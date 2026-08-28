@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import ContactForm from "@/components/contact/ContactForm";
 
 export const metadata: Metadata = {
@@ -33,7 +33,9 @@ export default function ContactPage() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 shrink-0 text-guinea-red" />
-                +224 — (à renseigner)
+                <a href="tel:+224662860976" className="transition-colors hover:text-guinea-red">
+                  +224 662 860 976
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 shrink-0 text-guinea-red" />
@@ -49,6 +51,16 @@ export default function ContactPage() {
               </li>
             </ul>
           </div>
+
+          <a
+            href="https://wa.me/224662860976?text=Bonjour%20Bonne%20Humeur%20TV%20!"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2.5 rounded-2xl bg-guinea-green px-6 py-4 text-sm font-bold text-white transition-transform hover:scale-[1.02]"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Discuter sur WhatsApp : +224 662 860 976
+          </a>
 
           <div className="overflow-hidden rounded-2xl border border-neutral-200 dark:border-white/10">
             <iframe

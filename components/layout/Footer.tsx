@@ -55,7 +55,14 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-2.5">
               <Phone className="h-4 w-4 shrink-0 text-guinea-red" />
-              +224 — (à renseigner)
+              <a
+                href="https://wa.me/224662860976"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-guinea-green"
+              >
+                +224 662 860 976 (WhatsApp)
+              </a>
             </li>
             <li className="flex items-center gap-2.5">
               <Mail className="h-4 w-4 shrink-0 text-guinea-red" />
