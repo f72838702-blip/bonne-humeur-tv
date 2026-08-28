@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Download, Quote } from "lucide-react";
 import ServicesGrid from "@/components/partenariats/ServicesGrid";
 import PartnershipForm from "@/components/partenariats/PartnershipForm";
+import Reveal from "@/components/shared/Reveal";
 
 export const metadata: Metadata = {
   title: "Offres & Partenariats",
@@ -41,6 +42,7 @@ export default function PartenariatsPage() {
 
       {/* ─── Mot du PDG ─── */}
       <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
+        <Reveal>
         <div className="relative rounded-3xl border border-neutral-200 bg-white p-8 dark:border-white/10 dark:bg-night-800 sm:p-12">
           <Quote className="absolute -top-5 left-8 h-10 w-10 rounded-full bg-guinea-red p-2 text-white shadow-glow" />
           <blockquote className="text-balance font-display text-lg font-medium leading-relaxed sm:text-2xl">
@@ -61,6 +63,7 @@ export default function PartenariatsPage() {
             </span>
           </figcaption>
         </div>
+        </Reveal>
       </section>
 
       {/* ─── Grille des prestations ─── */}
@@ -72,9 +75,9 @@ export default function PartenariatsPage() {
           Quatre pôles d'expertise, des formats adaptés à chaque objectif de
           communication.
         </p>
-        <div className="mt-10">
+        <Reveal delay={100} className="mt-10">
           <ServicesGrid />
-        </div>
+        </Reveal>
       </section>
 
       {/* ─── Formulaire de demande de devis ─── */}
@@ -87,9 +90,9 @@ export default function PartenariatsPage() {
             Remplissez ce formulaire : notre équipe commerciale vous répond sous
             48 h ouvrées avec une proposition adaptée.
           </p>
-          <div className="mt-10">
+          <Reveal delay={100} className="mt-10">
             <PartnershipForm />
-          </div>
+          </Reveal>
         </div>
       </section>
     </>

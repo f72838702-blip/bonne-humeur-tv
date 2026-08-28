@@ -4,6 +4,7 @@ import BreakingNews from "@/components/home/BreakingNews";
 import HeroPlayer from "@/components/home/HeroPlayer";
 import VideosGrid from "@/components/home/VideosGrid";
 import B2BCta from "@/components/home/B2BCta";
+import Reveal from "@/components/shared/Reveal";
 import { videos, CATEGORY_LABELS } from "@/lib/videos";
 import { formatDate } from "@/lib/utils";
 
@@ -17,10 +18,24 @@ export default function HomePage() {
 
       {/* ─── Hero : lecteur principal + à la une ─── */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <Reveal>
+          <h1 className="mb-5 flex items-center gap-3 font-display text-xl font-extrabold sm:text-2xl">
+            {hero.live && (
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute h-full w-full animate-ping rounded-full bg-guinea-red opacity-75" />
+                <span className="relative h-2.5 w-2.5 rounded-full bg-guinea-red" />
+              </span>
+            )}
+            En ce moment sur <span className="text-guinea-red">Bonne Humeur TV</span>
+          </h1>
+        </Reveal>
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <HeroPlayer video={hero} />
+          <Reveal>
+            <HeroPlayer video={hero} />
+          </Reveal>
 
-          <aside className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
+          <Reveal delay={120} className="flex flex-col">
+            <aside className="flex h-full flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
             <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-widest text-guinea-red">
               À la une
             </h2>
@@ -42,7 +57,8 @@ export default function HomePage() {
                 </span>
               </Link>
             ))}
-          </aside>
+            </aside>
+          </Reveal>
         </div>
       </section>
 
@@ -64,7 +80,9 @@ export default function HomePage() {
 
       {/* ─── Section vitrine B2B ─── */}
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
-        <B2BCta />
+        <Reveal>
+          <B2BCta />
+        </Reveal>
       </section>
     </>
   );

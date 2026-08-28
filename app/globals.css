@@ -30,4 +30,12 @@
   .text-balance {
     text-wrap: balance;
   }
+  /* Masquage de scrollbar (puces de catégories scrollables mobile) */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }

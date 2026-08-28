@@ -12,6 +12,15 @@ const CATEGORY_STYLES: Record<Video["category"], string> = {
   institutionnel: "bg-guinea-red/15 text-guinea-red",
 };
 
+/** Halo coloré par catégorie sur la miniature placeholder */
+const CATEGORY_GLOW: Record<Video["category"], string> = {
+  societe: "rgba(0,154,68,0.32)",
+  culture: "rgba(252,209,22,0.25)",
+  economie: "rgba(14,165,233,0.3)",
+  education: "rgba(139,92,246,0.3)",
+  institutionnel: "rgba(206,17,38,0.32)",
+};
+
 export default function VideoCard({ video }: { video: Video }) {
   return (
     <Link
@@ -19,7 +28,12 @@ export default function VideoCard({ video }: { video: Video }) {
       className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-night-800 dark:hover:border-white/20"
     >
       <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-night-800 via-night-900 to-black">
-        <div className="absolute inset-0 opacity-25 transition-opacity group-hover:opacity-40 [background:radial-gradient(ellipse_at_center,rgba(0,154,68,0.3),transparent_65%)]" />
+        <div
+          className="absolute inset-0 opacity-25 transition-opacity group-hover:opacity-40"
+          style={{
+            background: `radial-gradient(ellipse at center, ${CATEGORY_GLOW[video.category]}, transparent 65%)`,
+          }}
+        />
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur transition-all duration-300 group-hover:scale-110 group-hover:bg-guinea-red">
             <Play className="ml-0.5 h-5 w-5 fill-white text-white" />

@@ -28,7 +28,7 @@ export default function ShareButtons({ url, title }: { url: string; title: strin
         aria-label="Partager sur WhatsApp"
         className={`${base} hover:border-guinea-green hover:text-guinea-green`}
       >
-        <MessageCircle className="h-4.5 w-4.5" />
+        <MessageCircle className="h-4 w-4" />
       </a>
       <a
         href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`}
@@ -37,14 +37,14 @@ export default function ShareButtons({ url, title }: { url: string; title: strin
         aria-label="Partager sur Facebook"
         className={`${base} hover:border-sky-500 hover:text-sky-500`}
       >
-        <Facebook className="h-4.5 w-4.5" />
+        <Facebook className="h-4 w-4" />
       </a>
       <button
         onClick={copy}
         aria-label="Copier le lien"
         className={`${base} ${copied ? "border-guinea-green text-guinea-green" : "hover:border-guinea-red hover:text-guinea-red"}`}
       >
-        {copied ? <Check className="h-4.5 w-4.5" /> : <Link2 className="h-4.5 w-4.5" />}
+        {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
       </button>
     </div>
   );

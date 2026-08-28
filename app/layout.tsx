@@ -1,7 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Archivo } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import WhatsAppFloat from "@/components/layout/WhatsAppFloat";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["500", "700", "800", "900"],
+  variable: "--font-display",
+});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.vercel.app";
 
@@ -42,10 +51,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className="dark" suppressHydrationWarning>
-      <body className="flex min-h-screen flex-col">
+      <body className={`${inter.variable} ${archivo.variable} flex min-h-screen flex-col`}>
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <WhatsAppFloat />
       </body>
     </html>
   );
