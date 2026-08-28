@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  body {
+    @apply bg-neutral-50 text-neutral-900 antialiased dark:bg-night-950 dark:text-neutral-100;
+  }
+  ::selection {
+    @apply bg-guinea-red text-white;
+  }
+}
+
+@layer utilities {
+  /* Filet tricolore subtil (rappel du drapeau guinéen) */
+  .tricolor-line {
+    background: linear-gradient(
+      90deg,
+      #ce1126 0%,
+      #ce1126 33.33%,
+      #fcd116 33.33%,
+      #fcd116 66.66%,
+      #009a44 66.66%,
+      #009a44 100%
+    );
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}
