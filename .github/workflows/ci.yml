@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "feature/plateforme-media"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  quality:
+    name: Lint, types, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Types (TypeScript strict)
+        run: npx tsc --noEmit
+
+      - name: Tests unitaires (Vitest)
+        run: npm test
+
+      - name: Build de production
+        run: npm run build
+        env:
+          # Le build doit réussir SANS backend : toutes les pages rendent
+          # des états honnêtes « non configuré » (aucune clé réelle en CI).
+          NEXT_PUBLIC_SITE_URL: https://bonne-humeur-tv.vercel.app
+
+      - name: Audit de sécurité (niveau high)
+        run: npm run audit:check
+        continue-on-error: true # les avis non corrigeables sans breaking change sont suivis dans le rapport final

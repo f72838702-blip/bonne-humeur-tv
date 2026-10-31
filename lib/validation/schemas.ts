@@ -1,0 +1,174 @@
+import { z } from "zod";
+
+/**
+ * Schémas de validation — Zod 4 (>= 4.6.6, corrige GHSA-mrhx-c7xc-m3w5).
+ * Utilisés UNIQUEMENT côté serveur (Server Actions) : la validation
+ * client n'est jamais considérée comme un contrôle de sécurité.
+ */
+
+const trimmed = (min: number, max: number, label: string) =>
+  z
+    .string()
+    .trim()
+    .min(min, `${label} : ${min} caractères minimum`)
+    .max(max, `${label} : ${max} caractères maximum`);
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : undefined));
+
+const uuid = z.string().uuid("Identifiant invalide");
+const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, "Date invalide (format attendu : AAAA-MM-JJ)")
+  .optional()
+  .or(z.literal(""))
+  .transform((v) => (v ? v : undefined));
+
+// ─────────────────────────────────────────────────────────────
+// Formulaires publics
+// ─────────────────────────────────────────────────────────────
+export const contactSchema = z.object({
+  name: trimmed(2, 100, "Nom"),
+  email: z.email("Adresse email invalide"),
+  phone: optionalText(30),
+  subject: trimmed(3, 150, "Sujet"),
+  message: trimmed(10, 5000, "Message"),
+  consent: z.boolean().refine((v) => v === true, {
+    message: "Vous devez accepter le traitement de vos données",
+  }),
+  /** Honeypot anti-spam : doit rester VIDE (rempli par les bots). */
+  website: z.string().max(0, "Rejeté").optional().or(z.literal("")),
+});
+
+export const partnershipSchema = z.object({
+  contact_name: trimmed(2, 100, "Nom du contact"),
+  organisation: trimmed(2, 150, "Organisation"),
+  fonction: optionalText(100),
+  email: z.email("Adresse email invalide"),
+  phone: optionalText(30),
+  service: z.enum(["couverture", "interview", "production", "digitale", "autre"], {
+    message: "Choisissez une prestation",
+  }),
+  message: trimmed(10, 5000, "Description"),
+  budget: z
+    .enum(["lt5m", "5-15m", "15-50m", "gt50m", "unknown"])
+    .optional()
+    .or(z.literal("")),
+  timeline: optionalText(100),
+  consent: z.boolean().refine((v) => v === true, {
+    message: "Vous devez accepter le traitement de vos données",
+  }),
+  website: z.string().max(0, "Rejeté").optional().or(z.literal("")),
+});
+
+// ─────────────────────────────────────────────────────────────
+// Authentification
+// ─────────────────────────────────────────────────────────────
+export const loginSchema = z.object({
+  email: z.email("Adresse email invalide"),
+  password: trimmed(8, 128, "Mot de passe"),
+});
+
+// ─────────────────────────────────────────────────────────────
+// CMS : articles
+// ─────────────────────────────────────────────────────────────
+export const ARTICLE_STATUSES = ["draft", "review", "scheduled", "published", "archived"] as const;
+
+export const articleSchema = z.object({
+  id: uuid.optional(),
+  title: trimmed(5, 200, "Titre"),
+  slug: optionalText(96),
+  excerpt: optionalText(400),
+  content: trimmed(1, 100_000, "Contenu"),
+  featured_image: optionalText(500),
+  category_id: uuid.optional().or(z.literal("").transform(() => undefined)),
+  status: z.enum(ARTICLE_STATUSES, { message: "Statut invalide" }),
+  scheduled_at: isoDate,
+  meta_title: optionalText(200),
+  meta_description: optionalText(300),
+  is_featured: z.boolean().default(false),
+  tags: z.array(trimmed(2, 40, "Tag")).max(10, "10 tags maximum").default([]),
+});
+
+export const deleteArticleSchema = z.object({ id: uuid });
+
+// ─────────────────────────────────────────────────────────────
+// CMS : vidéos
+// ─────────────────────────────────────────────────────────────
+export const VIDEO_STATUSES = ["draft", "published", "archived"] as const;
+
+export const videoSchema = z.object({
+  id: uuid.optional(),
+  title: trimmed(3, 200, "Titre"),
+  slug: optionalText(96),
+  description: optionalText(2000),
+  youtube_id: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9_-]{11}$/, "ID YouTube invalide (11 caractères alphanumériques)"),
+  thumbnail_url: optionalText(500),
+  category_id: uuid.optional().or(z.literal("").transform(() => undefined)),
+  duration: optionalText(10),
+  published_at: isoDate,
+  status: z.enum(VIDEO_STATUSES, { message: "Statut invalide" }),
+  is_featured: z.boolean().default(false),
+  /** Un direct doit être RÉELLEMENT vérifié par la rédaction avant activation. */
+  is_live: z.boolean().default(false),
+});
+
+export const deleteVideoSchema = z.object({ id: uuid });
+
+// ─────────────────────────────────────────────────────────────
+// CMS : flash-infos, catégories, rôles, demandes
+// ─────────────────────────────────────────────────────────────
+export const breakingNewsSchema = z.object({
+  id: uuid.optional(),
+  content: trimmed(5, 200, "Texte"),
+  link: optionalText(300),
+  is_active: z.boolean().default(true),
+  start_at: isoDate,
+  end_at: isoDate,
+  position: z.number().int().min(0).max(999).default(0),
+});
+
+export const deleteBreakingNewsSchema = z.object({ id: uuid });
+
+export const categorySchema = z.object({
+  id: uuid.optional(),
+  name: trimmed(2, 60, "Nom"),
+  slug: optionalText(60),
+  description: optionalText(200),
+});
+
+export const deleteCategorySchema = z.object({ id: uuid });
+
+export const roleChangeSchema = z.object({
+  profile_id: uuid,
+  role: z.enum(["admin", "editor", "reporter"], { message: "Rôle invalide" }),
+});
+
+export const inviteUserSchema = z.object({
+  email: z.email("Adresse email invalide"),
+  full_name: trimmed(2, 100, "Nom complet"),
+  role: z.enum(["admin", "editor", "reporter"], { message: "Rôle invalide" }),
+});
+
+export const requestStatusSchema = z.object({
+  type: z.enum(["partnership", "contact"]),
+  id: uuid,
+  status: z.enum(["new", "processing", "treated"]),
+  admin_note: optionalText(1000),
+});
+
+export type ContactInput = z.infer<typeof contactSchema>;
+export type PartnershipInput = z.infer<typeof partnershipSchema>;
+export type ArticleInput = z.infer<typeof articleSchema>;
+export type VideoInput = z.infer<typeof videoSchema>;
+export type BreakingNewsInput = z.infer<typeof breakingNewsSchema>;
+export type CategoryInput = z.infer<typeof categorySchema>;
