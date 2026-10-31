@@ -1,0 +1,6 @@
+{
+  "name": "bhtv-migration-tests",
+  "private": true,
+  "type": "module",
+  "dependencies": { "pg": "^8.0.0" }
+}

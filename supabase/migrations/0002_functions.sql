@@ -1,6 +1,11 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- BONNE HUMEUR TV — Migration 0003 : Fonctions, triggers, sécurité
--- À appliquer APRÈS 0001_schema.sql et 0002_rls.sql
+-- BONNE HUMEUR TV — Migration 0002 : Fonctions, triggers, sécurité
+-- À appliquer APRÈS 0001_schema.sql et AVANT 0003_rls.sql.
+-- L'ordre 0002 (fonctions) → 0003 (RLS) est OBLIGATOIRE : les politiques de
+-- 0003_rls.sql appellent current_role()/has_role()/is_staff() — PostgreSQL
+-- résout les fonctions DÈS LA CRÉATION d'une policy (invalidé : l'ancien ordre
+-- « RLS avant fonctions » échouait avec « function public.has_role does not
+-- exist », prouvé par exécution réelle sur PostgreSQL isolé — cf. rapport).
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ─────────────────────────────────────────────────────────────

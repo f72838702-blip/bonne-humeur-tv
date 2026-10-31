@@ -66,6 +66,13 @@ Vérifiée structurellement : `tsc` 0 erreur, tests 55/55 (dont les schémas Ser
 
 ## 4. État réel de Supabase — INCHANGÉ et HONNÊTE
 
+> **CORRECTION postérieure à ce rapport** (mission de contrôle suivant) : la note
+> d'« ordre viable » ci-dessous s'est révélée **fausse** — l'exécution réelle sur
+> PostgreSQL isolé a prouvé que `0002_rls` (ancien) échoue (`function public.has_role
+> does not exist`). Les migrations ont été renumérotées (fonctions en 0002, RLS en
+> 0003) et validées complètement depuis une base vierge : voir
+> `RAPPORT_CONTROLE_FINAL_BONNE_HUMEUR_TV.md`.
+
 - **AUCUN projet Supabase n'existe** — aucune migration appliquée (les 8 fichiers vivent dans `supabase/migrations/`). Rien n'a été exécuté sur une base réelle pendant cette mission (conformité).
 - **Analyse statique des 8 migrations SANS contact de base** (exigence mission) :
   - Ordre `0001 → 0002 → 0003 → 0004 → 0005 → (0006) → 0007 → 0008` **viable** : les policies 0002 appellent `has_role()`/`is_staff()` définies en 0003, valide car `CREATE POLICY` ne résout pas les fonctions à la création ; caveat documenté — appliquer 0002/0003 consécutivement (sinon erreur transitoire sur les tables staff) ;

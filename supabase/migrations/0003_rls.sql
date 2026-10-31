@@ -1,6 +1,7 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- BONNE HUMEUR TV — Migration 0002 : Row Level Security
--- À appliquer APRÈS 0001_schema.sql
+-- BONNE HUMEUR TV — Migration 0003 : Row Level Security
+-- À appliquer APRÈS 0001_schema.sql et 0002_functions.sql (les fonctions
+-- current_role()/has_role()/is_staff() doivent exister pour créer les policies).
 --
 -- Principes :
 --   • Le public ne voit QUE les contenus publiés (articles, vidéos, flash-infos

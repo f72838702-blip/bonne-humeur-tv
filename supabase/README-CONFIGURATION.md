@@ -18,24 +18,24 @@ Dans le **SQL Editor** du dashboard, exécuter dans l'ordre les fichiers de
 | Ordre | Fichier | Contenu |
 |-------|---------|---------|
 | 1 | `0001_schema.sql` | Tables : profiles, categories, tags, articles, article_tags, videos, breaking_news, partnership_requests, contact_messages, form_submissions, audit_logs |
-| 2 | `0002_rls.sql` | Row Level Security : chaque table verrouillée, règles par rôle |
-| 3 | `0003_functions.sql` | Fonctions rôles, trigger création profil, audit, `check_rate_limit`, `search_published` |
+| 2 | `0002_functions.sql` | Fonctions rôles, trigger création profil, audit, `check_rate_limit`, `search_published` |
+| 3 | `0003_rls.sql` | Row Level Security : chaque table verrouillée, règles par rôle |
 | 4 | `0004_storage.sql` | Bucket `media` (public en lecture, 5 Mo, images uniquement) |
 | 5 | `0005_seed_categories.sql` | Catégories éditoriales structurelles (Politique, Société, Économie…) |
 | 6 | `0006_scheduled_publish.sql` *(optionnel)* | Publication programmée via pg_cron |
 | 7 | `0007_video_position.sql` | Colonne `videos.position` (épinglage accueil) — **OBLIGATOIRE avant toute utilisation du formulaire vidéo** (sinon l'INSERT échoue) |
 | 8 | `0008_media_folders.sql` | Plafond bucket 2 Mo + lecture publique restreinte aux 5 dossiers logiques (`articles/`, `categories/`, `thumbnails/`, `reporters/`, `branding/`) |
 
-Notes d'analyse (contrôles effectués sans contact de base réelle) :
+Notes de validation (exécution RÉELLE sur PostgreSQL 17 isolé, émulation Supabase —
+harnais dans `supabase/test-local/`, cf. `RAPPORT_CONTROLE_FINAL_BONNE_HUMEUR_TV.md`) :
 
-- Les policies de 0002 appellent `has_role()`/`is_staff()` alors que ces fonctions sont
-  créées en 0003 : c'est valide — `CREATE POLICY` ne résout pas les fonctions lors de la
-  création (seulement à l'usage, après 0003). En revanche, **appliquer 0002 puis 0003
-  l'un immédiatement après l'autre** : entre les deux, toute lecture des tables staff
-  renverrait une erreur transitoire « function does not exist ».
-- Les 8 migrations sont analysées sans erreur SQL bloquante identifiée
-  (délimiteur `$cron$` non conflictuel en 0006 ; `check_rate_limit` révoqué à
-  public/anon/authenticated et appelé uniquement via `service_role` ; 0007/0008 idempotentes).
+- **L'ordre ancien (0002_rls avant 0003_functions) a été PROUVÉ INVALIDE** par exécution :
+  `CREATE POLICY` résout les fonctions à la création — l'ancien ordre échouait avec
+  « function public.has_role(unknown) does not exist ». Les fichiers ont été renumérotés
+  (fonctions en 0002, RLS en 0003) : l'ordre ci-dessus est celui validé.
+- Les 8 migrations s'exécutent depuis une base vierge **sans aucune erreur**
+  (22 tests RLS/sécurité PASS — anti-élévation, anti-auto-publication, rate limiting,
+  Storage, recherche, publication programmée, 0007).
 
 Chaque fichier est idempotent ou s'exécute une seule fois : ne PAS relancer un
 fichier déjà appliqué sans vérification.

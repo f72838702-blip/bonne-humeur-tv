@@ -1,0 +1,49 @@
+
+=== EXÉCUTION DES MIGRATIONS depuis base vierge sur bhtv_clean ===
+  ok    (harnais) 00_supabase_emulation.sql
+  ok    0001_schema.sql
+  ok    0002_functions.sql
+  ok    0003_rls.sql
+  ok    0004_storage.sql
+  ok    0005_seed_categories.sql
+  ok    0006_scheduled_publish.sql
+  ok    0007_video_position.sql
+  ok    0008_media_folders.sql
+
+MIGRATIONS COMPLÈTES : aucune erreur.
+
+=== TESTS RLS / SÉCURITÉ / FONCTIONS (22 assertions) ===
+
+  PASS  T1 — 11 tables publiques créées (0001)
+  PASS  T2 — 11 catégories seedées (0005)
+  PASS  T3 — videos.position existe, défaut 0 + index (0007)
+  PASS  T4 — RLS public : anon ne voit que l'article PUBLIÉ (1 sur 2)
+  PASS  T5 — editor voit ses 2 articles
+  PASS  T6 — reporter insère son brouillon
+  PASS  T7 — anti-auto-publication : le reporter NE PEUT PAS publier (ERREUR RLS)
+  PASS  T7b — l'article est resté draft
+  PASS  T8 — l'editor publie → visible au public
+  PASS  T9 — anti-élévation : un reporter ne peut pas devenir admin (ERREUR RLS)
+  PASS  T9b — le rôle du reporter est toujours 'reporter'
+  PASS  T10 — seul un admin change les rôles (editor → promotion interdite)
+  PASS  T11a — reporter ne lit que SON profil
+  PASS  T11b — admin lit les 3 profils
+  PASS  T12a — anon peut ENVOYER au contact mais jamais LIRE (0 ligne)
+  PASS  T12b — form_submissions inaccessible hors service_role (0 ligne)
+  PASS  T13a — audit_logs rempli par le trigger, lecture admin OK
+  PASS  T13b — reporter ne lit PAS l'audit (0 ligne)
+  PASS  T14a — check_rate_limit refuse anon (permission denied)
+  PASS  T14b — fiable en base : true, true, false (max 2/60 s)
+  PASS  T15 — search_published : le public ne cherche que le PUBLIÉ
+  PASS  T16a — bucket media : public + plafond 2 Mo (0008)
+  PASS  T16b — lecture publique RESTREINTE aux 5 dossiers logiques (1 sur 2)
+  PASS  T16c — anon ne peut PAS écrire dans le Storage
+  PASS  T17 — 0006 (sans pg_cron) : fonction publication programmée effective
+  PASS  T18 — tri accueil appliqué : épinglée d'abord puis chronologique
+  PASS  T18b — l'index videos_home_order_idx existe pour le tri position (0007)
+  PASS  T19 — vue author_names : bylines publiques (anon la lit)
+  PASS  T20a — anon ne lit PAS l'audit
+  PASS  T20b — staff peut écrire l'audit (policies append-only)
+  PASS  T20c — check_rate_limit refuse un form_type inconnu
+
+══════════ RÉSULTAT : 31 PASS / 0 FAIL ══════════
