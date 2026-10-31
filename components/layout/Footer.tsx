@@ -28,6 +28,8 @@ export default function Footer() {
           <ul className="mt-4 space-y-2.5 text-sm">
             {[
               { href: "/", label: "Accueil" },
+              { href: "/actualites", label: "Actualités" },
+              { href: "/recherche", label: "Rechercher" },
               { href: "/videos", label: "Vidéos & Émissions" },
               { href: "/partenariats", label: "Offres & Partenariats" },
               { href: "/contact", label: "Contact" },
@@ -71,8 +73,24 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      <div className="border-t border-neutral-200 py-5 text-center text-xs text-neutral-500 dark:border-white/10 dark:text-neutral-500">
-        © 2026 Bonne Humeur TV — Tous droits réservés.
+      <div className="border-t border-neutral-200 py-5 dark:border-white/10">
+        <div className="flex flex-col items-center justify-between gap-3 px-4 text-xs text-neutral-500 sm:flex-row dark:text-neutral-500">
+          <p>© 2026 Bonne Humeur TV — Tous droits réservés.</p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/mentions-legales"
+              className="transition-colors hover:text-guinea-red"
+            >
+              Mentions légales
+            </Link>
+            <Link
+              href="/confidentialite"
+              className="transition-colors hover:text-guinea-red"
+            >
+              Confidentialité
+            </Link>
+          </div>
+        </div>
       </div>
     </footer>
   );

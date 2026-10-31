@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Download, Quote } from "lucide-react";
+import { Quote } from "lucide-react";
 import ServicesGrid from "@/components/partenariats/ServicesGrid";
 import PartnershipForm from "@/components/partenariats/PartnershipForm";
 import Reveal from "@/components/shared/Reveal";
@@ -26,17 +26,23 @@ export default function PartenariatsPage() {
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-neutral-300 sm:text-base">
             Bonne Humeur TV accompagne les entreprises, institutions et ONG dans
-            leur stratégie de visibilité : de la couverture d'événement à la
+            leur stratégie de visibilité : de la couverture d&apos;événement à la
             campagne digitale complète.
           </p>
-          <a
-            href="/plaquette-institutionnelle.pdf"
-            download
-            className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/25 px-7 py-3.5 text-sm font-bold transition-colors hover:bg-white/10"
-          >
-            <Download className="h-4 w-4" />
-            Télécharger la plaquette institutionnelle (PDF)
-          </a>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="#devis"
+              className="inline-flex items-center gap-2 rounded-full bg-guinea-red px-7 py-3.5 text-sm font-bold shadow-glow transition-transform hover:scale-105"
+            >
+              Demander un devis
+            </a>
+            <a
+              href="/contact"
+              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-7 py-3.5 text-sm font-bold transition-colors hover:bg-white/10"
+            >
+              Nous contacter
+            </a>
+          </div>
         </div>
       </section>
 
@@ -72,7 +78,7 @@ export default function PartenariatsPage() {
           Nos <span className="text-guinea-red">prestations</span>
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-center text-sm text-neutral-500 dark:text-neutral-400">
-          Quatre pôles d'expertise, des formats adaptés à chaque objectif de
+          Quatre pôles d&apos;expertise, des formats adaptés à chaque objectif de
           communication.
         </p>
         <Reveal delay={100} className="mt-10">
@@ -81,7 +87,10 @@ export default function PartenariatsPage() {
       </section>
 
       {/* ─── Formulaire de demande de devis ─── */}
-      <section className="border-t border-neutral-200 bg-white/50 dark:border-white/10 dark:bg-night-900/50">
+      <section
+        id="devis"
+        className="scroll-mt-20 border-t border-neutral-200 bg-white/50 dark:border-white/10 dark:bg-night-900/50"
+      >
         <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
           <h2 className="text-center font-display text-2xl font-extrabold sm:text-3xl">
             Demander un <span className="text-guinea-red">devis</span>

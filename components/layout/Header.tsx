@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, Moon, Play, Sun, X } from "lucide-react";
+import { Menu, Moon, Play, Search, Sun, X } from "lucide-react";
 import { useTheme } from "@/store/theme";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/", label: "Accueil" },
+  { href: "/actualites", label: "Actualités" },
   { href: "/videos", label: "Vidéos" },
   { href: "/partenariats", label: "Offres & Partenariats" },
   { href: "/contact", label: "Contact" },
@@ -66,6 +67,13 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/recherche"
+            aria-label="Rechercher"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-white/10"
+          >
+            <Search className="h-4 w-4" />
+          </Link>
           <button
             onClick={toggle}
             aria-label="Basculer le thème"

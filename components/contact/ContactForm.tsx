@@ -1,73 +1,148 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { CheckCircle2, Loader2, Send } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { useActionState, useState } from "react";
+import type { ActionState } from "@/lib/actions/helpers";
+import { submitContact } from "@/lib/actions/public-forms";
+import TurnstileClient from "@/components/shared/TurnstileClient";
 
-const schema = z.object({
-  name: z.string().min(2, "Votre nom est requis"),
-  email: z.string().email("Adresse email invalide"),
-  message: z.string().min(10, "Votre message est trop court"),
-});
+/**
+ * Formulaire de contact — validation UNIQUEMENT côté serveur (Server
+ * Action + Zod). Le message de succès n'est JAMAIS affiché localement :
+ * il ne provient que de la confirmation du serveur.
+ * Anti-spam : honeypot « website » + rate limiting en base + Turnstile
+ * (si configuré — le widget s'affiche alors automatiquement).
+ */
 
-type FormValues = z.infer<typeof schema>;
+// État initial : import de type uniquement, la valeur est locale
+// (le module helpers embarque du code serveur non bundlable client).
+const initialState: ActionState = { status: "idle", message: "" };
 
 const inputClass =
   "w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-guinea-red focus:ring-2 focus:ring-guinea-red/20 dark:border-white/15 dark:bg-night-900";
 
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-xs text-guinea-red">{message}</p>;
+}
+
 export default function ContactForm() {
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  const [state, formAction, pending] = useActionState(submitContact, initialState);
+  const [dismissed, setDismissed] = useState(false);
 
-  const onSubmit = async (values: FormValues) => {
-    setError(null);
-    if (!supabase) {
-      console.log("[DEMO] Message de contact :", values);
-      setSent(true);
-      return;
-    }
-    const { error: sbError } = await supabase.from("contact_messages").insert(values);
-    if (sbError) {
-      setError("Envoi impossible pour le moment. Réessayez plus tard.");
-      return;
-    }
-    setSent(true);
-  };
+  const success = state.status === "success" && !dismissed;
 
-  if (sent) {
+  if (success) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-guinea-green/30 bg-guinea-green/5 px-6 py-10 text-center">
-        <CheckCircle2 className="h-10 w-10 text-guinea-green" />
-        <p className="font-bold">Message bien reçu !</p>
-        <p className="text-sm text-neutral-500">Nous vous répondrons très vite.</p>
+      <div className="flex flex-col items-center gap-4 rounded-2xl border border-guinea-green/30 bg-guinea-green/5 px-6 py-12 text-center">
+        <span className="text-4xl">✅</span>
+        <h3 className="font-display text-xl font-bold">Message bien reçu !</h3>
+        <p className="max-w-md text-sm text-neutral-500 dark:text-neutral-400">
+          {state.message}
+        </p>
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          className="mt-2 rounded-full border border-neutral-300 px-6 py-2.5 text-sm font-semibold transition-colors hover:border-guinea-red hover:text-guinea-red dark:border-white/20"
+        >
+          Envoyer un autre message
+        </button>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-      <input {...register("name")} placeholder="Votre nom *" className={inputClass} />
-      {errors.name && <p className="-mt-2 text-xs text-guinea-red">{errors.name.message}</p>}
-      <input {...register("email")} type="email" placeholder="Votre email *" className={inputClass} />
-      {errors.email && <p className="-mt-2 text-xs text-guinea-red">{errors.email.message}</p>}
-      <textarea {...register("message")} rows={5} placeholder="Votre message *" className={inputClass} />
-      {errors.message && <p className="-mt-2 text-xs text-guinea-red">{errors.message.message}</p>}
-      {error && <p className="text-sm text-guinea-red">{error}</p>}
+    <form action={formAction} className="flex flex-col gap-4" noValidate>
+      {/* Honeypot anti-bots : invisible pour les humains */}
+      <input
+        type="text"
+        name="website"
+        className="hidden"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="contact-name" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-neutral-500">
+            Nom complet *
+          </label>
+          <input id="contact-name" name="name" placeholder="Votre nom" className={inputClass} />
+          <FieldError message={state.fieldErrors?.name} />
+        </div>
+        <div>
+          <label htmlFor="contact-email" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-neutral-500">
+            Email *
+          </label>
+          <input id="contact-email" name="email" type="email" placeholder="vous@exemple.com" className={inputClass} />
+          <FieldError message={state.fieldErrors?.email} />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="contact-phone" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-neutral-500">
+            Téléphone / WhatsApp
+          </label>
+          <input id="contact-phone" name="phone" type="tel" placeholder="+224 … (facultatif)" className={inputClass} />
+          <FieldError message={state.fieldErrors?.phone} />
+        </div>
+        <div>
+          <label htmlFor="contact-subject" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-neutral-500">
+            Sujet *
+          </label>
+          <input id="contact-subject" name="subject" placeholder="Objet de votre message" className={inputClass} />
+          <FieldError message={state.fieldErrors?.subject} />
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="contact-message" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-neutral-500">
+          Votre message *
+        </label>
+        <textarea
+          id="contact-message"
+          name="message"
+          rows={5}
+          placeholder="Écrivez votre message (10 caractères minimum)…"
+          className={inputClass}
+        />
+        <FieldError message={state.fieldErrors?.message} />
+      </div>
+
+      <div>
+        <label className="flex items-start gap-3 text-sm text-neutral-600 dark:text-neutral-300">
+          <input
+            type="checkbox"
+            name="consent"
+            className="mt-0.5 h-4 w-4 accent-guinea-red"
+          />
+          <span>
+            J&apos;accepte que mes données soient utilisées pour traiter ma
+            demande, conformément à la{" "}
+            <a href="/confidentialite" className="underline underline-offset-2 hover:text-guinea-red">
+              politique de confidentialité
+            </a>
+            . *
+          </span>
+        </label>
+        <FieldError message={state.fieldErrors?.consent} />
+      </div>
+
+      <TurnstileClient actionState={state} />
+
+      {state.status === "error" && (
+        <p className="rounded-xl bg-guinea-red/10 px-4 py-3 text-sm font-medium text-guinea-red">
+          {state.message}
+        </p>
+      )}
+
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={pending}
         className="inline-flex items-center justify-center gap-2 rounded-full bg-guinea-red px-7 py-3.5 text-sm font-bold text-white shadow-glow transition-all hover:scale-[1.02] disabled:opacity-60"
       >
-        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        Envoyer
+        {pending ? "Envoi en cours…" : "Envoyer"}
       </button>
     </form>
   );

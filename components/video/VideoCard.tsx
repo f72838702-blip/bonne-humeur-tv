@@ -1,69 +1,70 @@
 import Link from "next/link";
-import { Clock, Eye, Play } from "lucide-react";
-import type { Video } from "@/lib/videos";
-import { CATEGORY_LABELS } from "@/lib/videos";
-import { formatDate, formatViews } from "@/lib/utils";
+import Image from "next/image";
+import { CalendarDays, Clock, Play } from "lucide-react";
+import type { VideoWithRelations } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
-const CATEGORY_STYLES: Record<Video["category"], string> = {
-  societe: "bg-guinea-green/15 text-guinea-green",
-  culture: "bg-guinea-yellow/15 text-yellow-600 dark:text-guinea-yellow",
-  economie: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
-  education: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
-  institutionnel: "bg-guinea-red/15 text-guinea-red",
-};
+/**
+ * Carte vidéo — miniature réelle (image éditoriale ou vignette YouTube),
+ * catégorie issue de la base, date de publication réelle.
+ * Aucun compteur de vues (donnée inexistante → jamais de chiffre fictif).
+ */
+export default function VideoCard({ video }: { video: VideoWithRelations }) {
+  const thumbnail =
+    video.thumbnail_url ?? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg`;
 
-/** Halo coloré par catégorie sur la miniature placeholder */
-const CATEGORY_GLOW: Record<Video["category"], string> = {
-  societe: "rgba(0,154,68,0.32)",
-  culture: "rgba(252,209,22,0.25)",
-  economie: "rgba(14,165,233,0.3)",
-  education: "rgba(139,92,246,0.3)",
-  institutionnel: "rgba(206,17,38,0.32)",
-};
-
-export default function VideoCard({ video }: { video: Video }) {
   return (
     <Link
       href={`/videos/${video.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-night-800 dark:hover:border-white/20"
     >
       <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-night-800 via-night-900 to-black">
-        <div
-          className="absolute inset-0 opacity-25 transition-opacity group-hover:opacity-40"
-          style={{
-            background: `radial-gradient(ellipse at center, ${CATEGORY_GLOW[video.category]}, transparent 65%)`,
-          }}
+        <Image
+          src={thumbnail}
+          alt=""
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover opacity-80 transition-all duration-300 group-hover:scale-105 group-hover:opacity-95"
         />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur transition-all duration-300 group-hover:scale-110 group-hover:bg-guinea-red">
+        <span className="absolute inset-0 flex items-center justify-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/40 backdrop-blur transition-all duration-300 group-hover:scale-110 group-hover:bg-guinea-red">
             <Play className="ml-0.5 h-5 w-5 fill-white text-white" />
           </span>
-        </div>
-        <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-black/70 px-2 py-0.5 text-[11px] font-semibold text-white">
-          <Clock className="h-3 w-3" />
-          {video.duration}
         </span>
+        {video.is_live && (
+          <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-guinea-red px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
+            <span className="h-1 w-1 animate-pulse-dot rounded-full bg-white" />
+            Direct
+          </span>
+        )}
+        {video.duration && (
+          <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-black/70 px-2 py-0.5 text-[11px] font-semibold text-white">
+            <Clock className="h-3 w-3" />
+            {video.duration}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-2.5 p-4">
-        <span
-          className={`w-fit rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${CATEGORY_STYLES[video.category]}`}
-        >
-          {CATEGORY_LABELS[video.category]}
-        </span>
-        <h3 className="line-clamp-2 font-display text-sm font-bold leading-snug sm:text-base">
+        {video.categories && (
+          <span className="w-fit rounded-full bg-guinea-green/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-guinea-green">
+            {video.categories.name}
+          </span>
+        )}
+        <h3 className="line-clamp-2 font-display text-sm font-bold leading-snug transition-colors group-hover:text-guinea-red sm:text-base">
           {video.title}
         </h3>
-        <p className="line-clamp-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-          {video.excerpt}
-        </p>
-        <div className="mt-auto flex items-center gap-3 pt-1 text-[11px] font-medium text-neutral-400">
-          <span className="flex items-center gap-1">
-            <Eye className="h-3.5 w-3.5" />
-            {formatViews(video.views)} vues
+        {video.description && (
+          <p className="line-clamp-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+            {video.description}
+          </p>
+        )}
+        {video.published_at && (
+          <span className="mt-auto flex items-center gap-1.5 pt-1 text-[11px] font-medium text-neutral-400">
+            <CalendarDays className="h-3.5 w-3.5" />
+            {formatDate(video.published_at)}
           </span>
-          <span>{formatDate(video.publishedAt)}</span>
-        </div>
+        )}
       </div>
     </Link>
   );
