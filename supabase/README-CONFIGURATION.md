@@ -85,13 +85,50 @@ Redéployer après modification.
 Le changement de rôle est réservé aux admins (RLS `profiles_update` :
 comparaison avec `current_role()` — un utilisateur ne peut pas s'auto-promouvoir).
 
-## 6. Vérifications post-déploiement
+## 6. Checklist finale du propriétaire (contrôle de livraison)
 
-- [ ] `/admin/login` affiche le formulaire (pas d'erreur)
-- [ ] Connexion admin → tableau de bord avec compteurs réels
-- [ ] Créer un article → publier → visible sur `/actualites`
-- [ ] Ajouter une vraie vidéo YouTube → visible sur `/videos`
-- [ ] Formulaire contact → message apparaît dans `/admin/demandes`
+**Organisation & projet**
+- [ ] Organisation Supabase créée (plan Free, 1 seul projet actif + 1 en pause max)
+- [ ] Projet créé dans une région proche des lecteurs (ex. `eu-west` / Paris ou Londres)
+- [ ] **NOTE** : un projet Free est suspendu après ~1 semaine d'inactivité —
+  réactivation en 1 clic depuis le Dashboard ; prévoir une visite hebdomadaire
+  (ou une utilisation réelle du site, ce qui suffit)
+- [ ] **NOTE** : aucun backup automatique quotidien en Free — faire un export
+  `pg_dump` / CSV manuel au moins après chaque lot de contenu important (voir §7)
+
+**Migrations**
+- [ ] Les 8 migrations exécutées dans l'ordre 0001 → 0008 via SQL Editor
+  (noms corrigés : `0002_functions.sql` PUIS `0003_rls.sql` — l'ancien
+  ordre a été prouvé invalide par exécution réelle, voir
+  `supabase/test-local/RESULTAT_MIGRATIONS_POSTGRESQL.txt`)
+- [ ] Vérification : 11 tables publiques + 11 catégories + table `audit_logs` remplie au moindre update
+
+**Admin & connexion**
+- [ ] Compte admin créé via Auth → Add user (Auto Confirm) AVANT tout
+- [ ] Promotion SQL en `role='admin'` exécutée (§3)
+- [ ] Connexion `/admin/login` → tableau de bord avec compteurs réels
+
+**Variables d'environnement**
+- [ ] `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `SUPABASE_SUPABASE_SERVICE_ROLE_KEY` (serveur uniquement) configurées
+  chez l'hébergeur **et** en local (`.env.local`)
+
+**Permissions & sécurité**
+- [ ] Un compte `reporter` de test ne peut ni publier ni se promouvoir admin
+- [ ] `contact`/`partenariats` : le public peut envoyer mais ne peut RIEN lire
+- [ ] `/admin` inaccessible sans session (redirection vers `/admin/login`)
+
+**Upload d'images**
+- [ ] Upload d'une image article (< 2 Mo, WebP compressé) → visible sur le site
+- [ ] (sans `service_role` connecté : médiathèque désactivée = état attendu)
+
+**Formulaires, recherche & CMS**
+- [ ] Formulaire contact → message visible dans `/admin/demandes`
+- [ ] Formulaire partenariat → visible dans `/admin/demandes`
+- [ ] Deux envois rapides → 3e bloqué (rate limiting en base)
+- [ ] Recherche `/recherche?q=` : ne retourne QUE les articles publiés
+- [ ] Créer un article → publier → visible sur `/actualites` (et dans le flux RSS du sitemap)
+- [ ] Ajouter une vraie vidéo YouTube → épinglage éventuel → visible sur `/videos`
 - [ ] `https://<site>/sitemap.xml` et `/robots.txt` répondent
 
 ## 7. Sauvegarde
