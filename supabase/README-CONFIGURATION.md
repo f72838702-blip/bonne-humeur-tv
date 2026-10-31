@@ -23,6 +23,19 @@ Dans le **SQL Editor** du dashboard, exécuter dans l'ordre les fichiers de
 | 4 | `0004_storage.sql` | Bucket `media` (public en lecture, 5 Mo, images uniquement) |
 | 5 | `0005_seed_categories.sql` | Catégories éditoriales structurelles (Politique, Société, Économie…) |
 | 6 | `0006_scheduled_publish.sql` *(optionnel)* | Publication programmée via pg_cron |
+| 7 | `0007_video_position.sql` | Colonne `videos.position` (épinglage accueil) — **OBLIGATOIRE avant toute utilisation du formulaire vidéo** (sinon l'INSERT échoue) |
+| 8 | `0008_media_folders.sql` | Plafond bucket 2 Mo + lecture publique restreinte aux 5 dossiers logiques (`articles/`, `categories/`, `thumbnails/`, `reporters/`, `branding/`) |
+
+Notes d'analyse (contrôles effectués sans contact de base réelle) :
+
+- Les policies de 0002 appellent `has_role()`/`is_staff()` alors que ces fonctions sont
+  créées en 0003 : c'est valide — `CREATE POLICY` ne résout pas les fonctions lors de la
+  création (seulement à l'usage, après 0003). En revanche, **appliquer 0002 puis 0003
+  l'un immédiatement après l'autre** : entre les deux, toute lecture des tables staff
+  renverrait une erreur transitoire « function does not exist ».
+- Les 8 migrations sont analysées sans erreur SQL bloquante identifiée
+  (délimiteur `$cron$` non conflictuel en 0006 ; `check_rate_limit` révoqué à
+  public/anon/authenticated et appelé uniquement via `service_role` ; 0007/0008 idempotentes).
 
 Chaque fichier est idempotent ou s'exécute une seule fois : ne PAS relancer un
 fichier déjà appliqué sans vérification.
@@ -31,7 +44,11 @@ fichier déjà appliqué sans vérification.
 
 L'inscription publique crée toujours des comptes **reporter** (trigger
 `handle_new_user` — personne ne peut s'attribuer un rôle privilégié).
-Pour promouvoir le premier admin :
+
+1. **D'abord créer le compte dans Auth** : Dashboard → Authentication → Users →
+   **Add user → Create new user** (email + mot de passe, cocher *Auto Confirm*).
+2. **Ensuite promouvoir** en admin (le trigger `handle_new_user` a créé la
+   ligne `profiles` avec le rôle `reporter`) — SQL Editor, une seule fois :
 
 ```sql
 update public.profiles
@@ -39,8 +56,7 @@ set role = 'admin'
 where id = (select id from auth.users where email = 'admin@exemple.gn');
 ```
 
-(à faire une seule fois, depuis le SQL Editor, puis vérifier dans la table
-`profiles`).
+3. Vérifier dans la table `profiles` (le rôle doit afficher `admin`).
 
 ## 4. Variables d'environnement
 
