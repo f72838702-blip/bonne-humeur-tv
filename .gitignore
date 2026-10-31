@@ -16,3 +16,6 @@ next-env.d.ts
 .vercel
 
 .vercel
+
+# Supabase CLI temp
+supabase/.temp/
