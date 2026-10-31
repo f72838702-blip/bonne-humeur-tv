@@ -118,6 +118,18 @@ comparaison avec `current_role()` — un utilisateur ne peut pas s'auto-promouvo
 - [ ] `contact`/`partenariats` : le public peut envoyer mais ne peut RIEN lire
 - [ ] `/admin` inaccessible sans session (redirection vers `/admin/login`)
 
+**Publication programmée (pg_cron)**
+- [ ] Extension `pg_cron` activée : Dashboard → Intégrations → Cron
+  (disponible sur le plan Free — l'activer AVANT 0006 ou après, la migration
+  la crée elle-même si possible)
+- [ ] Tâche planifiée vérifiée : `select * from cron.job;` doit contenir
+  `bhtv-publish-scheduled` (`*/5 * * * *`)
+- [ ] Test réel : créer un article `scheduled` avec `scheduled_at` à H+5 →
+  visible publiquement sur `/actualites` dans les ~5 minutes suivant l'heure,
+  SANS aucune intervention manuelle (historique : `cron.job_run_details`)
+- Si pg_cron est indisponible, la publication programmée n'est PAS
+  opérationnelle (manuelle uniquement) — ne pas la présenter comme active.
+
 **Upload d'images**
 - [ ] Upload d'une image article (< 2 Mo, WebP compressé) → visible sur le site
 - [ ] (sans `service_role` connecté : médiathèque désactivée = état attendu)
@@ -143,7 +155,10 @@ comparaison avec `current_role()` — un utilisateur ne peut pas s'auto-promouvo
 
 - Sans `SUPABASE_SERVICE_ROLE_KEY` : invitations, médiathèque et rate limiting
   sont désactivés (états honnêtes affichés) — le reste fonctionne.
-- La publication programmée exige pg_cron (`0006`, optionnel) : sans lui,
-  les articles `scheduled` restent non publiés jusqu'à édition manuelle.
+- La publication programmée exige l'ordonnanceur pg_cron (`0006`) : sur
+  Supabase (Free inclus) l'extension est disponible → automatisation toutes
+  les 5 minutes. Sans pg_cron (Postgres hors Supabase sans l'extension),
+  les articles `scheduled` restent non publiés jusqu'à édition manuelle —
+  dans ce cas la fonctionnalité n'est PAS opérationnelle.
 - Le CSP autorise `script-src 'unsafe-inline'` (hydratation Next.js) —
   documenté dans le rapport final ; passage aux nonces = évolution future.
