@@ -3,16 +3,24 @@ import Image from "next/image";
 import { CalendarDays } from "lucide-react";
 import type { ArticleWithRelations } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { mediaVariantUrl } from "@/lib/media/variants";
 
-/** Vignette de repli neutre — aucune fausse image éditoriale. */
+/**
+ * Vignette de repli neutre — aucune fausse image éditoriale.
+ * Dimension adaptée : la variante « carte » (800 px, pré-compressée
+ * côté éditorial) sert directement depuis le CDN Storage, sans
+ * réoptimisation serveur (directive §2/§3).
+ */
 function ArticleThumb({ article }: { article: ArticleWithRelations }) {
   if (article.featured_image) {
     return (
       <Image
-        src={article.featured_image}
+        src={mediaVariantUrl(article.featured_image, "card")}
         alt={article.title}
-        width={640}
-        height={360}
+        width={800}
+        height={450}
+        loading="lazy"
+        unoptimized
         className="h-44 w-full rounded-xl object-cover transition-transform duration-300 group-hover:scale-[1.03]"
       />
     );

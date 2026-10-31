@@ -15,6 +15,8 @@ export interface ActionState {
   fieldErrors?: Record<string, string>;
   /** Données optionnelles (ex : URL de redirection). */
   redirectTo?: string;
+  /** Charge utile optionnelle (ex : métadonnées YouTube vers le formulaire). */
+  data?: Record<string, string | null>;
 }
 
 export const idleState: ActionState = { status: "idle", message: "" };

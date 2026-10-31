@@ -231,7 +231,8 @@ export async function saveVideo(
     title: formData.get("title"),
     slug: formData.get("slug") ?? "",
     description: formData.get("description") ?? "",
-    youtube_id: formData.get("youtube_id"),
+    youtube_id: formData.get("youtube_id") ?? "",
+    youtube_url: formData.get("youtube_url") ?? "",
     thumbnail_url: formData.get("thumbnail_url") ?? "",
     category_id: formData.get("category_id") || undefined,
     duration: formData.get("duration") ?? "",
@@ -239,11 +240,24 @@ export async function saveVideo(
     status: formData.get("status"),
     is_featured: formDataBool(formData, "is_featured"),
     is_live: formDataBool(formData, "is_live"),
+    position: formData.get("position") ?? 0,
   });
   if (!parsed.success) {
     return errorState("Veuillez corriger les champs signalés.", zodFieldErrors(parsed.error));
   }
   const input = parsed.data;
+
+  // Directive §1 : YouTube UNIQUEMENT. L'identifiant vient de l'ID brut
+  // ou d'une URL YouTube strictement validée (watch/youtu.be/embed/live).
+  // Toute URL d'un autre domaine est refusée — jamais de source arbitraire.
+  const { extractYouTubeId } = await import("@/lib/youtube/url");
+  const youtubeId = extractYouTubeId(input.youtube_id ?? "") ??
+    extractYouTubeId(input.youtube_url ?? "");
+  if (!youtubeId) {
+    return errorState("Source vidéo invalide : collez une URL YouTube (watch?v=, youtu.be, /embed/ ou /live/) ou l'identifiant à 11 caractères.", {
+      youtube_url: "URL YouTube ou ID invalide",
+    });
+  }
 
   const supabase = await getSupabaseServerClient();
   if (!supabase) return deniedState("unconfigured");
@@ -254,13 +268,14 @@ export async function saveVideo(
     title: input.title,
     slug,
     description: input.description ?? null,
-    youtube_id: input.youtube_id,
+    youtube_id: youtubeId,
     thumbnail_url: input.thumbnail_url ?? null,
     category_id: input.category_id ?? null,
     duration: input.duration ?? null,
     status: input.status,
     is_featured: input.is_featured,
     is_live: input.is_live,
+    position: input.position,
     // published_at = saisie éditoriale OU maintenant pour une publication immédiate.
     published_at: input.published_at
       ? new Date(input.published_at).toISOString()

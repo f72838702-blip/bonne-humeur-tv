@@ -3,15 +3,17 @@ import Image from "next/image";
 import { CalendarDays, Clock, Play } from "lucide-react";
 import type { VideoWithRelations } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { youtubeThumbnailUrl } from "@/lib/youtube/url";
 
 /**
- * Carte vidéo — miniature réelle (image éditoriale ou vignette YouTube),
- * catégorie issue de la base, date de publication réelle.
+ * Carte vidéo — miniature réelle (image éditoriale ou vignette YouTube).
+ * Vignette mqdefault (320 px) : dimension adaptée à une carte, chargement
+ * différé, `unoptimized` (image déjà compressée — directive §2/§3).
  * Aucun compteur de vues (donnée inexistante → jamais de chiffre fictif).
  */
 export default function VideoCard({ video }: { video: VideoWithRelations }) {
   const thumbnail =
-    video.thumbnail_url ?? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg`;
+    video.thumbnail_url ?? youtubeThumbnailUrl(video.youtube_id, "mq");
 
   return (
     <Link
@@ -21,9 +23,11 @@ export default function VideoCard({ video }: { video: VideoWithRelations }) {
       <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-night-800 via-night-900 to-black">
         <Image
           src={thumbnail}
-          alt=""
+          alt={`Miniature de la vidéo : ${video.title}`}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          loading="lazy"
+          unoptimized
           className="object-cover opacity-80 transition-all duration-300 group-hover:scale-105 group-hover:opacity-95"
         />
         <span className="absolute inset-0 flex items-center justify-center">

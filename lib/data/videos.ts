@@ -4,11 +4,14 @@ import type { Video, VideoWithRelations, Category } from "@/lib/types";
 /**
  * Accès aux vidéos. Le public ne voit, via RLS, que les vidéos publiées.
  * Aucune statistique de vues n'est lue ou affichée (pas de faux compteurs).
+ * YouTube est l'unique hébergeur : seuls l'ID et la miniature (i.ytimg,
+ * jamais retéléchargée) sont utilisés — zéro bande passante applicative.
  */
 
 const PUBLIC_FIELDS = `
   id, title, slug, description, youtube_id, thumbnail_url, category_id,
-  duration, published_at, status, is_featured, is_live, created_at, updated_at,
+  duration, published_at, status, is_featured, is_live, position,
+  created_at, updated_at,
   categories ( id, name, slug )
 `;
 
@@ -24,18 +27,31 @@ export async function getPublishedVideos(limit = 12): Promise<VideoWithRelations
   const supabase = getSupabasePublicClient();
   if (!supabase) return [];
 
+  // Fenêtre élargie pour inclure les vidéos épinglées (position > 0),
+  // puis tri applicatif : épinglées d'abord (position croissante),
+  // ensuite ordre chronologique. Le tri final reste borné à `limit`.
   const { data, error } = await supabase
     .from("videos")
     .select(PUBLIC_FIELDS)
     .eq("status", "published")
     .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(limit);
+    .limit(Math.min(limit * 2, 48));
 
   if (error) {
     console.error("[data/videos] getPublishedVideos :", error.message);
     return [];
   }
-  return (data ?? []).map((r) => toVideo(r as unknown as RawRow));
+  const rows = (data ?? []) as unknown as RawRow[];
+  const pinned = rows
+    .filter((r) => r.position > 0)
+    .sort((a, b) => a.position - b.position);
+  const rest = rows
+    .filter((r) => r.position === 0)
+    .sort(
+      (a, b) =>
+        new Date(b.published_at ?? 0).getTime() - new Date(a.published_at ?? 0).getTime()
+    );
+  return pinned.concat(rest).slice(0, limit).map((r) => toVideo(r));
 }
 
 /** Vidéo à la une (is_featured publiée la plus récente ; sinon la plus récente). */

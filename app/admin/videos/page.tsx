@@ -50,13 +50,16 @@ export default async function AdminVideosPage() {
               className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-night-800"
             >
               <div className="flex min-w-0 items-center gap-4">
-                {/* Miniature réelle depuis l'ID YouTube */}
+                {/* Miniature réelle depuis l'ID YouTube — dimension adaptée
+                    (mqdefault 320 px), pas de réoptimisation serveur. */}
                 <div className="relative hidden h-14 w-24 shrink-0 sm:block">
                   <Image
                     src={`https://i.ytimg.com/vi/${video.youtube_id}/mqdefault.jpg`}
-                    alt=""
+                    alt={`Miniature de ${video.title}`}
                     fill
                     sizes="96px"
+                    loading="lazy"
+                    unoptimized
                     className="rounded-lg object-cover"
                   />
                 </div>

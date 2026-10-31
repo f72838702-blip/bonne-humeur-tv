@@ -65,6 +65,8 @@ export interface Video {
   status: VideoStatus;
   is_featured: boolean;
   is_live: boolean;
+  /** Position d'épinglage sur l'accueil (0 = ordre chronologique automatique). */
+  position: number;
   created_at: string;
   updated_at: string;
 }

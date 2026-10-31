@@ -99,7 +99,10 @@ export const articleSchema = z.object({
 export const deleteArticleSchema = z.object({ id: uuid });
 
 // ─────────────────────────────────────────────────────────────
-// CMS : vidéos
+// CMS : vidéos — YouTube UNIQUEMENT (directive §1) : l'identifiant
+// provient soit d'une URL YouTube validée strictement (watch/youtu.be/
+// embed/live), soit d'un ID brut sur 11 caractères. Toute autre source
+// est refusée. Aucune vidéo n'est jamais hébergée sur nos serveurs.
 // ─────────────────────────────────────────────────────────────
 export const VIDEO_STATUSES = ["draft", "published", "archived"] as const;
 
@@ -108,10 +111,15 @@ export const videoSchema = z.object({
   title: trimmed(3, 200, "Titre"),
   slug: optionalText(96),
   description: optionalText(2000),
-  youtube_id: z
-    .string()
-    .trim()
-    .regex(/^[A-Za-z0-9_-]{11}$/, "ID YouTube invalide (11 caractères alphanumériques)"),
+  /** ID brut (11 caractères) OU URL YouTube complète — l'action extrait
+   *  et valide l'identifiant ; une source externe arbitraire est refusée.
+   *  Défense en profondeur : si un ID brut est fourni, il doit déjà être
+   *  au format exact YouTube (11 caractères alphanumériques/_/-). */
+  youtube_id: optionalText(11).refine(
+    (v) => v === undefined || /^[A-Za-z0-9_-]{11}$/.test(v),
+    "ID YouTube invalide (11 caractères attendus)"
+  ),
+  youtube_url: optionalText(300),
   thumbnail_url: optionalText(500),
   category_id: uuid.optional().or(z.literal("").transform(() => undefined)),
   duration: optionalText(10),
@@ -120,6 +128,8 @@ export const videoSchema = z.object({
   is_featured: z.boolean().default(false),
   /** Un direct doit être RÉELLEMENT vérifié par la rédaction avant activation. */
   is_live: z.boolean().default(false),
+  /** Position d'épinglage sur l'accueil (0 = ordre chronologique). */
+  position: z.coerce.number().int().min(0).max(999).default(0),
 });
 
 export const deleteVideoSchema = z.object({ id: uuid });

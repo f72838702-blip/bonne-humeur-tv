@@ -20,7 +20,8 @@ import {
   updateProfileRole,
 } from "@/lib/data/users";
 import { updateRequestStatus } from "@/lib/data/requests";
-import { deleteMedia, uploadMedia } from "@/lib/data/media";
+import { deleteMedia, uploadMediaVariants } from "@/lib/data/media";
+import { MEDIA_PURPOSES, MEDIA_VARIANTS, MediaPurpose, MediaVariant } from "@/lib/media/variants";
 
 /**
  * Actions d'administration — demandes B2B/contact, rôles, invitations,
@@ -176,12 +177,23 @@ export async function uploadMediaAction(
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
 
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
+  // Dossier logique de destination (directive §2).
+  const purpose = String(formData.get("purpose") ?? "");
+  if (!(MEDIA_PURPOSES as readonly string[]).includes(purpose)) {
+    return errorState("Choisissez un dossier de destination.");
+  }
+
+  // Variantes pré-comprimées par le navigateur (clés file_full, file_card…).
+  const variants: { variant: MediaVariant; file: File }[] = [];
+  for (const v of MEDIA_VARIANTS) {
+    const entry = formData.get(`file_${v}`);
+    if (entry instanceof File && entry.size > 0) variants.push({ variant: v, file: entry });
+  }
+  if (variants.length === 0) {
     return errorState("Sélectionnez une image à téléverser.");
   }
 
-  const result = await uploadMedia(file);
+  const result = await uploadMediaVariants(purpose as MediaPurpose, variants);
   if (!result.ok) {
     console.error("[actions/admin] uploadMediaAction :", result.error);
     return errorState(result.error === "storage_not_configured"
@@ -190,7 +202,9 @@ export async function uploadMediaAction(
   }
 
   revalidatePath("/admin/medias");
-  return successState("Image téléversée.");
+  return successState(
+    `Image téléversée (${variants.length} variante${variants.length > 1 ? "s" : ""} compressée${variants.length > 1 ? "s" : ""}).`
+  );
 }
 
 export async function deleteMediaAction(formData: FormData): Promise<ActionState> {
@@ -198,10 +212,7 @@ export async function deleteMediaAction(formData: FormData): Promise<ActionState
   if ("denied" in guard) return deniedState(guard.denied);
 
   const path = String(formData.get("path") ?? "");
-  if (!path.startsWith("uploads/")) {
-    return errorState("Chemin refusé.");
-  }
-
+  // Le chemin est revalidé dans deleteMedia (dossier autorisé, sans «..»).
   const result = await deleteMedia(path);
   if (!result.ok) {
     console.error("[actions/admin] deleteMediaAction :", result.error);

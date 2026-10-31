@@ -25,8 +25,10 @@ export default async function AdminMediaPage() {
       <header>
         <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Médiathèque</h1>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Images de couverture des articles et visuels du site. Copiez l’URL
-          d’un fichier pour la coller dans un article ou une vidéo.
+          Images administrables dans des dossiers logiques (articles, rubriques,
+          miniatures, reporters, identité). Copiez l’URL d’un fichier pour la
+          coller dans un article ou une vidéo ; les variantes compressées
+          (‑card, ‑thumb) se déduisent de l’URL principale.
         </p>
       </header>
 
@@ -53,13 +55,16 @@ export default async function AdminMediaPage() {
                 key={obj.path}
                 className="flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white dark:border-white/10 dark:bg-night-800"
               >
-                {/* Aperçu : URL publique réelle du Storage (Image optimisée) */}
+                {/* Aperçu : URL publique réelle du Storage — fichiers déjà
+                    compressés à l'upload, pas de réoptimisation serveur. */}
                 <div className="relative h-28 w-full">
                   <Image
                     src={obj.url}
                     alt={obj.name}
                     fill
                     sizes="(max-width: 1024px) 50vw, 25vw"
+                    loading="lazy"
+                    unoptimized
                     className="object-cover"
                   />
                 </div>
@@ -80,7 +85,9 @@ export default async function AdminMediaPage() {
                     className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 text-[10px] text-neutral-500 dark:border-white/10 dark:bg-night-900 dark:text-neutral-400"
                   />
                   <div className="mt-1 flex items-center justify-between gap-2">
-                    <span className="text-[9px] text-neutral-400">{obj.type}</span>
+                    <span className="text-[9px] text-neutral-400">
+                      {obj.purpose}/ · {obj.type}
+                    </span>
                     <DeleteActionForm
                       action={deleteMediaAction}
                       hiddenFields={{ path: obj.path }}

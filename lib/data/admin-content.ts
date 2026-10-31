@@ -129,7 +129,8 @@ export async function getStaffArticleById(id: string): Promise<ArticleWithRelati
 
 const VIDEO_FIELDS = `
   id, title, slug, description, youtube_id, thumbnail_url, category_id,
-  duration, published_at, status, is_featured, is_live, created_at, updated_at,
+  duration, published_at, status, is_featured, is_live, position,
+  created_at, updated_at,
   categories ( id, name, slug )
 `;
 

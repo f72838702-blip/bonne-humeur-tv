@@ -52,6 +52,9 @@ Vercel : **Settings → Environment Variables**, ajouter :
 - `SUPABASE_SERVICE_ROLE_KEY` *(serveur uniquement — jamais côté client)*
 - `NEXT_PUBLIC_SITE_URL`
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` *(optionnel)*
+- `YOUTUBE_API_KEY` *(optionnel — serveur uniquement, jamais NEXT_PUBLIC_* :
+  import des métadonnées YouTube dans le CMS ; sans elle, l'ajout manuel
+  fonctionne, cache serveur 1 h pour préserver le quota de l'API)*
 
 Redéployer après modification.
 

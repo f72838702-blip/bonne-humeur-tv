@@ -154,10 +154,11 @@ export default async function ArticlePage({ params }: Params) {
           {article.featured_image && (
             <Image
               src={article.featured_image}
-              alt=""
-              width={1200}
-              height={675}
+              alt={`Illustration de l'article : ${article.title}`}
+              width={1920}
+              height={1080}
               priority
+              unoptimized
               className="mt-6 aspect-video w-full rounded-2xl border border-neutral-200 object-cover dark:border-white/10"
             />
           )}

@@ -5,6 +5,7 @@ import { CalendarDays, Newspaper, Search, SearchX, Tv } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import { searchPublishedContent } from "@/lib/data/search";
 import { formatDate } from "@/lib/utils";
+import { mediaVariantUrl } from "@/lib/media/variants";
 
 /**
  * Recherche globale (articles + vidéos publiés) via la fonction SQL
@@ -146,10 +147,12 @@ export default async function SearchPage({
                           <span className="relative flex aspect-video w-full items-center justify-center bg-gradient-to-br from-night-800 via-night-900 to-black">
                             {v.thumbnail_url && (
                               <Image
-                                src={v.thumbnail_url}
-                                alt=""
+                                src={mediaVariantUrl(v.thumbnail_url, "thumb")}
+                                alt={`Miniature de la vidéo : ${v.title}`}
                                 fill
                                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                loading="lazy"
+                                unoptimized
                                 className="object-cover opacity-80 transition-opacity group-hover:opacity-95"
                               />
                             )}

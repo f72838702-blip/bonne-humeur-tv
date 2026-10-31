@@ -2,22 +2,30 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Play } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, Play } from "lucide-react";
 import type { VideoWithRelations } from "@/lib/types";
+import { youtubeThumbnailUrl, youtubeWatchUrl } from "@/lib/youtube/url";
 
 /**
- * Lecteur principal (accueil + page vidéo). La miniature réelle est
- * chargée via next/image (thumbnail éditoriale ou vignette YouTube) ;
- * l'iframe youtube-nocookie n'est injectée qu'au clic (économie de
- * bande passante + respect du consentement implicite).
- * Le badge « En direct » ne s'affiche QUE si la donnée réelle is_live
- * a été activée par la rédaction — jamais de faux direct.
+ * Lecteur principal (accueil + page vidéo). Directive §1/§3 :
+ * • la miniature réelle (éditoriale ou vignette YouTube) s'affiche AVANT
+ *   l'iframe youtube-nocookie, injectée uniquement au clic — pas de
+ *   préchargement du lecteur ;
+ * • l'image est `unoptimized` : les vignettes YouTube et les variantes
+ *   Storage sont déjà compressées, aucune réoptimisation à chaque
+ *   requête sur le serveur applicatif ;
+ * • `priority` : image principale au-dessus de la ligne de flottaison
+ *   (les images secondaires restent en chargement différé) ;
+ * • le badge « En direct » ne s'affiche QUE si la donnée réelle is_live
+ *   a été activée par la rédaction — jamais de faux direct ;
+ * • repli honnête : lien vers YouTube si la vidéo ne se charge pas.
  */
 export default function HeroPlayer({ video }: { video: VideoWithRelations }) {
   const [playing, setPlaying] = useState(false);
 
   const thumbnail =
-    video.thumbnail_url ?? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg`;
+    video.thumbnail_url ?? youtubeThumbnailUrl(video.youtube_id, "hq");
 
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-night-900 shadow-glow dark:border-white/10">
@@ -39,9 +47,11 @@ export default function HeroPlayer({ video }: { video: VideoWithRelations }) {
           >
             <Image
               src={thumbnail}
-              alt=""
+              alt={`Miniature de la vidéo : ${video.title}`}
               fill
               sizes="(max-width: 1024px) 100vw, 65vw"
+              priority
+              unoptimized
               className="object-cover opacity-70 transition-opacity group-hover:opacity-85"
             />
             <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-guinea-red shadow-glow transition-transform duration-300 group-hover:scale-110">
@@ -66,6 +76,19 @@ export default function HeroPlayer({ video }: { video: VideoWithRelations }) {
           </span>
         )}
       </div>
+
+      <p className="flex items-center gap-2 border-t border-white/10 px-4 py-2.5 text-xs text-neutral-300">
+        <span className="font-medium">La vidéo ne se charge pas&nbsp;?</span>
+        <Link
+          href={youtubeWatchUrl(video.youtube_id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-bold text-guinea-yellow underline underline-offset-2"
+        >
+          Regardez-la sur YouTube
+          <ExternalLink className="h-3 w-3" />
+        </Link>
+      </p>
     </div>
   );
 }
