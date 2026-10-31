@@ -9,6 +9,15 @@ Supabase Free — sans toucher à la production, sans push, sans deploy de domai
 > **Instruction respectée** : plus aucune nouvelle fonctionnalité ; uniquement
 > résoudre les incohérences, vérifier les intégrations, documenter les étapes
 > externes et préparer la livraison.
+>
+> ⚠️ **Corrections requises par la mission suivante (31/10/2026)**, traitées
+> intégralement dans `RAPPORT_DERNIERE_VALIDATION_BONNE_HUMEUR_TV.md` :
+> **GHSA-xqc2-xf4c-x3h3 N'EST PAS inexistante** (contrairement au § 2
+> ci-dessous, erroné) — avis React critique publié le 14/10/2026, précisément
+> corrigé par Next.js 15.5.28 (le projet est à jour, voir le nouveau rapport) ;
+> **la publication programmée (0006) n'est pas « effective sans pg_cron »** —
+> la fonction l'est (T17), mais l'**ordonnancement exige pg_cron, disponible
+> en Supabase Free** (voir le nouveau rapport, § 2).
 
 ---
 
@@ -60,7 +69,7 @@ serveur isolé sur `127.0.0.1:5433`, harnais d'émulation Supabase
 | `check_rate_limit` : refus à `anon` (grant), `true,true,false` fiable en base, form_type inconnu refusé | PASS |
 | `search_published` : ne retourne QUE le publié | PASS |
 | Storage : lecture publique restreinte aux 5 dossiers, 2 Mo, anon écriture refusée | PASS |
-| Publication programmée (0006) effective sans pg_cron | PASS |
+| Publication programmée (0006) : fonction effective (T17) ; l'**ordonnancement** exige pg_cron (disponible en Supabase Free) | PASS |
 | Tri d'accueil vidéo (0007) : réplique l'algorithme RÉEL de `lib/data/videos.ts` (épinglées puis chrono) | PASS |
 | Vue `author_names` lisible par anon (bylines) | PASS |
 
@@ -73,8 +82,9 @@ Toute nouvelle correction est accompagnée de tests dans le même runner : **fai
 
 ## 2. Corrections de dépendances React éventuelles
 
-- CVE examinée : **GHSA-xqc2-xf4c-x3h3** → **introuvable** (404 sur GitHub
-  Advisories). Elle n'existe pas — aucune action correspondante.
+- CVE examinée : **GHSA-xqc2-xf4c-x3h3** → *« introuvable »* — **CET ÉNONCÉ
+  ÉTAIT ERRONÉ** : l'avis existe (avis React critique published 14/10/2026) ;
+  corrigé et re-vérifié dans `RAPPORT_DERNIERE_VALIDATION_BONNE_HUMEUR_TV.md`.
 - Distinction faite (vérifiée par exécution) : `npm ls react-server-dom-webpack
   react-server-dom-parcel react-server-dom-turbopack` → **ces paquets ne sont PAS
   des dépendances npm** de ce projet. Next.js livre ses propres copies
