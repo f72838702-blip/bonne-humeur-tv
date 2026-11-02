@@ -109,9 +109,10 @@ comparaison avec `current_role()` — un utilisateur ne peut pas s'auto-promouvo
 - [ ] Connexion `/admin/login` → tableau de bord avec compteurs réels
 
 **Variables d'environnement**
-- [ ] `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-  `SUPABASE_SUPABASE_SERVICE_ROLE_KEY` (serveur uniquement) configurées
-  chez l'hébergeur **et** en local (`.env.local`)
+- [ ] `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  (clé **Publishable**), `SUPABASE_SERVICE_ROLE_KEY` (clé **Secret** ou
+  legacy service_role — serveur uniquement) configurées chez l'hébergeur
+  **et** en local (`.env.local`)
 
 **Permissions & sécurité**
 - [ ] Un compte `reporter` de test ne peut ni publier ni se promouvoir admin
