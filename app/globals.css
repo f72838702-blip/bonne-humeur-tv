@@ -6,6 +6,13 @@
   html {
     @apply scroll-smooth;
   }
+  /* Widgets natifs (sélecteur calendrier des datetime-local, scrollbar)
+     suivent le thème : sans color-scheme, l'icône du sélecteur de date
+     est sombre SUR fond sombre en thème nuit → invisible (cause démontrée
+     de l'impression « impossible à renseigner » en thème sombre). */
+  html {
+    color-scheme: light dark;
+  }
   body {
     @apply bg-neutral-50 text-neutral-900 antialiased dark:bg-night-950 dark:text-neutral-100;
   }

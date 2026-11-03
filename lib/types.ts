@@ -84,6 +84,8 @@ export interface BreakingNewsItem {
   start_at: string | null;
   end_at: string | null;
   position: number;
+  /** Niveau éditorial — présent après la migration 0024. */
+  level?: "normal" | "important" | "urgent";
   created_at: string;
 }
 

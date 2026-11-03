@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isAllowedDuration } from "@/lib/flash/flash-core";
 
 /**
  * Schémas de validation — Zod 4 (>= 4.6.6, corrige GHSA-mrhx-c7xc-m3w5).
@@ -29,6 +30,13 @@ const isoDate = z
   .optional()
   .or(z.literal(""))
   .transform((v) => (v ? v : undefined));
+
+/** Durée de diffusion du menu déroulant — REFUSÉE si absente de la liste
+ *  autorisée (une valeur fabriquée dans la requête ne passe jamais). */
+const durationMinutes = z
+  .number()
+  .int("Durée invalide")
+  .refine((n) => isAllowedDuration(n), "Durée de diffusion non autorisée");
 
 // ─────────────────────────────────────────────────────────────
 // Formulaires publics
@@ -146,9 +154,24 @@ export const breakingNewsSchema = z.object({
   start_at: isoDate,
   end_at: isoDate,
   position: z.number().int().min(0).max(999).default(0),
+  /** Niveau éditorial — exige la migration 0024 (colonne level). */
+  level: z
+    .enum(["normal", "important", "urgent"], { message: "Niveau invalide" })
+    .default("normal"),
+  /** Minutes de diffusion — figurant DANS la liste autorisée uniquement. */
+  duration_minutes: durationMinutes.nullable().optional(),
 });
 
 export const deleteBreakingNewsSchema = z.object({ id: uuid });
+
+/** Prolongation / réactivation d'un flash (§7) : durée de la liste
+ *  autorisée uniquement, mode contrôlé côté serveur. */
+export const flashRenewSchema = z.object({
+  id: uuid,
+  mode: z.enum(["extend", "reactivate"], { message: "Action invalide" }),
+  duration_minutes: durationMinutes,
+});
+export type FlashRenewInput = z.infer<typeof flashRenewSchema>;
 
 export const categorySchema = z.object({
   id: uuid.optional(),

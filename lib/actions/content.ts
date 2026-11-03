@@ -4,6 +4,16 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/session";
 import {
+  isAllowedDuration,
+  classifyFlash,
+  computeExpiry,
+  formatConakryDateTime,
+  formatConakryTime,
+  humanizeDuration,
+  parseConakryInput,
+  DEFAULT_DURATION_MINUTES,
+} from "@/lib/flash/flash-core";
+import {
   articleSchema,
   breakingNewsSchema,
   categorySchema,
@@ -11,6 +21,7 @@ import {
   deleteBreakingNewsSchema,
   deleteCategorySchema,
   deleteVideoSchema,
+  flashRenewSchema,
   videoSchema,
 } from "@/lib/validation/schemas";
 import {
@@ -432,7 +443,21 @@ export async function deleteVideo(formData: FormData): Promise<ActionState> {
 
 // ─────────────────────────────────────────────────────────────
 // FLASH-INFOS — editor+
+// Durée de diffusion (menu déroulant) + horloge SERVEUR exclusivement
+// (§3/§5) : expiration = début + durée, calculée ici, jamais côté
+// navigateur. Durées contrôlées contre la liste autorisée (§10).
 // ─────────────────────────────────────────────────────────────
+
+const ALLOWED_FLASH_INTENTS = ["publish", "draft", "update"] as const;
+
+/** Code PostgreSQL « column does not exist » (42703) : colonne « level »
+ *  absente (migration 0024 non appliquée) — message clair, pas d'échec brut. */
+function isMissingLevelColumn(error: { code?: string; message?: string }): boolean {
+  return error.code === "42703" || /level/.test(error.message ?? "");
+}
+
+const LEVEL_MIGRATION_MESSAGE =
+  "Le niveau des flash-infos exige l'application de la migration 0024 (colonne level) sur le serveur Supabase par la direction : l'action est refusée tant que la migration n'est pas appliquée.";
 
 export async function saveBreakingNews(
   _prev: ActionState,
@@ -441,14 +466,25 @@ export async function saveBreakingNews(
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
 
+  // Intention explicite portée par le BOUTON soumis (valeur garantie dans
+  // la FormData, aucun état client — même mécanisme que les articles).
+  const intentRaw = formData.get("flash_intent");
+  const intent = ALLOWED_FLASH_INTENTS.find((i) => i === intentRaw) ?? "update";
+
   const parsed = breakingNewsSchema.safeParse({
     id: formData.get("id") || undefined,
     content: formData.get("content"),
     link: formData.get("link") ?? "",
-    is_active: formDataBool(formData, "is_active"),
+    is_active: intent === "publish",
     start_at: formData.get("start_at") ?? "",
     end_at: formData.get("end_at") ?? "",
     position: Number(formData.get("position") ?? 0) || 0,
+    level: formData.get("level") || "normal",
+    duration_minutes:
+      typeof formData.get("duration_minutes") === "string" &&
+      formData.get("duration_minutes") !== ""
+        ? Number(formData.get("duration_minutes"))
+        : undefined,
   });
   if (!parsed.success) {
     return errorState("Veuillez corriger les champs signalés.", zodFieldErrors(parsed.error));
@@ -458,32 +494,231 @@ export async function saveBreakingNews(
   const supabase = await getSupabaseServerClient();
   if (!supabase) return deniedState("unconfigured");
 
-  const row = {
-    content: input.content,
-    link: input.link ?? null,
-    is_active: input.is_active,
-    start_at: input.start_at ?? null,
-    end_at: input.end_at ?? null,
-    position: input.position,
-  };
+  // ── CRÉATION (ou publication d'un brouillon existant) ──────────
+  const isPublication = !input.id || intent === "publish";
+  const isDraft = !input.id && intent === "draft";
+  const isUpdate = Boolean(input.id) && intent === "update";
 
-  if (input.id) {
-    const { error } = await supabase.from("breaking_news").update(row).eq("id", input.id);
-    if (error) {
-      console.error("[actions/content] saveBreakingNews update :", error.message);
-      return errorState("Enregistrement impossible.");
-    }
-  } else {
-    const { error } = await supabase.from("breaking_news").insert(row);
-    if (error) {
-      console.error("[actions/content] saveBreakingNews insert :", error.message);
-      return errorState("Création impossible.");
-    }
+  // Programmation facultative : le champ « schedule_start » est lu pour
+  // une publication ; interprété en heure de Conakry (UTC+0 constant).
+  const scheduleRaw = String(formData.get("schedule_start") ?? "").trim();
+  const scheduleIso = parseConakryInput(scheduleRaw);
+  if (scheduleRaw && scheduleIso === null) {
+    return errorState("Date de programmation invalide. Utilisez le sélecteur de date et heure.",
+      { schedule_start: "Date invalide" });
   }
 
+  if (isPublication && !isAllowedDuration(input.duration_minutes ?? null)) {
+    return errorState("Choisissez une durée de diffusion.", {
+      duration_minutes: "Durée requise (valeur de la liste uniquement)",
+    });
+  }
+
+  if (isPublication) {
+    // Horloge SERVEUR (§3) — jamais l'horloge du navigateur.
+    const startIso =
+      isAllowedDuration(input.duration_minutes ?? null) &&
+      scheduleIso
+        ? scheduleIso // programmé : la durée démarre au DÉBUT programmé (§6)
+        : new Date().toISOString();
+    const endIso = computeExpiry(startIso, input.duration_minutes ?? DEFAULT_DURATION_MINUTES);
+    if (!endIso) {
+      return errorState("Calcul de l'expiration impossible (durée ou programmation invalides).");
+    }
+    const row = {
+      content: input.content,
+      link: input.link ?? null,
+      is_active: true,
+      start_at: startIso,
+      end_at: endIso,
+      position: input.position,
+      level: input.level,
+    };
+
+    const message_base = scheduleIso
+      ? `Flash Info programmé : diffusé à partir de ${formatConakryDateTime(startIso)} pendant ${humanizeDuration(input.duration_minutes ?? 0)} — fin à ${formatConakryTime(endIso)} (Conakry).`
+      : `Flash Info diffusé : il défilera en boucle pendant ${humanizeDuration(input.duration_minutes ?? 0)} et disparaîtra automatiquement à ${formatConakryTime(endIso)} (heure de Conakry).`;
+
+    if (input.id) {
+      const { error } = await supabase.from("breaking_news").update(row).eq("id", input.id);
+      if (error) {
+        console.error("[actions/content] saveBreakingNews publish update :", error.message);
+        if (isMissingLevelColumn(error)) {
+          return errorState(LEVEL_MIGRATION_MESSAGE);
+        }
+        return errorState("Publication impossible.");
+      }
+      revalidatePath("/");
+      revalidatePath("/admin/flash-infos");
+      return successState(message_base, "/admin/flash-infos");
+    }
+    const { error } = await supabase.from("breaking_news").insert(row);
+    if (error) {
+      console.error("[actions/content] saveBreakingNews publish insert :", error.message);
+      if (isMissingLevelColumn(error)) {
+        return errorState(LEVEL_MIGRATION_MESSAGE);
+      }
+      return errorState("Création impossible.");
+    }
+    revalidatePath("/");
+    revalidatePath("/admin/flash-infos");
+    return successState(message_base, "/admin/flash-infos");
+  }
+
+  if (isDraft) {
+    const row = {
+      content: input.content,
+      link: input.link ?? null,
+      is_active: false,
+      start_at: null, // période définie à la PUBLICATION (§3), pas au brouillon
+      end_at: null,
+      position: input.position,
+      level: input.level,
+    };
+    const { error } = await supabase.from("breaking_news").insert(row);
+    if (error) {
+      console.error("[actions/content] saveBreakingNews draft :", error.message);
+      if (isMissingLevelColumn(error)) {
+        return errorState(LEVEL_MIGRATION_MESSAGE);
+      }
+      return errorState("Création du brouillon impossible.");
+    }
+    revalidatePath("/");
+    revalidatePath("/admin/flash-infos");
+    return successState("Flash Info enregistré comme brouillon (non diffusé).", "/admin/flash-infos");
+  }
+
+  // ── MODIFICATION d'un flash EXISTANT (§7) : texte, lien, niveau,
+  // position — JAMAIS sa période : elle est rechargée du serveur.
+  if (isUpdate) {
+    const { data: existing } = await supabase
+      .from("breaking_news")
+      .select("is_active")
+      .eq("id", input.id!)
+      .maybeSingle();
+    if (!existing) {
+      return errorState("Flash Info introuvable ou vous n'avez pas la permission de le modifier.");
+    }
+    const row = {
+      content: input.content,
+      link: input.link ?? null,
+      position: input.position,
+      level: input.level,
+      is_active: existing.is_active, // préservé : aucune réactivation accidentelle
+      // start_at / end_at NON transmis : période inchangée.
+    };
+    const { error } = await supabase.from("breaking_news").update(row).eq("id", input.id!);
+    if (error) {
+      console.error("[actions/content] saveBreakingNews update :", error.message);
+      if (isMissingLevelColumn(error)) {
+        return errorState(LEVEL_MIGRATION_MESSAGE);
+      }
+      return errorState("Enregistrement impossible.");
+    }
+    revalidatePath("/");
+    revalidatePath("/admin/flash-infos");
+    return successState(
+      "Flash Info mis à jour — sa période de diffusion est inchangée (utilisez « Prolonger la diffusion » pour l'étendre).",
+      "/admin/flash-infos"
+    );
+  }
+
+  return errorState("Action inconnue.");
+}
+
+/**
+ * PROLONGER / RÉACTIVER (§7) — admin+editor.
+ *  extend      : re-calcule l'expiration à partir de l'HEURE DE
+ *                CONFIRMATION (now serveur) ; le début est conservé.
+ *  reactivate  : redémarre une diffusion complète (début = maintenant,
+ *                fin = maintenant + durée) pour un brouillon/expiré.
+ * Règles serveur strictes : prolonger exige un flash actif à fin définie ;
+ * réactiver exige un flash inactif ou expiré (jamais de réactivation
+ * accidentelle). Toujours le client de session (RLS), jamais service_role.
+ */
+export async function renewBreakingNews(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const guard = await requireRole(["admin", "editor"]);
+  if ("denied" in guard) return deniedState(guard.denied);
+
+  const parsed = flashRenewSchema.safeParse({
+    id: formData.get("id"),
+    mode: formData.get("mode"),
+    duration_minutes:
+      typeof formData.get("duration_minutes") === "string" && formData.get("duration_minutes") !== ""
+        ? Number(formData.get("duration_minutes"))
+        : undefined,
+  });
+  if (!parsed.success) {
+    return errorState("Relancez l'action depuis la liste des flash-infos.", zodFieldErrors(parsed.error));
+  }
+  const { id, mode, duration_minutes } = parsed.data;
+  if (!isAllowedDuration(duration_minutes ?? null)) {
+    return errorState("Choisissez une durée de la liste.", {
+      duration_minutes: "Durée non autorisée",
+    });
+  }
+
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) return deniedState("unconfigured");
+
+  const { data: existing } = await supabase
+    .from("breaking_news")
+    .select("is_active, start_at, end_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (!existing) {
+    return errorState("Flash Info introuvable ou vous n'avez pas la permission de le modifier.");
+  }
+
+  const nowIso = new Date().toISOString(); // horloge SERVEUR
+  const lifecycle = classifyFlash(nowIso, existing.is_active, existing.start_at, existing.end_at);
+
+  if (mode === "extend") {
+    if (lifecycle !== "active" && lifecycle !== "active_no_expiry") {
+      return errorState(
+        lifecycle === "expired"
+          ? "Ce Flash Info a expiré : utilisez « Réactiver la diffusion »."
+          : "Seul un Flash Info actif peut être prolongé."
+      );
+    }
+    const endIso = computeExpiry(nowIso, duration_minutes);
+    if (!endIso) return errorState("Calcul de l'expiration impossible.");
+    const { error } = await supabase.from("breaking_news").update({ end_at: endIso }).eq("id", id);
+    if (error) {
+      console.error("[actions/content] renewBreakingNews extend :", error.message);
+      return errorState("Prolongation impossible.");
+    }
+    revalidatePath("/");
+    revalidatePath("/admin/flash-infos");
+    return successState(
+      `Diffusion prolongée : la fin est désormais ${formatConakryDateTime(endIso)}.`,
+      "/admin/flash-infos"
+    );
+  }
+
+  // reactivate
+  if (lifecycle === "active" || lifecycle === "active_no_expiry") {
+    return errorState("Ce Flash Info est déjà diffusé : utilisez « Prolonger la diffusion ».");
+  }
+  const endIso = computeExpiry(nowIso, duration_minutes);
+  if (!endIso) return errorState("Calcul de l'expiration impossible.");
+  const { error } = await supabase
+    .from("breaking_news")
+    .update({ is_active: true, start_at: nowIso, end_at: endIso })
+    .eq("id", id);
+  if (error) {
+    console.error("[actions/content] renewBreakingNews reactivate :", error.message);
+    return errorState("Réactivation impossible.");
+  }
   revalidatePath("/");
   revalidatePath("/admin/flash-infos");
-  return successState("Flash-info enregistré.", "/admin/flash-infos");
+  return successState(
+    `Diffusion relancée : ${humanizeDuration(duration_minutes)} à partir de maintenant, fin à ${formatConakryTime(endIso)} (Conakry).`,
+    "/admin/flash-infos"
+  );
 }
 
 export async function deleteBreakingNews(formData: FormData): Promise<ActionState> {

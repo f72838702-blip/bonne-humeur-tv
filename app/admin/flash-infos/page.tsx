@@ -3,8 +3,8 @@ import { Zap } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
 import { getStaffBreakingNews } from "@/lib/data/admin-content";
 import { deleteBreakingNews } from "@/lib/actions/content";
-import { formatDateTime } from "@/lib/utils";
 import FlashNewsForm from "@/components/admin/FlashNewsForm";
+import FlashCountdown from "@/components/admin/FlashCountdown";
 import DeleteActionForm from "@/components/admin/DeleteActionForm";
 import { ForbiddenScreen, NotFoundScreen, UnconfiguredScreen } from "@/components/admin/AccessDenied";
 
@@ -70,7 +70,9 @@ export default async function AdminFlashInfosPage() {
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">{item.content}</span>
                 <span className="shrink-0 text-xs text-neutral-400">
-                  #{item.position} · {formatDateTime(item.created_at)}
+                  #{item.position}
+                  {item.end_at && " · "}
+                  {item.end_at && <FlashCountdown endIso={item.end_at} />}
                 </span>
               </summary>
 
