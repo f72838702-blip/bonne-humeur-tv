@@ -3,6 +3,7 @@ import { Tv } from "lucide-react";
 import VideoCard from "@/components/video/VideoCard";
 import EmptyState from "@/components/shared/EmptyState";
 import FilterChips from "@/components/shared/FilterChips";
+import AdSlot from "@/components/publicite/AdSlot";
 import { getPublishedVideos } from "@/lib/data/videos";
 import { getCategories } from "@/lib/data/categories";
 
@@ -68,6 +69,11 @@ export default async function VideosPage({
             ))}
           </div>
         )}
+      </div>
+
+      {/* Insertion publicitaire (additif) */}
+      <div className="mt-10">
+        <AdSlot code="videos_inline" className="" />
       </div>
     </section>
   );

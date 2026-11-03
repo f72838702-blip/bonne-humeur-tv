@@ -4,6 +4,7 @@ import { CalendarDays } from "lucide-react";
 import type { ArticleWithRelations } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { mediaVariantUrl } from "@/lib/media/variants";
+import { SponsoredArticleBadge } from "@/components/publicite/AdVisuals";
 
 /**
  * Vignette de repli neutre — aucune fausse image éditoriale.
@@ -32,13 +33,25 @@ function ArticleThumb({ article }: { article: ArticleWithRelations }) {
   );
 }
 
-export default function ArticleCard({ article }: { article: ArticleWithRelations }) {
+export default function ArticleCard({
+  article,
+  sponsored = false,
+}: {
+  article: ArticleWithRelations;
+  /** Mention « Sponsorisé » (§12) — l'article réel suit la marque partout. */
+  sponsored?: boolean;
+}) {
   return (
     <Link
       href={`/actualites/${article.slug}`}
       className="group flex flex-col rounded-2xl border border-neutral-200 bg-white p-4 transition-all hover:border-guinea-red/40 hover:shadow-lg dark:border-white/10 dark:bg-night-800 dark:hover:border-guinea-red/50"
     >
       <ArticleThumb article={article} />
+      {sponsored && (
+        <span className="mt-3 self-start">
+          <SponsoredArticleBadge />
+        </span>
+      )}
       {article.categories && (
         <span className="mt-4 text-[10px] font-bold uppercase tracking-wider text-guinea-green">
           {article.categories.name}

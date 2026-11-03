@@ -173,12 +173,14 @@ create policy "ad_partners_admin_delete" on public.ad_partners
 revoke all on function public.get_public_ad_zone(text) from public;
 revoke all on function public.get_public_ad_link(uuid) from public;
 revoke all on function public.get_public_partners() from public;
+revoke all on function public.get_public_sponsored_articles() from public;
 revoke all on function public.record_ad_event(uuid, text, text, text) from public;
 revoke all on function public.purge_ad_fingerprints() from public, anon, authenticated;
 
 grant execute on function public.get_public_ad_zone(text) to anon, authenticated;
 grant execute on function public.get_public_ad_link(uuid) to anon, authenticated;
 grant execute on function public.get_public_partners() to anon, authenticated;
+grant execute on function public.get_public_sponsored_articles() to anon, authenticated;
 grant execute on function public.record_ad_event(uuid, text, text, text) to anon, authenticated;
 
 -- Purge quotidienne des empreintes si pg_cron est actif (infra 0006 réelle).

@@ -4,6 +4,8 @@ import ArticleCard from "@/components/shared/ArticleCard";
 import EmptyState from "@/components/shared/EmptyState";
 import FilterChips from "@/components/shared/FilterChips";
 import Pagination from "@/components/shared/Pagination";
+import AdSlot from "@/components/publicite/AdSlot";
+import { getSponsoredArticleIds } from "@/lib/data/ads-public";
 import { getPublishedArticles } from "@/lib/data/articles";
 import { getCategories } from "@/lib/data/categories";
 
@@ -30,14 +32,16 @@ export default async function ActualitesPage({
   const { page: pageParam, categorie } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const [categories, result] = await Promise.all([
+  const [categories, result, sponsoredIds] = await Promise.all([
     getCategories(),
     getPublishedArticles({
       page,
       perPage: PER_PAGE,
       categorySlug: categorie,
     }),
+    getSponsoredArticleIds(),
   ]);
+  const sponsored = new Set(sponsoredIds);
 
   const totalPages = Math.max(1, Math.ceil(result.total / PER_PAGE));
 
@@ -74,10 +78,15 @@ export default async function ActualitesPage({
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {result.items.map((article) => (
-              <ArticleCard key={article.id} article={article} />
+              <ArticleCard key={article.id} article={article} sponsored={sponsored.has(article.id)} />
             ))}
           </div>
         )}
+      </div>
+
+      {/* ─── Insertion publicitaire (additif) ─── */}
+      <div className="mt-10">
+        <AdSlot code="news_feed_inline" className="" />
       </div>
 
       <Pagination
@@ -94,6 +103,7 @@ export default async function ActualitesPage({
               }).toString()}`
         }
       />
+
     </section>
   );
 }

@@ -8,6 +8,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import JsonLd from "@/components/shared/JsonLd";
 import YouTubeEmbed from "@/components/shared/YouTubeEmbed";
 import ShareButtons from "@/components/video/ShareButtons";
+import AdSlot from "@/components/publicite/AdSlot";
 import { getPublishedArticleBySlug, getRelatedArticles } from "@/lib/data/articles";
 import { renderArticleSegments, extractArticleYouTubeIds, markdownToPlainText } from "@/lib/content/markdown";
 import { youtubeEmbedUrl, youtubeThumbnailUrl, youtubeWatchUrl } from "@/lib/youtube/url";
@@ -221,6 +222,9 @@ export default async function ArticlePage({ params }: Params) {
             )}
           </div>
 
+          {/* Insertion publicitaire en lecture (additif — corps intact) */}
+          <AdSlot code="article_inline" className="mt-8" />
+
           <div className="mt-10 flex items-center gap-3 border-t border-neutral-200 pt-6 dark:border-white/10">
             <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">
               Partager l&apos;article
@@ -228,6 +232,9 @@ export default async function ArticlePage({ params }: Params) {
             <ShareButtons url={url} title={article.title} />
           </div>
         </article>
+
+        {/* Emplacement bas d'article (additif) */}
+        <AdSlot code="article_bottom" className="mt-6" />
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <h2 className="font-display text-sm font-extrabold uppercase tracking-widest text-guinea-red">

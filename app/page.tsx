@@ -8,6 +8,9 @@ import B2BCta from "@/components/home/B2BCta";
 import ArticleCard from "@/components/shared/ArticleCard";
 import EmptyState from "@/components/shared/EmptyState";
 import Reveal from "@/components/shared/Reveal";
+import AdSlot from "@/components/publicite/AdSlot";
+import PartnerShowcase from "@/components/publicite/PartnerShowcase";
+import { getSponsoredArticleIds } from "@/lib/data/ads-public";
 import { getFeaturedVideo, getLiveVideo, getPublishedVideos } from "@/lib/data/videos";
 import { getFeaturedArticles, getPublishedArticles } from "@/lib/data/articles";
 import { formatDate } from "@/lib/utils";
@@ -25,14 +28,17 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [liveVideo, featuredVideo, videos, featuredArticles, latestArticles] =
+  const [liveVideo, featuredVideo, videos, featuredArticles, latestArticles, sponsoredIds] =
     await Promise.all([
       getLiveVideo(),
       getFeaturedVideo(),
       getPublishedVideos(6),
       getFeaturedArticles(3),
       getPublishedArticles({ perPage: 4 }),
+      getSponsoredArticleIds(),
     ]);
+
+  const sponsored = new Set(sponsoredIds);
 
   const sideArticles = latestArticles.items;
   const hasContent = featuredVideo !== null || sideArticles.length > 0;
@@ -40,6 +46,11 @@ export default async function HomePage() {
   return (
     <>
       <BreakingNews />
+
+      {/* ─── Bannière publicitaire haute (additif — rien n'est masqué) ─── */}
+      <div className="mx-auto max-w-7xl px-4 pt-2 sm:px-6">
+        <AdSlot code="home_top_banner" className="" />
+      </div>
 
       {/* ─── Direct réel : uniquement si la rédaction a activé is_live ─── */}
       {liveVideo && (
@@ -149,12 +160,17 @@ export default async function HomePage() {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {featuredArticles.map((article) => (
               <Reveal key={article.id}>
-                <ArticleCard article={article} />
+                <ArticleCard article={article} sponsored={sponsored.has(article.id)} />
               </Reveal>
             ))}
           </div>
         </section>
       )}
+
+      {/* ─── Insertion publicitaire entre les sections (additif) ─── */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <AdSlot code="home_inline" />
+      </div>
 
       {/* ─── Dernières vidéos ─── */}
       {videos.length > 0 && (
@@ -172,12 +188,19 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ─── Bandeau promotionnel (additif) ─── */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <AdSlot code="home_promo_strip" className="" />
+      </div>
+
       {/* ─── Section vitrine B2B ─── */}
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
         <Reveal>
           <B2BCta />
         </Reveal>
       </section>
+      {/* ─── Partenaires officiels (additif) ─── */}
+      <PartnerShowcase className="mx-auto mb-16 max-w-7xl px-4 sm:px-6" />
     </>
   );
 }

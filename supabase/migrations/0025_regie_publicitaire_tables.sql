@@ -207,7 +207,11 @@ create table public.ad_partners (
   name text not null check (length(btrim(name)) between 2 and 120),
   logo_url text not null,
   alt_text text not null default '' check (length(alt_text) <= 200),
-  link_url text,
+  link_url text check (
+    link_url is null
+    or lower(btrim(link_url)) like 'http://%'
+    or lower(btrim(link_url)) like 'https://%'
+  ),
   sort_order integer not null default 100,
   visible_from date,
   visible_to date,
@@ -264,7 +268,7 @@ as $$
       select jsonb_agg(sub)
       from (
         select cr.id, cr.format, cr.name, cr.payload - 'link_url' payload,
-               cam.priority, cr.weight
+               cam.priority, cr.weight, cr.article_id
         from public.ad_placements p2
         join public.ad_campaign_placements cp on cp.placement_code = p2.code
         join public.ad_campaigns cam on cam.id = cp.campaign_id
@@ -400,6 +404,29 @@ language sql security definer set search_path = public
 as $$
   delete from public.ad_event_fingerprints
   where seen_at < now() - interval '3 days';
+$$;
+
+-- ═══════════════════════════════════════════════════════════
+-- ARTICLES SPONSORISÉS — liste des articles RÉELS actuellement portés
+-- par une créative « sponsor_article » approuvée d'une campagne
+-- ACTIVE EN PÉRIODE. Utilisée par les listes publiques pour afficher
+-- la mention « Sponsorisé » partout où l'article apparaît (§12 :
+-- la marque suit l'article, jamais transformé silencieusement).
+-- ═══════════════════════════════════════════════════════════
+create or replace function public.get_public_sponsored_articles()
+returns setof uuid
+language sql stable security definer set search_path = public
+as $$
+  select distinct cr.article_id
+  from public.ad_creatives cr
+  join public.ad_campaigns cam on cam.id = cr.campaign_id
+  join public.advertisers adv on adv.id = cam.advertiser_id
+  where cr.format = 'sponsor_article'
+    and cr.status = 'approved'
+    and cr.article_id is not null
+    and cam.status = 'active'
+    and cam.start_at <= now() and now() < cam.end_at
+    and adv.is_active
 $$;
 
 comment on table public.advertisers is 'Annonceurs de la régie — coordonnées privées, jamais publiques.';

@@ -260,6 +260,8 @@ export interface AdPublicCreative {
   payload: Record<string, unknown>;
   priority: number;
   weight: number;
+  /** Article RÉEL associé (format sponsor_article uniquement). */
+  article_id?: string | null;
 }
 
 export interface AdPublicZone {
