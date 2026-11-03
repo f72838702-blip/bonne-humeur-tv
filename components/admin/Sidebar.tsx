@@ -7,6 +7,7 @@ import {
   ImagesIcon,
   Inbox,
   LayoutDashboard,
+  Megaphone,
   FileText,
   Users,
   Video,
@@ -30,6 +31,7 @@ const ALL_ITEMS = [
   { href: "/admin/demandes", label: "Demandes", icon: Inbox, roles: ["admin", "editor"] },
   { href: "/admin/categories", label: "Catégories", icon: FolderTree, roles: ["admin", "editor"] },
   { href: "/admin/medias", label: "Médiathèque", icon: ImagesIcon, roles: ["admin", "editor"] },
+  { href: "/admin/publicites", label: "Publicités", icon: Megaphone, roles: ["admin", "editor"] },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, roles: ["admin"] },
 ] as const;
 

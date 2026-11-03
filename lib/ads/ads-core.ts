@@ -40,6 +40,18 @@ export const AD_PLACEMENT_CODES = [
 ] as const;
 export type AdPlacementCode = (typeof AD_PLACEMENT_CODES)[number];
 
+/** Libellés lisibles (interface admin + doc emplacements). */
+export const AD_PLACEMENT_LABELS: Record<AdPlacementCode, string> = {
+  home_top_banner: "Accueil — bannière haute",
+  home_inline: "Accueil — insertion entre sections",
+  news_feed_inline: "Actualités — insertion dans le flux",
+  article_inline: "Article — insertion en cours de lecture",
+  article_bottom: "Article — bas de page",
+  videos_inline: "Vidéos — insertion",
+  home_promo_strip: "Accueil — bandeau promotionnel",
+  home_partners: "Accueil — partenaires officiels",
+};
+
 export const AD_DEVICES = ["desktop", "mobile"] as const;
 export type AdDevice = (typeof AD_DEVICES)[number];
 

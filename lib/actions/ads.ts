@@ -459,19 +459,31 @@ export async function saveCreativeAction(
     created_by: guard.session.userId,
   };
 
-  const { error } = parsed.data.id
-    ? await (await getSupabaseServerClient())!
-        .from("ad_creatives")
-        .update({ ...row, updated_at: new Date().toISOString() })
-        .eq("id", parsed.data.id)
-        .eq("status", "draft") // l'éditeur ne modifie PAS une créative approuvée (RLS aussi)
-        .select("id")
-        .single()
-    : await (await getSupabaseServerClient())!
-        .from("ad_creatives")
-        .insert(row)
-        .select("id")
-        .single();
+  const supabase = await getSupabaseServerClient();
+  const role = guard.session.profile?.role ?? "reporter";
+
+  let error: { message: string } | null = null;
+  let updated: boolean = false;
+  if (parsed.data.id) {
+    // Un éditeur ne modifie PAS une créative déjà approuvée (RLS 0026
+    // identique) ; l'admin peut corriger n'importe quelle créative.
+    const updateRow = { ...row, updated_at: new Date().toISOString() };
+    let query = supabase!.from("ad_creatives").update(updateRow).eq("id", parsed.data.id);
+    if (role !== "admin") query = query.eq("status", "draft");
+    const { error: updateError, data } = await query.select("id").maybeSingle();
+    error = updateError;
+    updated = Boolean(data);
+    if (!error && !updated) {
+      return errorState(
+        role === "admin"
+          ? "Création introuvable."
+          : "Création déjà approuvée : seul un administrateur peut la modifier. Proposez une nouvelle création."
+      );
+    }
+  } else {
+    const { error: insertError } = await supabase!.from("ad_creatives").insert(row);
+    error = insertError;
+  }
 
   if (error) {
     console.error("[actions/ads] saveCreativeAction :", error.message);
@@ -479,7 +491,7 @@ export async function saveCreativeAction(
   }
 
   revalidateAds();
-  return successState(parsed.data.id ? "Création modifiée." : "Création créée (brouillon).");
+  return successState(parsed.data.id && updated ? "Création modifiée." : "Création créée (brouillon).");
 }
 
 /** Validation administrative : approved (admin) / refused / retour brouillon. */

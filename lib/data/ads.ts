@@ -185,6 +185,25 @@ export async function listPartners() {
   return (data ?? []) as unknown as AdPartner[];
 }
 
+// ─── Règlements (ADMIN — RLS 0026 : editor = 0 ligne) ────────────────
+
+export async function listAllPayments() {
+  const supabase = await server();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("ad_payments")
+    .select("*, ad_campaigns ( name, reference, advertisers ( name ) )")
+    .order("paid_on", { ascending: false })
+    .limit(500);
+  if (error) {
+    console.error("[data/ads] listAllPayments :", error.message);
+    return [];
+  }
+  return (data ?? []) as unknown as (AdPayment & {
+    ad_campaigns: { name: string; reference: string | null; advertisers: { name: string } | null } | null;
+  })[];
+}
+
 // ─── Statistiques (agrégats de la base, JAMAIS de chiffre inventé) ───
 
 export interface DailyRow extends AdDailyStat {

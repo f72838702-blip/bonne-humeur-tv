@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isSafeAdUrl, AD_FORMATS, AD_STORED_STATUSES, PAYMENT_METHODS } from "@/lib/ads/ads-core";
+import { extractYouTubeId } from "@/lib/youtube/url";
 
 /** Tableau mutable pour z.enum (zod 4 : tuple lisible obligatoire). */
 const PAYMENT_METHODS_ZOD = ["espèces", "mobile_money", "virement", "chèque", "autre"] as const;
@@ -47,7 +48,15 @@ function optSafeAdUrl() {
 }
 
 export const videoPayloadSchema = z.object({
-  youtube_url: z.string().trim().min(1, "URL YouTube obligatoire").max(500),
+  youtube_url: z
+    .string()
+    .trim()
+    .min(1, "URL YouTube obligatoire")
+    .max(500)
+    .refine(
+      (v) => extractYouTubeId(v) !== null,
+      "URL YouTube uniquement (youtube.com/watch, youtu.be, shorts)"
+    ),
   title: z.string().trim().min(1, "Titre obligatoire").max(120),
   description: optText(300),
 });
@@ -110,9 +119,9 @@ export const adCampaignSchema = z.object({
   commercial_manager: optText(120),
   notes: optText(2000),
   contract_ref: optText(60),
-  contract_signed_at: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]),
-  contract_start_at: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]),
-  contract_end_at: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]),
+  contract_signed_at: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]).optional(),
+  contract_start_at: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]).optional(),
+  contract_end_at: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]).optional(),
   contract_terms: optText(2000),
   placements: z.array(z.string().min(2).max(40)).max(12).default([]),
 });
@@ -151,8 +160,8 @@ export const adPartnerSchema = z.object({
   alt_text: optText(200),
   link_url: z.union([z.literal(""), safeAdUrl]).optional(),
   sort_order: z.number().int().min(0).max(10000).default(100),
-  visible_from: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]),
-  visible_to: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]),
+  visible_from: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]).optional(),
+  visible_to: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]).optional(),
   is_active: z.boolean().default(true),
 });
 
