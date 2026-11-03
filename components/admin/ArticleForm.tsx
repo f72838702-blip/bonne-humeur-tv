@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
+import { Youtube } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ArticleWithRelations, Category, UserRole } from "@/lib/types";
 import { saveArticle } from "@/lib/actions/content";
+import { extractYouTubeId, youtubeThumbnailUrl, youtubeWatchUrl } from "@/lib/youtube/url";
+import CoverImageUploader from "./CoverImageUploader";
 import { FieldError, FormMessage, SubmitButton, idleActionState, inputClass, labelClass } from "./form-ui";
 
 /**
@@ -32,6 +35,15 @@ function toLocalInput(iso: string | null): string {
   return iso ? iso.slice(0, 16) : "";
 }
 
+/** IDs YouTube présents dans un corps Markdown, pour l'aperçu éditeur. */
+function articleYtIds(markdown: string): string[] {
+  return [
+    ...new Set(
+      [...markdown.matchAll(/\[\[youtube:([A-Za-z0-9_-]{11})\]\]/g)].map((m) => m[1])
+    ),
+  ];
+}
+
 export default function ArticleForm({
   categories,
   role,
@@ -44,6 +56,14 @@ export default function ArticleForm({
   const [state, formAction] = useActionState(saveArticle, idleActionState);
   const [status, setStatus] = useState(article?.status ?? "draft");
   const [scheduleHint, setScheduleHint] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState(article?.featured_image ?? "");
+  const [ytOpen, setYtOpen] = useState(false);
+  const [ytUrl, setYtUrl] = useState("");
+  const [ytError, setYtError] = useState<string | null>(null);
+  const [ytPreviewIds, setYtPreviewIds] = useState<string[]>(
+    article?.content ? articleYtIds(article.content) : []
+  );
+  const contentRef = useRef<HTMLTextAreaElement | null>(null);
   const router = useRouter();
   const isStaff = role === "admin" || role === "editor";
   const options = isStaff ? STATUS_OPTIONS_STAFF : STATUS_OPTIONS_REPORTER;
@@ -72,6 +92,38 @@ export default function ArticleForm({
       return;
     }
     setScheduleHint(null);
+  };
+
+  /**
+   * Insère un bloc vidéo YouTube à la position EXACTE du curseur dans le
+   * corps Markdown : ID extrait et validé (URL YouTube uniquement — toute
+   * autre source est refusée), bloc stable [[youtube:ID]] sur sa propre
+   * ligne, le reste du texte et les blocs existants sont préservés.
+   */
+  const insertYouTube = () => {
+    const id = extractYouTubeId(ytUrl);
+    if (!id) {
+      setYtError(
+        "URL YouTube invalide. Formats acceptés : youtube.com/watch?v=…, youtu.be/…, youtube.com/shorts/…, youtube.com/embed/…, youtube.com/live/…"
+      );
+      return;
+    }
+    const textarea = contentRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? start;
+    // Normalisation locale : le bloc est toujours sur SA propre ligne,
+    // entouré d'une ligne vide — aucun autre caractère n'est modifié.
+    const before = textarea.value.slice(0, start).replace(/\s+$/, "");
+    const after = textarea.value.slice(end).replace(/^\s+/, "");
+    const block = `${before}\n\n[[youtube:${id}]]\n\n`;
+    textarea.value = `${block}${after}`;
+    const caret = block.length;
+    textarea.focus();
+    textarea.setSelectionRange(caret, caret);
+    setYtPreviewIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    setYtUrl("");
+    setYtError(null);
   };
 
   return (
@@ -123,6 +175,7 @@ export default function ArticleForm({
             </label>
             <textarea
               id="content"
+              ref={contentRef}
               name="content"
               rows={18}
               required
@@ -138,6 +191,82 @@ export default function ArticleForm({
               contenus dangereux sont neutralisés côté serveur.
             </p>
             <FieldError errors={state.fieldErrors} name="content" />
+
+            <div className="mt-3 rounded-xl border border-neutral-200 p-3 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setYtOpen((v) => !v)}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-guinea-red/40 bg-guinea-red/10 px-4 py-2.5 text-sm font-bold text-guinea-red transition-colors hover:bg-guinea-red/20 sm:w-auto"
+              >
+                <Youtube className="h-4 w-4" />
+                Insérer une vidéo YouTube
+              </button>
+
+              {ytOpen && (
+                <div className="mt-3 flex flex-col gap-2">
+                  <p className="text-[11px] leading-relaxed text-neutral-400">
+                    Placez d&apos;abord votre curseur dans le texte à
+                    l&apos;endroit voulu, collez le lien de la vidéo, puis
+                    insérez — la vidéo apparaîtra exactement à cette position.
+                  </p>
+                  <input
+                    id="youtube_url"
+                    type="url"
+                    value={ytUrl}
+                    onChange={(e) => {
+                      setYtUrl(e.target.value);
+                      setYtError(null);
+                    }}
+                    placeholder="https://www.youtube.com/watch?v=… ou https://youtu.be/…"
+                    className={inputClass}
+                  />
+                  {ytError && (
+                    <p role="alert" className="text-xs font-medium text-guinea-red">
+                      {ytError}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={insertYouTube}
+                    className="rounded-lg bg-guinea-red px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-guinea-red/90"
+                  >
+                    Insérer à l&apos;emplacement du curseur
+                  </button>
+
+                  {ytPreviewIds.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-400">
+                        Vidéo{ytPreviewIds.length > 1 ? "s" : ""} insérée
+                        {ytPreviewIds.length > 1 ? "s" : ""} dans le corps
+                      </p>
+                      <ul className="mt-2 grid gap-3 sm:grid-cols-2">
+                        {ytPreviewIds.map((id) => (
+                          <li key={id} className="rounded-xl border border-neutral-300 bg-white p-2 text-sm dark:border-white/10 dark:bg-night-800">
+                            <span className="block text-xs font-bold text-neutral-600 dark:text-neutral-300">
+                              Bloc dans le texte : <code>[[youtube:{id}]]</code>
+                            </span>
+                            <span className="mt-1.5 block text-xs text-neutral-400">
+                              {youtubeWatchUrl(id)}
+                            </span>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={youtubeThumbnailUrl(id, "mq")}
+                              alt={`Aperçu de la vidéo YouTube ${id}`}
+                              loading="lazy"
+                              className="mt-2 w-full rounded-lg"
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-2 text-[11px] text-neutral-400">
+                        La vidéo s&apos;affichera sur la page publique à la
+                        position exacte du bloc, au format largeur de l&apos;article.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -210,26 +339,44 @@ export default function ArticleForm({
           </div>
 
           <div>
-            <label htmlFor="featured_image" className={labelClass}>
-              Image de couverture (URL)
-            </label>
+            <p className={labelClass}>Image de couverture</p>
+            {/* Sélection depuis l'appareil + compression + téléversement ;
+                met à jour coverUrl qui est transmis dans featured_image. */}
+            <CoverImageUploader value={coverUrl} onChange={setCoverUrl} />
             <input
               id="featured_image"
               name="featured_image"
               type="url"
               maxLength={500}
-              defaultValue={article?.featured_image ?? ""}
-              placeholder="https://…"
-              className={inputClass}
+              value={coverUrl}
+              onChange={(e) => setCoverUrl(e.target.value)}
+              placeholder="URL de la couverture (remplie automatiquement après téléversement)"
+              className={`${inputClass} mt-3`}
             />
             <p className="mt-1 text-[11px] text-neutral-400">
-              Téléversez vos visuels dans la{" "}
+              Ou collez une URL de la{" "}
               <Link href="/admin/medias" className="font-semibold text-guinea-red hover:underline">
                 médiathèque
-              </Link>{" "}
-              puis collez l’URL obtenue.
+              </Link>
+              . Aucun ancien média n&apos;est supprimé automatiquement.
             </p>
             <FieldError errors={state.fieldErrors} name="featured_image" />
+
+            <div className="mt-3">
+              <label htmlFor="featured_image_alt" className={labelClass}>
+                Texte alternatif (ALT)
+              </label>
+              <input
+                id="featured_image_alt"
+                name="featured_image_alt"
+                type="text"
+                maxLength={300}
+                defaultValue={article?.featured_image_alt ?? ""}
+                placeholder="Décrit l'image pour les malvoyants et les moteurs de recherche"
+                className={inputClass}
+              />
+              <FieldError errors={state.fieldErrors} name="featured_image_alt" />
+            </div>
           </div>
 
           {isStaff && (

@@ -7,11 +7,16 @@ import type { Article, ArticleWithRelations, Category } from "@/lib/types";
  * Sans backend → listes vides, jamais de contenu fictif.
  */
 
+/**
+ * Colonnes en `*` (plutôt qu'une liste figée) : la migration 0023 ajoute
+ * la colonne featured_image_alt — une sélection explicite de cette colonne
+ * échouerait (42703) tant que la migration n'est pas appliquée sur le
+ * serveur. Avec `*`, le code fonctionne AVANT l'activation (ALT absent,
+ * traité null par les ?? du rendu) et l'ALT s'active automatiquement
+ * APRÈS application de 0023. Jointures explicites conservées.
+ */
 const PUBLIC_FIELDS = `
-  id, title, slug, excerpt, content, featured_image, category_id, author_id,
-  status, published_at, scheduled_at, meta_title, meta_description,
-  created_at, updated_at,
-  categories ( id, name, slug )
+  *, categories ( id, name, slug )
 `;
 
 type RawRow = Omit<Article, "category_id" | "author_id"> & {

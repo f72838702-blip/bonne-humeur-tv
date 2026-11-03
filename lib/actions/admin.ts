@@ -222,3 +222,57 @@ export async function deleteMediaAction(formData: FormData): Promise<ActionState
   revalidatePath("/admin/medias");
   return successState("Fichier supprimé.");
 }
+
+// ─────────────────────────────────────────────────────────────
+// COUVERTURE D'ARTICLE — appelée directement par le formulaire
+// d'article (ArticleForm). Même pipeline que la médiathèque :
+// compression navigateur + revalidation serveur (signature, MIME,
+// dimensions, poids) + upload service_role CÔTÉ SERVEUR uniquement.
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Téléverse la couverture d'un article (dossier logique « articles »
+ * exclusivement) et renvoie l'URL publique réelle (variante pleine) pour
+ * préremplir le champ featured_image du formulaire.
+ *
+ * Rôles : identiques à saveArticle (admin, editor, reporter) — un reporter
+ * ajoute une couverture à SON article, comme la médiathèque l'exigeait
+ * pour editor+ uniquement. Le service_role n'est jamais exposé au
+ * navigateur : l'upload part de ce module serveur seulement.
+ */
+export async function uploadArticleCoverAction(
+  formData: FormData
+): Promise<ActionState> {
+  const guard = await requireRole(["admin", "editor", "reporter"]);
+  if ("denied" in guard) return deniedState(guard.denied);
+
+  const variants: { variant: MediaVariant; file: File }[] = [];
+  for (const v of MEDIA_VARIANTS) {
+    const entry = formData.get(`file_${v}`);
+    if (entry instanceof File && entry.size > 0) variants.push({ variant: v, file: entry });
+  }
+  if (variants.length === 0) {
+    return errorState("Aucune image compressée à téléverser.");
+  }
+
+  const result = await uploadMediaVariants("articles", variants);
+  if (!result.ok) {
+    console.error("[actions/admin] uploadArticleCoverAction :", result.error);
+    return errorState(
+      result.error === "storage_not_configured"
+        ? "Le stockage n'est pas configuré (SUPABASE_SERVICE_ROLE_KEY)."
+        : `Téléversement refusé : ${result.error}`
+    );
+  }
+
+  return {
+    status: "success",
+    message: "Image téléversée.",
+    // successState ne transporte pas de données → état complet explicite
+    // (même mécanisme que importYouTubeMeta).
+    data: {
+      url: result.url ?? null,
+      variants: result.variants?.join(" ") ?? null,
+    },
+  };
+}

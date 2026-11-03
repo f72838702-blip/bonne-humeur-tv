@@ -32,6 +32,7 @@ export interface Article {
   excerpt: string | null;
   content: string;
   featured_image: string | null;
+  featured_image_alt: string | null;
   category_id: string | null;
   author_id: string | null;
   status: ContentStatus;

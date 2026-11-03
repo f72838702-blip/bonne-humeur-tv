@@ -45,6 +45,14 @@ function deniedState(denied: string): ActionState {
 // ARTICLES
 // ─────────────────────────────────────────────────────────────
 
+/** Code PostgreSQL « column does not exist » (42703) ou colonne ALT absente. */
+function isMissingAltColumn(error: { code?: string; message?: string }): boolean {
+  return error.code === "42703" || /featured_image_alt/.test(error.message ?? "");
+}
+
+const ALT_MIGRATION_MESSAGE =
+  "Le texte ALT exige l'activation de la migration 0023 (colonne featured_image_alt) sur le serveur Supabase. Enregistrez sans ALT pour l'instant, ou faites appliquer la migration par la direction.";
+
 export async function saveArticle(
   _prev: ActionState,
   formData: FormData
@@ -62,6 +70,7 @@ export async function saveArticle(
     excerpt: formData.get("excerpt") ?? "",
     content: formData.get("content"),
     featured_image: formData.get("featured_image") ?? "",
+    featured_image_alt: formData.get("featured_image_alt") ?? "",
     category_id: formData.get("category_id") || undefined,
     status: formData.get("status"),
     scheduled_at: formData.get("scheduled_at") ?? "",
@@ -139,6 +148,14 @@ export async function saveArticle(
     excerpt: input.excerpt ?? null,
     content: input.content,
     featured_image: input.featured_image ?? null,
+    /**
+     * ALT de la couverture : transmis UNIQUEMENT s'il est renseigné.
+     * Sans la migration 0023 (colonne featured_image_alt absente du serveur),
+     * une sauvegarde sans ALT reste fonctionnelle ; avec ALT, l'erreur 42703
+     * est traduite en message compréhensible (voir plus bas). Aucun HTML/URL :
+     * la validation zod (optionnelText) garantit du texte simple.
+     */
+    ...(input.featured_image_alt ? { featured_image_alt: input.featured_image_alt } : {}),
     category_id: input.category_id ?? null,
     status,
     scheduled_at: input.scheduled_at ?? null,
@@ -152,6 +169,9 @@ export async function saveArticle(
   if (articleId) {
     const { error } = await supabase.from("articles").update(row).eq("id", articleId);
     if (error) {
+      if (isMissingAltColumn(error)) {
+        return errorState(ALT_MIGRATION_MESSAGE);
+      }
       console.error("[actions/content] saveArticle update :", error.message);
       return errorState("Enregistrement impossible. Vérifiez vos droits sur cet article.");
     }
@@ -162,6 +182,9 @@ export async function saveArticle(
       .select("id")
       .single();
     if (error || !data) {
+      if (error && isMissingAltColumn(error)) {
+        return errorState(ALT_MIGRATION_MESSAGE);
+      }
       console.error("[actions/content] saveArticle insert :", error?.message);
       return errorState("Création impossible.");
     }

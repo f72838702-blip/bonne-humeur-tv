@@ -19,11 +19,14 @@ import type {
 
 type StaffClient = NonNullable<Awaited<ReturnType<typeof getSupabaseServerClient>>>;
 
+/**
+ * Colonne en `*` (même raisonnement que lib/data/articles.ts) : la
+ * migration 0023 ajoute featured_image_alt — la sélection explicite
+ * échouerait tant que 0023 n'est pas appliquée. Avec `*`, le champ
+ * s'active automatiquement après application, sans erreur avant.
+ */
 const ARTICLE_FIELDS = `
-  id, title, slug, excerpt, content, featured_image, category_id, author_id,
-  status, published_at, scheduled_at, meta_title, meta_description,
-  is_featured, created_at, updated_at,
-  categories ( id, name, slug )
+  *, categories ( id, name, slug )
 `;
 
 type ArticleRow = Article & {

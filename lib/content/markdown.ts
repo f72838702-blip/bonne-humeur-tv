@@ -1,5 +1,6 @@
 import { marked } from "marked";
 import { escapeHtml } from "@/lib/utils";
+import { extractYouTubeId } from "@/lib/youtube/url";
 
 /**
  * Rendu Markdown SÛR pour le contenu des articles.
@@ -34,6 +35,7 @@ export function renderMarkdownToHtml(markdown: string): string {
 /** Extrait le texte brut d'un Markdown (aperçus, méta-description de secours). */
 export function markdownToPlainText(markdown: string): string {
   return markdown
+    .replace(YOUTUBE_MARKER_GLOBAL_RE, " ")
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/`[^`]*`/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
@@ -41,4 +43,67 @@ export function markdownToPlainText(markdown: string): string {
     .replace(/[#>*_~|-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Marqueur vidéo YouTube — SEULE porte d'intégration dans le corps.
+//
+// Format de bloc stable (une seule ligne, exactement) :
+//   [[youtube:VIDEO_ID]]
+//
+// L'identifiant provient EXCLUSIVEMENT de extractYouTubeId (URL YouTube
+// validée côté rédaction) ; ici il est REVALIDÉ : 11 caractères
+// alphanumériques/_/-. Aucun HTML, aucune URL arbitraire : l'iframe
+// publique est construite uniquement à partir de l'ID validé
+// (youtube-nocookie). Tout texte autour du marqueur reste du Markdown
+// échappé — [[youtube:12caractères]] ou [[youtube:<script>]] ne sont PAS
+// reconnus et restent du simple texte inoffensif.
+// ─────────────────────────────────────────────────────────────
+
+const YOUTUBE_MARKER_GLOBAL_RE = /\[\[youtube:[A-Za-z0-9_-]{11}\]\]/g;
+
+/** Segment du corps d'article rendu par la page publique. */
+export type ArticleSegment =
+  | { type: "html"; html: string }
+  | { type: "youtube"; id: string };
+
+/**
+ * Découpe le corps Markdown en segments : blocs Markdown rendus SÛR
+ * (échappement avant parsing, comme toujours) et blocs vidéo YouTube
+ * validés. Le marqueur n'est reconnu que sur une LIGNE SEULE — insertion
+ * au milieu d'un paragraphe ajoute donc bien un bloc après ce paragraphe.
+ */
+export function renderArticleSegments(markdown: string): ArticleSegment[] {
+  const segments: ArticleSegment[] = [];
+  let buffer: string[] = [];
+  let flushBuffer = () => {
+    if (buffer.length > 0) {
+      const text = buffer.join("\n");
+      if (text.trim()) segments.push({ type: "html", html: renderMarkdownToHtml(text) });
+      buffer = [];
+    }
+  };
+
+  for (const line of markdown.split(/\r?\n/)) {
+    // Le marqueur est revalidé une deuxième fois ici : l'ID isolé doit
+    // passer extractYouTubeId (charset + longueur 11) — sinon la ligne
+    // reste du Markdown ordinaire échappé.
+    const match = /^\[\[youtube:([A-Za-z0-9_-]{11})\]\]$/.exec(line.trim());
+    const id = match ? extractYouTubeId(match[1]) : null;
+    if (id) {
+      flushBuffer();
+      segments.push({ type: "youtube", id });
+    } else {
+      buffer.push(line);
+    }
+  }
+  flushBuffer();
+  return segments;
+}
+
+/** Identifiants YouTube valides présents dans un corps Markdown (dédoublonnés). */
+export function extractArticleYouTubeIds(markdown: string): string[] {
+  return [...new Set(renderArticleSegments(markdown)
+    .filter((s): s is { type: "youtube"; id: string } => s.type === "youtube")
+    .map((s) => s.id))];
 }

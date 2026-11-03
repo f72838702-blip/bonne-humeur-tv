@@ -87,6 +87,7 @@ export const articleSchema = z.object({
   excerpt: optionalText(400),
   content: trimmed(1, 100_000, "Contenu"),
   featured_image: optionalText(500),
+  featured_image_alt: optionalText(300),
   category_id: uuid.optional().or(z.literal("").transform(() => undefined)),
   status: z.enum(ARTICLE_STATUSES, { message: "Statut invalide" }),
   scheduled_at: isoDate,
