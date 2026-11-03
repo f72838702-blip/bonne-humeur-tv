@@ -161,11 +161,22 @@ mobile/URL directe/Open Graph.
 **0 USD/mois confirmé** — aucune nouvelle bibliothèque, aucun service, aucune
 souscription ; tout repose sur les services Free existants.
 
-## 8. DÉPLOIEMENT — NON EFFECTUÉ (en attente)
+## 8. DÉPLOIEMENT — EFFECTUÉ sur feu vert (3 novembre 2026)
 
-Le rapport précède tout déploiement, conformément à la consigne. Prêt, même
-procédure que les déploiements réussis (`npx wrangler deploy`, worker
-`bonne-humeur-tv-preview` uniquement). Aucun push GitHub.
+- Commande : `npx wrangler deploy` — **exit 0**, worker **`bonne-humeur-tv-preview`** uniquement.
+- **Version déployée : `961f8a92-4aed-4f57-a262-854f668e5b7c`** — Worker Startup 31 ms.
+- URL inchangée : `https://bonne-humeur-tv-preview.bonne-humeur-tv.workers.dev`.
+- **21 routes vérifiées en direct** : 12 publiques + article réel + login admin → 200 ·
+  9 routes admin → 307 (gardes intacts) · aucun 1102.
+- Bundles : webpack + **nouveau CSS `9dc673b4…` servis 200** (la version déployée est
+  bien la build corrigée).
+- **Compteur d'iframes (article actuel) : toujours 2 — ATTENDU** : le doublon est dans
+  le contenu enregistré en base ; le correctif est du CÔTÉ ÉDITEUR (les corrections
+  de contenu se font volontairement, jamais automatiquement). Le rédacteur ouvre le
+  panneau (« Insérer ou gérer une vidéo YouTube »), supprime l'occurrence #1 ou #2
+  (bouton « Supprimer »), réenregistre → la page publique n'affichera plus qu'un seul
+  lecteur.
+- Budget 0 USD/mois ; aucun push GitHub ; secret `SUPABASE_SERVICE_ROLE_KEY` intact.
 
 ## 9. RECOMMANDATION DIRECTION (test visuel 5 minutes après déploiement)
 
