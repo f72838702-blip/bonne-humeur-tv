@@ -101,6 +101,8 @@ export default function FlashTicker({ items }: { items: FlashTickerItem[] }) {
               {news.link ? (
                 <Link
                   href={news.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="px-6 underline-offset-4 hover:underline"
                 >
                   {news.content}
