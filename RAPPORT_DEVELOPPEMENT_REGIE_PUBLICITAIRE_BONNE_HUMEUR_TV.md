@@ -224,3 +224,37 @@ MediaUploader, lib/types, lib/media/variants, page accueil/actualités/article/v
   statistiques).
 - Le nombre de créations par zone est plafonné par l'emplacement (max_items,
   1-12) ; au-delà, la plus forte priorité/poids gagne la place.
+
+## 17. ADDITIF (03/11/2026) — Migrations 0025/0026 APPLIQUÉES sur la base distante
+
+Exécutées sur **autorisation explicite de la direction** le même jour, via la
+commande officielle du CLI (`supabase db push --remote --yes`), dry-run conforme
+préalable (uniquement 0025 + 0026). §1/§13 (migrations jamais appliquées) devient
+obsolète à partir de cet hour : ce qui suit remplace ce point.
+
+Vérifications réelles sur la base distante (requêtes LECTURE SEULE via l'API
+Management, aucune modification de données) :
+
+- `migration list --remote` : **0001→0026 toutes enregistrées** (0025 + 0026 ✔).
+- **9 tables `ad_*` présentes, RLS ENABLED sur les 9** (aucune table sans RLS).
+- **27 policies** exactement le contenu de 0026 : règlements = admin seulement
+  (insert/update) + select staff ; placements = select/update staff (pas d'insert),
+  créations = 3 staff ; empreintes = **aucune policy** (fail-closed).
+- **6 fonctions** présentes : `get_public_ad_zone`, `get_public_ad_link`,
+  `get_public_partners`, `get_public_sponsored_articles`, `record_ad_event`,
+  `purge_ad_fingerprints`.
+- **ACL vérifiées par aclexplode** : les 5 fonctions publiques → anon +
+  authenticated + service_role EXECUTE, **PUBLIC révoqué** (aucune ligne PUBLIC) ;
+  `purge_ad_fingerprints` → **service_role uniquement** (postgres propriétaire,
+  aucun rôle interactif).
+- **Job pg_cron `bhtv-purge-ad-fingerprints` actif** : `25 2 * * *` (02h25 UTC),
+  exécution sous rôle `postgres` (propriétaire des fonctions — EXECUTE implicite),
+  à côté du job existant `bhtv-publish-scheduled`.
+- **Les 8 emplacements seedés** en base distante : home_top_banner, home_inline,
+  news_feed_inline, article_inline, article_bottom, videos_inline,
+  home_promo_strip, home_partners — **la base distante reste par ailleurs intouchée
+  (0 annonceur, 0 campagne, 0 création, 0 contenu fictif).**
+
+Le module régie n'est pas encore déployé sur l'environnement Cloudflare public
+(prod inchangée, version f5aeaef3 sans régie) : la RECETTE par la direction et le
+DÉPLOIEMENT restent à faire, chacun sur autorisation distincte.
