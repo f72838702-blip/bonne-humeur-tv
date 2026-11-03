@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { ArticleWithRelations, Category, UserRole } from "@/lib/types";
 import { saveArticle } from "@/lib/actions/content";
@@ -42,6 +43,7 @@ export default function ArticleForm({
 }) {
   const [state, formAction] = useActionState(saveArticle, idleActionState);
   const [status, setStatus] = useState(article?.status ?? "draft");
+  const [scheduleHint, setScheduleHint] = useState<string | null>(null);
   const router = useRouter();
   const isStaff = role === "admin" || role === "editor";
   const options = isStaff ? STATUS_OPTIONS_STAFF : STATUS_OPTIONS_REPORTER;
@@ -52,6 +54,25 @@ export default function ArticleForm({
       router.refresh();
     }
   }, [state, router]);
+
+  /** Confirmation avant publication (dialogue navigateur, annulable). */
+  const confirmPublish = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (!window.confirm("Publier cet article sur le site public ? Il sera visible immédiatement.")) {
+      event.preventDefault();
+    }
+  };
+
+  /** La date est obligatoire : contrôle immédiat + serveur en dernier ressort. */
+  const guardSchedule = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    const input = document.getElementById("scheduled_at") as HTMLInputElement | null;
+    if (!input?.value) {
+      event.preventDefault();
+      setScheduleHint("Indiquez d'abord la date et l'heure de publication programmée.");
+      input?.focus();
+      return;
+    }
+    setScheduleHint(null);
+  };
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -139,6 +160,12 @@ export default function ArticleForm({
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">
+              Les boutons ci-dessous appliquent le statut en un clic
+              (brouillon, publier, programmer). Ce menu reste utile pour les
+              autres transitions (soumettre à validation, archiver) via
+              « Transition avancée ».
+            </p>
             {!isStaff && (
               <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">
                 En tant que reporter, vos articles sont relus par un éditeur
@@ -289,8 +316,64 @@ export default function ArticleForm({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 border-t border-neutral-200 pt-5 dark:border-white/10">
-        <SubmitButton label="Enregistrer l'article" pendingLabel="Enregistrement…" />
+      <div className="flex flex-col gap-3 border-t border-neutral-200 pt-5 dark:border-white/10">
+        {/* Avertissement local pour la publication programmée (date manquante). */}
+        {scheduleHint && (
+          <p role="alert" className="rounded-xl border border-guinea-red/40 bg-guinea-red/10 px-4 py-3 text-sm font-medium text-guinea-red">
+            {scheduleHint}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          {/* Enregistrement sans intention : applique le statut du menu (transitions avancées). */}
+          <SubmitButton
+            label="Transition avancée — statut du menu"
+            pendingLabel="Enregistrement…"
+            variant="neutral"
+          />
+          {isStaff && (
+            <SubmitButton
+              label="Programmer la publication"
+              pendingLabel="Programmation…"
+              variant="neutral"
+              name="intent"
+              value="schedule"
+              onClick={guardSchedule}
+            />
+          )}
+          {isStaff && (
+            <SubmitButton
+              label="Publier maintenant"
+              pendingLabel="Publication…"
+              variant="success"
+              name="intent"
+              value="publish"
+              onClick={confirmPublish}
+            />
+          )}
+          {isStaff ? (
+            <SubmitButton
+              label="Enregistrer comme brouillon"
+              pendingLabel="Enregistrement…"
+              name="intent"
+              value="draft"
+            />
+          ) : (
+            <>
+              <SubmitButton
+                label="Soumettre à validation"
+                pendingLabel="Envoi…"
+                name="intent"
+                value="review"
+              />
+              <SubmitButton
+                label="Enregistrer comme brouillon"
+                pendingLabel="Enregistrement…"
+                name="intent"
+                value="draft"
+              />
+            </>
+          )}
+        </div>
       </div>
     </form>
   );

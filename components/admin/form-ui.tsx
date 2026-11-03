@@ -1,6 +1,7 @@
 "use client";
 
 import type { ActionState } from "@/lib/actions/helpers";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { useFormStatus } from "react-dom";
 
 /**
@@ -42,17 +43,26 @@ export function FormMessage({ state }: { state: ActionState }) {
   );
 }
 
-/** Bouton d'envoi — désactivé pendant la soumission (useFormStatus). */
+/** Bouton d'envoi — désactivé pendant la soumission (useFormStatus).
+ *  name/value : identifie « l'intention » au serveur (ex : intent=publish)
+ *  sans état client ni race condition — la valeur du bouton soumis est
+ *  garantie dans la FormData. onClick : confirmation (preventDefault). */
 export function SubmitButton({
   label,
   pendingLabel = "Enregistrement…",
   variant = "primary",
   className = "",
+  name,
+  value,
+  onClick,
 }: {
   label: string;
   pendingLabel?: string;
-  variant?: "primary" | "danger" | "neutral";
+  variant?: "primary" | "danger" | "neutral" | "success";
   className?: string;
+  name?: string;
+  value?: string;
+  onClick?: (event: ReactMouseEvent<HTMLButtonElement>) => void;
 }) {
   const { pending } = useFormStatus();
   const base =
@@ -62,10 +72,18 @@ export function SubmitButton({
     danger: "bg-guinea-red/10 text-guinea-red hover:bg-guinea-red/20 border border-guinea-red/40",
     neutral:
       "border border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-white/15 dark:text-neutral-200 dark:hover:bg-white/10",
+    success: "bg-guinea-green text-white hover:bg-guinea-green/90",
   } as const;
 
   return (
-    <button type="submit" disabled={pending} className={`${base} ${variants[variant]} ${className}`}>
+    <button
+      type="submit"
+      name={name}
+      value={value}
+      disabled={pending}
+      onClick={onClick}
+      className={`${base} ${variants[variant]} ${className}`}
+    >
       {pending ? pendingLabel : label}
     </button>
   );

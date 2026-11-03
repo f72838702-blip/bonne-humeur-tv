@@ -75,13 +75,33 @@ export async function saveArticle(
   }
   const input = parsed.data;
 
+  /**
+   * Intention explicite du formulaire (« Publier maintenant », « Enregistrer
+   * comme brouillon », « Programmer la publication ») : le bouton soumis
+   * l'emporte sur le menu Statut. La valeur d'un submit est garantie dans
+   * la FormData — aucun état client. Le reste (rôles, transitions, RLS)
+   * est revérifié ci-dessous et en base.
+   */
+  const INTENT_STATUS = {
+    draft: "draft",
+    review: "review",
+    publish: "published",
+    schedule: "scheduled",
+  } as const;
+  const intentRaw = formData.get("intent");
+  const intent =
+    typeof intentRaw === "string" && intentRaw in INTENT_STATUS
+      ? (intentRaw as keyof typeof INTENT_STATUS)
+      : null;
+  const status = intent ? INTENT_STATUS[intent] : input.status;
+
   // Un reporter ne peut soumettre qu'en draft/review (la RLS le
   // réapplique, mais on refuse ici avec un message clair).
-  if (!isStaff && !["draft", "review"].includes(input.status)) {
+  if (!isStaff && !["draft", "review"].includes(status)) {
     return errorState("En tant que reporter, vous ne pouvez enregistrer qu'un brouillon ou le soumettre à validation.");
   }
   // Publication programmée : la date est obligatoire.
-  if (input.status === "scheduled" && !input.scheduled_at) {
+  if (status === "scheduled" && !input.scheduled_at) {
     return errorState("Indiquez la date et l'heure de publication programmée.", {
       scheduled_at: "Date requise pour une publication programmée",
     });
@@ -109,7 +129,7 @@ export async function saveArticle(
     }
     publishedAt = existing.published_at ?? null;
   }
-  if (input.status === "published" && !publishedAt) {
+  if (status === "published" && !publishedAt) {
     publishedAt = new Date().toISOString();
   }
 
@@ -120,7 +140,7 @@ export async function saveArticle(
     content: input.content,
     featured_image: input.featured_image ?? null,
     category_id: input.category_id ?? null,
-    status: input.status,
+    status,
     scheduled_at: input.scheduled_at ?? null,
     published_at: publishedAt,
     meta_title: input.meta_title ?? null,
@@ -158,7 +178,67 @@ export async function saveArticle(
   revalidatePath("/actualites");
   revalidatePath(`/actualites/${slug}`);
   revalidatePath("/admin/articles");
-  return successState("Article enregistré.", `/admin/articles`);
+
+  // Message fidèle à l'action réellement effectuée. Une publication
+  // redirige vers la page publique : vérification visuelle immédiate.
+  const message =
+    status === "published"
+      ? "Article publié."
+      : status === "scheduled"
+        ? "Article programmé : il passera automatiquement en ligne à l'échéance indiquée."
+        : status === "review"
+          ? "Article soumis à la validation d'un éditeur."
+          : status === "archived"
+            ? "Article archivé."
+            : "Brouillon enregistré.";
+  return successState(message, status === "published" ? `/actualites/${slug}` : "/admin/articles");
+}
+
+/**
+ * Publication directe depuis la liste `/admin/articles` (admin+editor).
+ * UPDATE minimal (status + published_at) — reste sous la policy RLS
+ * articles_update (le client de session, jamais service_role).
+ * La date de publication d'origine est préservée (jamais réinitialisée).
+ */
+export async function publishArticle(formData: FormData): Promise<ActionState> {
+  const guard = await requireRole(["admin", "editor"]);
+  if ("denied" in guard) return deniedState(guard.denied);
+
+  const parsed = deleteArticleSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) return errorState("Identifiant d'article invalide.");
+
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) return deniedState("unconfigured");
+
+  const { data: existing } = await supabase
+    .from("articles")
+    .select("status, published_at, slug")
+    .eq("id", parsed.data.id)
+    .maybeSingle();
+  if (!existing) {
+    return errorState("Article introuvable ou vous n'avez pas la permission de le publier.");
+  }
+  if (existing.status === "published") {
+    return errorState("Cet article est déjà publié.");
+  }
+
+  const { error } = await supabase
+    .from("articles")
+    .update({
+      status: "published",
+      published_at: existing.published_at ?? new Date().toISOString(),
+    })
+    .eq("id", parsed.data.id);
+  if (error) {
+    console.error("[actions/content] publishArticle :", error.message);
+    return errorState("Publication impossible. Vérifiez vos droits sur cet article.");
+  }
+
+  revalidatePath("/");
+  revalidatePath("/actualites");
+  revalidatePath(`/actualites/${existing.slug}`);
+  revalidatePath("/admin/articles");
+  return successState("Article publié.");
 }
 
 /** Remplace les tags d'un article (upsert par slug, puis liaison). */

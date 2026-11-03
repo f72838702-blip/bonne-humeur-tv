@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { FileText, Plus } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
 import { getStaffArticles } from "@/lib/data/admin-content";
-import { deleteArticle } from "@/lib/actions/content";
+import { deleteArticle, publishArticle } from "@/lib/actions/content";
 import { formatDateTime } from "@/lib/utils";
 import type { ContentStatus } from "@/lib/types";
 import StatusBadge from "@/components/admin/StatusBadge";
@@ -120,6 +120,17 @@ export default async function AdminArticlesPage({
                   <FileText className="mr-1 inline h-3.5 w-3.5" />
                   Modifier
                 </Link>
+                {/* Publication rapide (staff uniquement) — brouillons et articles à valider. */}
+                {isStaff && (article.status === "draft" || article.status === "review") && (
+                  <DeleteActionForm
+                    tone="green"
+                    action={publishArticle}
+                    hiddenFields={{ id: article.id }}
+                    buttonLabel="Publier"
+                    pendingLabel="Publication…"
+                    confirmLabel={`Publier « ${article.title} » sur le site public ? Il sera visible immédiatement sur /actualites.`}
+                  />
+                )}
                 {isStaff && (
                   <DeleteActionForm
                     action={deleteArticle}
