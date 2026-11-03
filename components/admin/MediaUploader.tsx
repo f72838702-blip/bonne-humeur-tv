@@ -20,6 +20,7 @@ const PURPOSE_LABELS: Record<MediaPurpose, string> = {
   thumbnails: "Miniatures dédiées",
   reporters: "Photos de reporter",
   branding: "Identité / bannières",
+  advertising: "Publicités (régie)",
 };
 
 const VARIANT_LABELS: Record<string, string> = {

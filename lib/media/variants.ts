@@ -9,6 +9,7 @@
  *   thumbnails/  miniatures dédiées       → thumb
  *   reporters/   photos de reporter       → avatar
  *   branding/    identité, bannières      → full
+ *   advertising/ visuels de la régie      → full + card
  */
 
 export const MEDIA_PURPOSES = [
@@ -17,6 +18,7 @@ export const MEDIA_PURPOSES = [
   "thumbnails",
   "reporters",
   "branding",
+  "advertising",
 ] as const;
 
 export type MediaPurpose = (typeof MEDIA_PURPOSES)[number];
@@ -31,6 +33,7 @@ export const MAIN_VARIANT: Record<MediaPurpose, MediaVariant> = {
   thumbnails: "thumb",
   reporters: "avatar",
   branding: "full",
+  advertising: "full",
 };
 
 /** Variantes produites pour chaque dossier (la compression client
@@ -41,6 +44,7 @@ export const PURPOSE_VARIANTS: Record<MediaPurpose, MediaVariant[]> = {
   thumbnails: ["thumb"],
   reporters: ["avatar"],
   branding: ["full"],
+  advertising: ["full", "card"],
 };
 
 /** Cibles de compression côté navigateur (directive §2) :

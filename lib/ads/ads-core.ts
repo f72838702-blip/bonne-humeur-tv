@@ -63,6 +63,7 @@ export type AdEffectiveState =
   | "diffusing" //  active + créative diffusée en ce moment
   | "expired" //    active + fin passée (dénomination du bandeau, jamais public)
   | "paused"
+  | "suspended"
   | "completed"
   | "cancelled"
   | "refused";
@@ -268,7 +269,8 @@ export const AD_STATE_LABELS: Record<AdEffectiveState, string> = {
   programmed: "Programmée",
   diffusing: "En diffusion",
   expired: "Expirée",
-  paused: "Suspendue",
+  paused: "Sans période (fail-closed)",
+  suspended: "Suspendue",
   completed: "Terminée",
   cancelled: "Annulée",
   refused: "Refusée",

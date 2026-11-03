@@ -142,3 +142,129 @@ export interface BackendStatus {
   supabaseConfigured: boolean;
   turnstileConfigured: boolean;
 }
+
+// ═══════════════════════════════════════════════════════════
+// RÉGIE PUBLICITAIRE (migrations 0025/0026)
+// ═══════════════════════════════════════════════════════════
+
+export interface Advertiser {
+  id: string;
+  name: string;
+  legal_name: string | null;
+  logo_url: string | null;
+  sector: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  website: string | null;
+  location: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdPartner {
+  id: string;
+  name: string;
+  logo_url: string;
+  alt_text: string;
+  link_url: string | null;
+  sort_order: number;
+  visible_from: string | null;
+  visible_to: string | null;
+  is_active: boolean;
+}
+
+export interface AdPlacement {
+  code: string;
+  label: string;
+  description: string | null;
+  allowed_formats: ("banner" | "sponsor_article" | "video" | "card" | "promo_strip")[];
+  max_items: number;
+  devices: ("desktop" | "mobile")[];
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface AdCampaign {
+  id: string;
+  advertiser_id: string;
+  name: string;
+  reference: string | null;
+  description: string | null;
+  start_at: string | null;
+  end_at: string | null;
+  billing_type: "forfait" | "forfait_plus_production";
+  amount: number | null;
+  currency: string;
+  priority: number;
+  status: "draft" | "pending" | "active" | "suspended" | "completed" | "cancelled" | "refused";
+  commercial_manager: string | null;
+  notes: string | null;
+  contract_ref: string | null;
+  contract_signed_at: string | null;
+  contract_start_at: string | null;
+  contract_end_at: string | null;
+  contract_terms: string | null;
+  created_at: string;
+  updated_at: string;
+  advertisers?: { name: string } | null;
+}
+
+export interface AdCreative {
+  id: string;
+  campaign_id: string;
+  format: "banner" | "sponsor_article" | "video" | "card" | "promo_strip";
+  name: string;
+  payload: Record<string, unknown>;
+  article_id: string | null;
+  status: "draft" | "approved" | "refused";
+  weight: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdPlacementLink {
+  campaign_id: string;
+  placement_code: string;
+  weight: number;
+}
+
+export interface AdPayment {
+  id: string;
+  campaign_id: string;
+  amount: number;
+  currency: string;
+  paid_on: string;
+  method: "espèces" | "mobile_money" | "virement" | "chèque" | "autre";
+  transaction_reference: string | null;
+  note: string | null;
+  recorded_by: string | null;
+  created_at: string;
+}
+
+export interface AdDailyStat {
+  stat_date: string;
+  creative_id: string;
+  placement_code: string;
+  impressions: number;
+  clicks: number;
+}
+
+/** Création rendue par get_public_ad_zone (champs d'affichage SEULEMENT). */
+export interface AdPublicCreative {
+  id: string;
+  format: AdCreative["format"];
+  name: string;
+  payload: Record<string, unknown>;
+  priority: number;
+  weight: number;
+}
+
+export interface AdPublicZone {
+  active: boolean;
+  max_items: number;
+  devices: ("desktop" | "mobile")[];
+  creatives: AdPublicCreative[];
+}
