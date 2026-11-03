@@ -7,6 +7,13 @@ import { Youtube } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ArticleWithRelations, Category, UserRole } from "@/lib/types";
 import { saveArticle } from "@/lib/actions/content";
+import {
+  deleteYouTubeOccurrence,
+  findYouTubeOccurrences,
+  insertYouTubeBlock,
+  moveYouTubeOccurrence,
+  type VideoInsertMode,
+} from "@/lib/content/editor-video";
 import { extractYouTubeId, youtubeThumbnailUrl, youtubeWatchUrl } from "@/lib/youtube/url";
 import CoverImageUploader from "./CoverImageUploader";
 import { FieldError, FormMessage, SubmitButton, idleActionState, inputClass, labelClass } from "./form-ui";
@@ -35,13 +42,9 @@ function toLocalInput(iso: string | null): string {
   return iso ? iso.slice(0, 16) : "";
 }
 
-/** IDs YouTube présents dans un corps Markdown, pour l'aperçu éditeur. */
-function articleYtIds(markdown: string): string[] {
-  return [
-    ...new Set(
-      [...markdown.matchAll(/\[\[youtube:([A-Za-z0-9_-]{11})\]\]/g)].map((m) => m[1])
-    ),
-  ];
+/** Indicateur d'emplacement après une édition vidéo (lisible, 1-indexé). */
+function caretLine(value: string, caret: number): number {
+  return value.slice(0, Math.max(0, caret)).split("\n").length;
 }
 
 export default function ArticleForm({
@@ -60,10 +63,22 @@ export default function ArticleForm({
   const [ytOpen, setYtOpen] = useState(false);
   const [ytUrl, setYtUrl] = useState("");
   const [ytError, setYtError] = useState<string | null>(null);
-  const [ytPreviewIds, setYtPreviewIds] = useState<string[]>(
-    article?.content ? articleYtIds(article.content) : []
-  );
+  const [ytNote, setYtNote] = useState<string | null>(null);
+  /** Miroir du contenu du textarea (source de la liste des blocs vidéo). */
+  const [contentValue, setContentValue] = useState(article?.content ?? "");
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
+  /**
+   * Curseur MÉMORISÉ (mobile inclus) : le clavier virtuel ou le panneau
+   * fait perdre le focus au textarea AVANT tout clic d'insertion — la
+   * dernière position connue (sélection comprise) est conservée ici et
+   * sert quand le champ n'a plus le focus.
+   */
+  const caretRef = useRef<{ start: number; end: number }>({
+    start: 0,
+    end: 0,
+  });
+  /** Garde anti-doublon : un double-tap ne peut pas insérer deux blocs. */
+  const lastInsertRef = useRef(0);
   const router = useRouter();
   const isStaff = role === "admin" || role === "editor";
   const options = isStaff ? STATUS_OPTIONS_STAFF : STATUS_OPTIONS_REPORTER;
@@ -94,13 +109,56 @@ export default function ArticleForm({
     setScheduleHint(null);
   };
 
+  // ─────────────────────────────────────────────────────────────
+  // Curseur et édition vidéo
+  // ─────────────────────────────────────────────────────────────
+
+  /** Mémorise la position courante du curseur (appelé sur tout événement
+   *  de sélection, de tap, de frappe ET avant une perte de focus). */
+  const captureCaret = () => {
+    const ta = contentRef.current;
+    if (!ta) return;
+    caretRef.current = {
+      start: ta.selectionStart ?? ta.value.length,
+      end: ta.selectionEnd ?? ta.selectionStart ?? ta.value.length,
+    };
+  };
+
+  /** Curseur à utiliser : LIVE si le textarea a le focus, sinon la
+   *  dernière position mémorisée (panneau/clavier = focus perdu). */
+  const currentCaret = (): { start: number; end: number } => {
+    const ta = contentRef.current;
+    if (ta && document.activeElement === ta) captureCaret();
+    return { ...caretRef.current };
+  };
+
+  /** Applique le nouveau contenu : focus + curseur restaurés (exigences
+   *  2/4), miroir d'état à jour, snapshot de curseur resynchronisé. */
+  const applyContent = (value: string, caret: number) => {
+    const ta = contentRef.current;
+    setContentValue(value);
+    if (!ta) return;
+    ta.value = value;
+    ta.focus();
+    const pos = Math.max(0, Math.min(caret, value.length));
+    try {
+      ta.setSelectionRange(pos, pos);
+    } catch {
+      // Anciens navigateurs tactiles : le focus suffit, le contenu est bon.
+    }
+    caretRef.current = { start: pos, end: pos };
+  };
+
   /**
-   * Insère un bloc vidéo YouTube à la position EXACTE du curseur dans le
-   * corps Markdown : ID extrait et validé (URL YouTube uniquement — toute
-   * autre source est refusée), bloc stable [[youtube:ID]] sur sa propre
-   * ligne, le reste du texte et les blocs existants sont préservés.
+   * Insère un bloc vidéo YouTube selon le mode choisi. La chaîne réelle
+   * (calcul du texte, remplacement de la sélection, position du curseur)
+   * vit dans le module PUR lib/content/editor-video.ts — testé
+   * unitairement. Aucun clic ne peut insérer deux blocs (garde temporelle
+   * + URL vidée immédiatement après succès).
    */
-  const insertYouTube = () => {
+  const insertYouTube = (mode: VideoInsertMode) => {
+    const now = Date.now();
+    if (now - lastInsertRef.current < 350) return; // double-tap → ignoré
     const id = extractYouTubeId(ytUrl);
     if (!id) {
       setYtError(
@@ -110,20 +168,50 @@ export default function ArticleForm({
     }
     const textarea = contentRef.current;
     if (!textarea) return;
-    const start = textarea.selectionStart ?? textarea.value.length;
-    const end = textarea.selectionEnd ?? start;
-    // Normalisation locale : le bloc est toujours sur SA propre ligne,
-    // entouré d'une ligne vide — aucun autre caractère n'est modifié.
-    const before = textarea.value.slice(0, start).replace(/\s+$/, "");
-    const after = textarea.value.slice(end).replace(/^\s+/, "");
-    const block = `${before}\n\n[[youtube:${id}]]\n\n`;
-    textarea.value = `${block}${after}`;
-    const caret = block.length;
-    textarea.focus();
-    textarea.setSelectionRange(caret, caret);
-    setYtPreviewIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    const { start, end } = currentCaret();
+    const replaced = mode === "cursor" && end > start;
+    const op = insertYouTubeBlock(textarea.value, start, end, id, mode);
+    lastInsertRef.current = now;
+    applyContent(op.value, op.caret);
+
+    const anchor = op.anchorExcerpt ? ` après « ${op.anchorExcerpt} »` : "";
+    const where =
+      mode === "end"
+        ? "à la fin de l'article"
+        : mode === "after-paragraph"
+          ? `après un paragraphe${anchor}`
+          : replaced
+            ? "à l'emplacement de la sélection remplacée"
+            : `à l'emplacement du curseur${anchor}`;
+    setYtNote(
+      `Bloc vidéo inséré ${where} — ligne ${caretLine(op.value, op.caret)}.`
+    );
     setYtUrl("");
     setYtError(null);
+  };
+
+  /** Occurrences réelles des blocs vidéo du corps (doublons visibles). */
+  const occurrences = ytOpen ? findYouTubeOccurrences(contentValue) : [];
+  const idCounts = new Map<string, number>();
+  for (const o of occurrences) idCounts.set(o.id, (idCounts.get(o.id) ?? 0) + 1);
+
+  const moveOccurrence = (index: number) => {
+    const occurrence = occurrences[index];
+    if (!occurrence) return;
+    const { start, end } = currentCaret();
+    const op = moveYouTubeOccurrence(contentValue, occurrence, start, end);
+    applyContent(op.value, op.caret);
+    setYtNote(
+      `Bloc déplacé à l'emplacement du curseur — ligne ${caretLine(op.value, op.caret)}.`
+    );
+  };
+
+  const removeOccurrence = (index: number) => {
+    const occurrence = occurrences[index];
+    if (!occurrence) return;
+    const op = deleteYouTubeOccurrence(contentValue, occurrence);
+    applyContent(op.value, op.caret);
+    setYtNote("Bloc vidéo supprimé.");
   };
 
   return (
@@ -182,6 +270,20 @@ export default function ArticleForm({
               defaultValue={article?.content ?? ""}
               placeholder={"## Titre de section\n\nParagraphe de l'article…\n\n- **gras**\n- *italique*\n- listes à puces"}
               className={`${inputClass} font-mono text-[13px] leading-relaxed`}
+              /* Curseur capturé à CHAQUE événement susceptible de le
+                 déplacer (souris, clavier, tactile, changement de valeur)
+                 ET à la perte de focus — l'insertion retrouve toujours
+                 l'endroit voulu, même depuis un téléphone. */
+              onSelect={captureCaret}
+              onClick={captureCaret}
+              onKeyUp={captureCaret}
+              onPointerUp={captureCaret}
+              onTouchEnd={captureCaret}
+              onBlur={captureCaret}
+              onChange={(e) => {
+                setContentValue(e.target.value);
+                captureCaret();
+              }}
             />
             <p className="mt-1 text-[11px] text-neutral-400">
               Mise en forme markdown : <code className="rounded bg-neutral-100 px-1 dark:bg-white/10">**gras**</code>,{" "}
@@ -195,19 +297,27 @@ export default function ArticleForm({
             <div className="mt-3 rounded-xl border border-neutral-200 p-3 dark:border-white/10">
               <button
                 type="button"
-                onClick={() => setYtOpen((v) => !v)}
+                onClick={() => {
+                  // Mémorise le curseur AVANT tout changement de focus.
+                  captureCaret();
+                  setYtOpen((v) => !v);
+                  setYtError(null);
+                }}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-guinea-red/40 bg-guinea-red/10 px-4 py-2.5 text-sm font-bold text-guinea-red transition-colors hover:bg-guinea-red/20 sm:w-auto"
               >
                 <Youtube className="h-4 w-4" />
-                Insérer une vidéo YouTube
+                Insérer ou gérer une vidéo YouTube
               </button>
 
               {ytOpen && (
                 <div className="mt-3 flex flex-col gap-2">
                   <p className="text-[11px] leading-relaxed text-neutral-400">
-                    Placez d&apos;abord votre curseur dans le texte à
-                    l&apos;endroit voulu, collez le lien de la vidéo, puis
-                    insérez — la vidéo apparaîtra exactement à cette position.
+                    Tapez dans le texte à l&apos;endroit voulu, collez le lien
+                    de la vidéo, puis choisissez une des trois insertions. La
+                    position du curseur est mémorisée même si le clavier du
+                    téléphone ou ce panneau cache le champ — sur un
+                    smartphone, vous pouvez sélectionner du texte puis
+                    passer au panneau sans la perdre.
                   </p>
                   <input
                     id="youtube_url"
@@ -225,42 +335,95 @@ export default function ArticleForm({
                       {ytError}
                     </p>
                   )}
-                  <button
-                    type="button"
-                    onClick={insertYouTube}
-                    className="rounded-lg bg-guinea-red px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-guinea-red/90"
-                  >
-                    Insérer à l&apos;emplacement du curseur
-                  </button>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <button
+                      type="button"
+                      onClick={() => insertYouTube("cursor")}
+                      className="rounded-lg bg-guinea-red px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-guinea-red/90"
+                    >
+                      Au curseur
+                      <span className="block text-[10px] font-medium opacity-80">
+                        remplace la sélection
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => insertYouTube("after-paragraph")}
+                      className="rounded-lg border border-guinea-red/40 bg-guinea-red/10 px-4 py-3 text-sm font-bold text-guinea-red transition-colors hover:bg-guinea-red/20"
+                    >
+                      Après le paragraphe courant
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => insertYouTube("end")}
+                      className="rounded-lg border border-guinea-red/40 bg-guinea-red/10 px-4 py-3 text-sm font-bold text-guinea-red transition-colors hover:bg-guinea-red/20"
+                    >
+                      À la fin de l&apos;article
+                    </button>
+                  </div>
 
-                  {ytPreviewIds.length > 0 && (
+                  {ytNote && (
+                    <p className="rounded-lg border border-guinea-green/40 bg-guinea-green/10 px-3 py-2 text-xs font-medium text-guinea-green">
+                      ✔ {ytNote}
+                    </p>
+                  )}
+
+                  {occurrences.length > 0 && (
                     <div className="mt-2">
                       <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-400">
-                        Vidéo{ytPreviewIds.length > 1 ? "s" : ""} insérée
-                        {ytPreviewIds.length > 1 ? "s" : ""} dans le corps
+                        Bloc{occurrences.length > 1 ? "s" : ""} vidéo
+                        {occurrences.length > 1 ? "s" : ""} dans le corps — déplacer ou supprimer
                       </p>
                       <ul className="mt-2 grid gap-3 sm:grid-cols-2">
-                        {ytPreviewIds.map((id) => (
-                          <li key={id} className="rounded-xl border border-neutral-300 bg-white p-2 text-sm dark:border-white/10 dark:bg-night-800">
-                            <span className="block text-xs font-bold text-neutral-600 dark:text-neutral-300">
-                              Bloc dans le texte : <code>[[youtube:{id}]]</code>
-                            </span>
-                            <span className="mt-1.5 block text-xs text-neutral-400">
-                              {youtubeWatchUrl(id)}
-                            </span>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={youtubeThumbnailUrl(id, "mq")}
-                              alt={`Aperçu de la vidéo YouTube ${id}`}
-                              loading="lazy"
-                              className="mt-2 w-full rounded-lg"
-                            />
-                          </li>
-                        ))}
+                        {occurrences.map((occurrence, index) => {
+                          const count = idCounts.get(occurrence.id) ?? 1;
+                          return (
+                            <li
+                              key={`${occurrence.start}-${occurrence.id}`}
+                              className="rounded-xl border border-neutral-300 bg-white p-2 text-sm dark:border-white/10 dark:bg-night-800"
+                            >
+                              <span className="block text-xs font-bold text-neutral-600 dark:text-neutral-300">
+                                #{index + 1} · <code>[[youtube:{occurrence.id}]]</code>
+                                {count > 1 && (
+                                  <span className="ml-2 rounded-full bg-guinea-yellow/20 px-2 py-0.5 text-[10px] font-bold text-guinea-yellow">
+                                    {count}× ce bloc — la page publique affichera {count} lecteurs
+                                  </span>
+                                )}
+                              </span>
+                              <span className="mt-1.5 block text-xs text-neutral-400">
+                                {youtubeWatchUrl(occurrence.id)}
+                              </span>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={youtubeThumbnailUrl(occurrence.id, "mq")}
+                                alt={`Aperçu de la vidéo YouTube ${occurrence.id}`}
+                                loading="lazy"
+                                className="mt-2 w-full rounded-lg"
+                              />
+                              <div className="mt-2 grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => moveOccurrence(index)}
+                                  className="rounded-lg border border-neutral-300 px-2 py-2 text-xs font-bold text-neutral-600 transition-colors hover:bg-neutral-100 dark:border-white/15 dark:text-neutral-300 dark:hover:bg-white/10"
+                                >
+                                  Déplacer au curseur
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => removeOccurrence(index)}
+                                  className="rounded-lg border border-guinea-red/40 bg-guinea-red/10 px-2 py-2 text-xs font-bold text-guinea-red transition-colors hover:bg-guinea-red/20"
+                                >
+                                  Supprimer
+                                </button>
+                              </div>
+                            </li>
+                          );
+                        })}
                       </ul>
                       <p className="mt-2 text-[11px] text-neutral-400">
-                        La vidéo s&apos;affichera sur la page publique à la
-                        position exacte du bloc, au format largeur de l&apos;article.
+                        « Déplacer au curseur » retire le bloc de sa position
+                        actuelle et le place à la dernière position connue du
+                        curseur. « Supprimer » retire uniquement ce bloc.
                       </p>
                     </div>
                   )}

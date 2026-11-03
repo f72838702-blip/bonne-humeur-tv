@@ -218,6 +218,19 @@ export default function CoverImageUploader({
             : "JPEG, PNG ou WebP — compressée automatiquement (2 Mo maximum, ratio préservé). Le téléphone ouvre le sélecteur de photos."}
       </p>
 
+      {/* Confirmation LISIBLE que l'image est liée à l'article : un
+          téléversement réussi ne suffit PAS — tant que l'article n'est
+          pas enregistré, l'URL n'existe que dans ce formulaire. Toute
+          navigation avant enregistrement perd le lien (cause réelle des
+          couvertures « absentes » du site public). */}
+      {value && !error && phase === null && (
+        <p className="mt-3 rounded-xl border border-guinea-green/40 bg-guinea-green/10 px-3 py-2 text-xs font-bold text-guinea-green" role="status">
+          ✔ Couverture liée à cet article — enregistrez l&apos;article
+          maintenant (brouillon, publier…). Elle apparaîtra sur le site
+          public dès la publication.
+        </p>
+      )}
+
       {error && (
         <p role="alert" className="mt-3 rounded-xl border border-guinea-red/40 bg-guinea-red/10 px-4 py-3 text-sm font-medium text-guinea-red">
           {error}

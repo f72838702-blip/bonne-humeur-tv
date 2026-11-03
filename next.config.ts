@@ -45,6 +45,20 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  /**
+   * Server Actions : le défaut Next.js (1 Mo) est TROP PETIT pour le lot
+   * d'une couverture complète (full ≤ 600 Ko + card ≤ 300 Ko + thumb
+   * ≤ 200 Ko ≈ 1,1 Mo de FormData) — au-delà, la requête est rejetée
+   * AVANT d'atteindre l'action : l'image n'atteint jamais le bucket et
+   * la couverture ne peut jamais être liée à l'article. Limite portée à
+   * 3 Mo (plafond absolu bucket 2 Mo PAR fichier — aucun dépassement du
+   * quota Storage ; aucune ressource payante).
+   */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "3mb",
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "i.ytimg.com" },
