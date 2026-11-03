@@ -1,0 +1,19 @@
+// Configuration Cloudflare Workers — Bonne Humeur TV
+// Branche deploy/cloudflare-staging.
+// AUCUN déploiement distant : preview LOCALE uniquement à ce stade
+// (wrangler dev) ; toute mise en ligne exige l'autorisation de la direction.
+{
+  // Nom du Worker en prévisualisation isolée (jamais de domaine réel)
+  "name": "bonne-humeur-tv-preview",
+  // Date de compatibilité : généraux, nodejs_compat requis par OpenNext (Server Actions, Supabase ssr…)
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": ".open-next/worker.js",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": false
+  }
+}

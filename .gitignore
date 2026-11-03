@@ -15,7 +15,10 @@ next-env.d.ts
 *.log
 .vercel
 
-.vercel
+# Cloudflare Workers (opennext/wrangler) + secrets locaux preview
+.open-next/
+.wrangler/
+.dev.vars
 
 # Supabase CLI temp
 supabase/.temp/
