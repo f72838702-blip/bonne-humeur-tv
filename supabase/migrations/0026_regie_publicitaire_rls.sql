@@ -12,7 +12,7 @@
 --             lecture statistiques — RÈGLEMENTS en LECTURE SEULE.
 --   reporter: AUCUN accès à la gestion commerciale.
 --   public  : JAMAIS les tables — uniquement les fonctions de diffusion
---             get_public_ads / get_public_partners / record_ad_event
+--             get_public_ad_zone / get_public_ad_link / get_public_partners / record_ad_event
 --             (SECURITY DEFINER, champs d'affichage seulement).
 -- ═══════════════════════════════════════════════════════════════════════════
 
@@ -170,12 +170,14 @@ create policy "ad_partners_admin_delete" on public.ad_partners
 --   anon + authenticated exécutent UNIQUEMENT diffusion et trackers.
 --   purge_ad_fingerprints : personne (pg_cron, rôle postgres).
 -- ═══════════════════════════════════════════════════════════
-revoke all on function public.get_public_ads(text) from public;
+revoke all on function public.get_public_ad_zone(text) from public;
+revoke all on function public.get_public_ad_link(uuid) from public;
 revoke all on function public.get_public_partners() from public;
 revoke all on function public.record_ad_event(uuid, text, text, text) from public;
 revoke all on function public.purge_ad_fingerprints() from public, anon, authenticated;
 
-grant execute on function public.get_public_ads(text) to anon, authenticated;
+grant execute on function public.get_public_ad_zone(text) to anon, authenticated;
+grant execute on function public.get_public_ad_link(uuid) to anon, authenticated;
 grant execute on function public.get_public_partners() to anon, authenticated;
 grant execute on function public.record_ad_event(uuid, text, text, text) to anon, authenticated;
 
@@ -204,5 +206,5 @@ exception
 end;
 $cron$;
 
-comment on function public.get_public_ads(text) is 'Diffusion publique : renvoie les champs AFFICHAGE des créations approuvées de campagnes actives dans leur période serveur — aucune coordonnée privée.';
+comment on function public.get_public_ad_zone(text) is 'Diffusion publique : renvoie les champs AFFICHAGE des créations approuvées de campagnes actives dans leur période serveur — aucune coordonnée privée.';
 comment on function public.record_ad_event(uuid, text, text, text) is 'Tracker idempotent : 1 événement max / jour / créative / empreinte SHA-256 serveur (AUCUNE IP brute).';

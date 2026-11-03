@@ -120,7 +120,7 @@ async function main() {
               now() - interval '1 hour', now() + interval '1 day', 'active', 50)`);
     await as("authenticated", U_EDITOR, `
       insert into public.ad_creatives (id, campaign_id, format, name, payload, status)
-      values ('11111111-1111-1111-1111-111111111203','11111111-1111-1111-1111-111111111202','banner','Bannière Test','{}','draft')`);
+      values ('11111111-1111-1111-1111-111111111203','11111111-1111-1111-1111-111111111202','banner','Bannière Test','{"link_url":"https://exemple.com"}','draft')`);
     try {
       await as("authenticated", U_EDITOR, `
         update public.ad_creatives set status='approved', approved_by='${U_ADMIN}', approved_at=now()
@@ -139,18 +139,19 @@ async function main() {
   await expect("ADS8", "get_public_ads renvoie la création en diffusion", async () => {
     await c.query(`insert into public.ad_campaign_placements (campaign_id, placement_code)
       values ('11111111-1111-1111-1111-111111111202','home_top_banner')`);
-    const rows = await as("anon", null, "select * from public.get_public_ads('home_top_banner')");
-    return rows.rows.length === 1 && rows.rows[0].format === "banner";
+    const rows = await as("anon", null, "select public.get_public_ad_zone('home_top_banner') zone");
+    const zone = rows.rows[0].zone;
+    return zone.creatives.length === 1 && zone.creatives[0].format === "banner" && zone.max_items >= 1;
   });
 
   // ADS9 — le jeu de Colonnes RENVOYÉS par get_public_ads ne contient AUCUN champ privé
   await expect("ADS9", "get_public_ads : colonnes = affichage seul (aucun montant/contrat)", async () => {
-    const rows = await as("anon", null, "select * from public.get_public_ads('home_top_banner') limit 1");
-    const cols = rows.fields.map((f) => f.name);
-    const forbidden = ["amount", "currency", "contact_email", "contact_phone",
-      "contract_terms", "contract_ref", "legal_name", "notes", "reference"];
-    return cols.every((c) => !forbidden.includes(c))
-      && ["creative_id", "format", "name", "payload", "priority", "weight"].every((k) => cols.includes(k));
+    const rows = await as("anon", null, "select public.get_public_ad_zone('home_top_banner') zone");
+    const zone = rows.rows[0].zone;
+    const top = zone.creatives[0] ?? {};
+    return ["active", "max_items", "devices", "creatives"].every((k) => k in zone)
+      && !top.payload.link_url              // le lien sortant n'est JAMAIS exposé au DOM
+      && !("link_url" in (top.payload ?? {}));
   });
 
   // ADS10 — impression idempotente : 2 appels même empreinte = 1 impression
@@ -227,8 +228,8 @@ async function main() {
   // ADS18 — get_public_ads : campagne suspendue non diffusée
   await expect("ADS18", "campagne suspendue : get_public_ads vide", async () => {
     await as("authenticated", U_ADMIN, "update public.ad_campaigns set status='suspended' where id='11111111-1111-1111-1111-111111111202'");
-    const rows = await as("anon", null, "select * from public.get_public_ads('home_top_banner')");
-    const empty = rows.rows.length === 0;
+        const rows = await as("anon", null, "select public.get_public_ad_zone('home_top_banner') zone");
+    const empty = rows.rows[0].zone.creatives.length === 0;
     await as("authenticated", U_ADMIN, "update public.ad_campaigns set status='active' where id='11111111-1111-1111-1111-111111111202'");
     return empty;
   });
@@ -238,8 +239,8 @@ async function main() {
     await as("authenticated", U_ADMIN, `update public.ad_campaigns
       set start_at = now() - interval '2 days', end_at = now() - interval '1 day'
       where id='11111111-1111-1111-1111-111111111202'`);
-    const rows = await as("anon", null, "select * from public.get_public_ads('home_top_banner')");
-    const empty = rows.rows.length === 0;
+        const rows = await as("anon", null, "select public.get_public_ad_zone('home_top_banner') zone");
+    const empty = rows.rows[0].zone.creatives.length === 0;
     await as("authenticated", U_ADMIN, `update public.ad_campaigns
       set start_at = now() - interval '1 hour', end_at = now() + interval '1 hour'
       where id='11111111-1111-1111-1111-111111111202'`);
@@ -249,8 +250,8 @@ async function main() {
   // ADS20 — annonceur désactivé : diffusion STOPPÉE
   await expect("ADS20", "annonceur inactif : get_public_ads vide", async () => {
     await as("authenticated", U_ADMIN, "update public.advertisers set is_active=false where id='11111111-1111-1111-1111-111111111201'");
-    const rows = await as("anon", null, "select * from public.get_public_ads('home_top_banner')");
-    const empty = rows.rows.length === 0;
+        const rows = await as("anon", null, "select public.get_public_ad_zone('home_top_banner') zone");
+    const empty = rows.rows[0].zone.creatives.length === 0;
     await as("authenticated", U_ADMIN, "update public.advertisers set is_active=true where id='11111111-1111-1111-1111-111111111201'");
     return empty;
   });

@@ -10,7 +10,7 @@
 --              ad_campaigns, ad_creatives, ad_campaign_placements,
 --              ad_payments, ad_daily_stats (+ ad_event_fingerprints
 --              = déduplication des impressions, AUCUNE IP brute).
---   Fonctions : get_public_ads (diffusion, champs d'affichage SEULEMENT),
+--   Fonctions : get_public_ad_zone (diffusion, champs d'affichage SEULEMENT),
 --               record_ad_event (idempotent), purge_ad_fingerprints.
 --   Triggers  : touch_updated_at + audit_row_change (tables commerciales).
 --   Aucune colonne redondante : la « Programmation » est calculée depuis la
@@ -243,45 +243,69 @@ create trigger ad_partners_audit after insert or update or delete on public.ad_p
   for each row execute function public.audit_row_change('ad_partners');
 
 -- ═══════════════════════════════════════════════════════════
--- FONCTION DE DIFFUSION PUBLIQUE — renvoie UNIQUEMENT les champs
--- d'affichage (aucune coordonnée d'annonceur, aucun montant, aucun
--- contrat). Sécurité invoker... SECURITY DEFINER : l'anon ne lit JAMAIS
--- les tables directement ; la fonction joint et filtre elle-même.
+-- FONCTION DE DIFFUSION PUBLIQUE — UNE requête / emplacement (§15) :
+-- renvoie la ZONE complète (max_items, devices, créations) en un seul
+-- jsonb. Les créations diffusables sont filtrées comme suit :
+--    placement actif ET campagne active ET période serveur couvrante
+--    ET créative approved ET annonceur actif ET format autorisé.
+-- Les liens sortants NE sont JAMAIS renvoyés : payload - 'link_url' —
+-- le visiteur passe exclusivement par /ads/click/[id] (§10).
+-- AUCUNE coordonnée d'annonceur, aucun montant, aucun contrat.
 -- ═══════════════════════════════════════════════════════════
-create or replace function public.get_public_ads(p_code text)
-returns table (
-  creative_id uuid,
-  format text,
-  name text,
-  payload jsonb,
-  priority smallint,
-  weight smallint
-)
+create or replace function public.get_public_ad_zone(p_code text)
+returns jsonb
 language sql stable security definer set search_path = public
 as $$
-  select cr.id, cr.format, cr.name, cr.payload, cam.priority, cr.weight
+  select jsonb_build_object(
+    'active', p.is_active,
+    'max_items', p.max_items,
+    'devices', p.devices,
+    'creatives', coalesce((
+      select jsonb_agg(sub)
+      from (
+        select cr.id, cr.format, cr.name, cr.payload - 'link_url' payload,
+               cam.priority, cr.weight
+        from public.ad_placements p2
+        join public.ad_campaign_placements cp on cp.placement_code = p2.code
+        join public.ad_campaigns cam on cam.id = cp.campaign_id
+        join public.ad_creatives cr on cr.campaign_id = cam.id
+        join public.advertisers adv on adv.id = cam.advertiser_id
+        where p2.code = p_code
+          and p2.is_active
+          and cam.status = 'active'
+          and cam.start_at is not null and cam.end_at is not null
+          and cam.start_at <= now() and now() < cam.end_at
+          and cr.status = 'approved'
+          and cr.format = any (p2.allowed_formats)
+          and adv.is_active
+        order by cam.priority desc, cr.weight
+        limit p.max_items
+      ) sub
+    ), '[]'::jsonb)
+  )
   from public.ad_placements p
-  join public.ad_campaign_placements cp
-    on cp.placement_code = p.code
-  join public.ad_campaigns cam
-    on cam.id = cp.campaign_id
-  join public.ad_creatives cr
-    on cr.campaign_id = cam.id
-  join public.advertisers adv
-    on adv.id = cam.advertiser_id
-  where p.code = p_code
-    and p.is_active
+  where p.code = p_code;
+$$;
+
+-- Le lien de redirection d'une créative — pour la route /ads/click/[id]
+-- UNIQUEMENT (serveur) : créative approuvée d'une campagne RéELLEMENT
+-- en diffusion ; sinon null (open redirect impossible par construction).
+create or replace function public.get_public_ad_link(p_creative uuid)
+returns text
+language sql stable security definer set search_path = public
+as $$
+  select coalesce(cr.payload ->> 'link_url', '')
+  from public.ad_creatives cr
+  join public.ad_campaigns cam on cam.id = cr.campaign_id
+  where cr.id = p_creative
+    and cr.status = 'approved'
     and cam.status = 'active'
     and cam.start_at is not null and cam.end_at is not null
-    and cam.start_at <= now() and now() < cam.end_at
-    and cr.status = 'approved'
-    and cr.format = any (p.allowed_formats)
-    and adv.is_active
-  order by cam.priority desc, cr.weight;
+    and cam.start_at <= now() and now() < cam.end_at;
 $$;
 
 -- ═══════════════════════════════════════════════════════════
--- PARTENAIRES PUBLICS — mêmes principes que get_public_ads :
+-- PARTENAIRES PUBLICS — mêmes principes que les fonctions de diffusion :
 -- champs d'affichage seulement, période respectée (dates serveur).
 -- Le lien partenaire est rendu tel quel UNIQUEMENT s'il a été saisi
 -- http/https côté admin (validation applicative ads-core) —
@@ -318,16 +342,18 @@ $$;
 create or replace function public.record_ad_event(
   p_creative uuid,
   p_kind text,
-  p_placement text,
-  p_fingerprint text
+  p_placement text default null,
+  p_fingerprint text default null
 ) returns boolean
 language plpgsql security definer set search_path = public
 as $$
 declare
   v_valid boolean;
   v_fresh boolean;
+  v_place text := coalesce(nullif(btrim(coalesce(p_placement, '')), ''), '-');
+  v_fp text := coalesce(p_fingerprint, '');
 begin
-  if p_kind not in ('impression', 'clic') or length(p_fingerprint) = 0 or length(p_fingerprint) > 200 then
+  if p_kind not in ('impression', 'clic') or length(v_fp) = 0 or length(v_fp) > 200 then
     return false;
   end if;
 
