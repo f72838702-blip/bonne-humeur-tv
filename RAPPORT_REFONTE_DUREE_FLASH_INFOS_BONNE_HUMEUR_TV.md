@@ -6,10 +6,7 @@ bandeau public d'accueil) — menu déroulant de durée, calcul serveur de
 l'expiration, programmation facultative, prolongation/réactivation,
 retrait automatique côté public.
 
-**STATUT : CODE TERMINÉ ET VALIDÉ LOCALEMENT — AUCUNE MODIFICATION
-DISTANTE** (aucune migration appliquée, aucune donnée distante touchée,
-aucun déploiement, aucun push). Déploiement + migration 0024 en attente
-de l'autorisation expresse de la direction.
+**STATUT : DÉPLOYÉ SUR FEU VERT DE LA DIRECTION (3 novembre 2026).**
 
 ---
 
@@ -179,12 +176,21 @@ puis `db push --remote` (doit n'afficher QUE 0024).
 aucune souscription ; tout repose sur Supabase Free / Cloudflare
 Workers Free existants.
 
-## 12. STATUT DE PRÉPARATION AU DÉPLOIEMENT
+## 12. STATUT — DÉPLOIEMENT EFFECTUÉ SUR FEU VERT (3 novembre 2026)
 
-- Code complet, testé, builds OK — **PRÊT À DÉPLOYER sur feu vert de la
-  direction uniquement**, avec, dans le même feu vert :
-  1. application de la migration 0024 (précondition du niveau) ;
-  2. `wrangler deploy` (aucune autre commande distante).
-- Aucun secret exposé ; RLS et policies inchangés ; aucun push GitHub ;
-  aucune donnée distante modifiée (l'unique flash existant est
-  préservé tel quel — aucune date ajoutée à sa place).
+- **Migration 0024 APPLIQUÉE** : liste distante vérifiée (seule 0024 en
+  attente) + `db push --dry-run --remote` = « Would push: 0024 » UNIQUEMENT,
+  puis `db push --remote --yes`. Vérification SQL en lecture seule :
+  9 colonnes (`level text not null default 'normal'`), **3 policies
+  breaking_news INTACTES**, flash existant préservé (« beperyma »,
+  niveau normal).
+- **Déploiement `wrangler deploy` exit 0 → Version
+  `5f4e18b2-4b22-4834-8350-59fe91977bf8`** (Worker Startup 23 ms).
+- Live vérifié : `/`, `/actualites`, `/contact`, `/admin/login` → 200 ·
+  gardes admin (`/admin`, `/admin/flash-infos`, `/admin/articles/new`,
+  `/admin/medias`) → 307 · bandeau réel rendu · CSP/XFO intacts.
+- Aucun secret exposé ; RLS inchangée ; aucun push GitHub ; budget 0 USD.
+- **Reste à la direction (navigateur/téléphone)** : publier un flash avec
+  la durée 15 min (la plus courte), vérifier le compte à rebours admin,
+  la disparition publique à l'expiration (page laissée ouverte), Android +
+  iPhone, et le niveau (couleur du bandeau).
