@@ -257,4 +257,32 @@ Management, aucune modification de données) :
 
 Le module régie n'est pas encore déployé sur l'environnement Cloudflare public
 (prod inchangée, version f5aeaef3 sans régie) : la RECETTE par la direction et le
-DÉPLOIEMENT restent à faire, chacun sur autorisation distincte.
+DÉPLOIEMENT restent à faire, chacun sur autorisation distincte. **Voir l'additif
+§18 ci-dessous : le déploiement a ensuite été exécuté sur autorisation.**
+
+## 18. ADDITIF (03/11/2026) — DÉPLOIEMENT DU CODE DE LA RÉGIE (autorisation direction)
+
+`npx opennextjs-cloudflare build` à neuf → `npx wrangler deploy` exit 0 → worker
+`bonne-humeur-tv-preview`, **Version 12bdfa00-6e3f-42cb-90fb-de58f0db7606**,
+51 fichiers chargés (25 déjà en cache), Total 10,79 MiB / gzip 2,43 MiB,
+**Worker Startup 21 ms**. secrets intacts (aucun secret dans les bundles — même
+chaîne que les déploiements précédents).
+
+Smoke tests LIVE (https://bonne-humeur-tv-preview.bonne-humeur-tv.workers.dev) :
+
+| Route | Réponse attendue | Réel |
+|---|---|---|
+| `/` (accueil, zones régie invisibles sans données) | 200 | ✔ |
+| `/actualites`, `/videos` | 200 | ✔ |
+| `/admin/login` | 200 | ✔ |
+| `/admin/publicites` (+ campagnes/statistiques/partenaires) | 307 (non authentifié) | ✔ ×4 |
+| `/ads/click/<uuid bidon>` | 302 → `/` | ✔ (Location vérifiée) |
+| `POST /ads/track` payload invalide | `{"counted":false}` | ✔ |
+| CSP / X-Frame-Options | inchangées (i.ytimg, *.supabase.co, youtube-nocookie…) | ✔ |
+
+Le site public se comporte **exactement comme avant** : aucune zone d'emplacement
+ne rend quoi que ce soit sans données (aucun bloc vide, aucun élément existant
+remplacé). **Reste : recette par la direction connectée au CMS** — créer 1
+annonceur, 1 campagne (période réelle), 1 création image, l'approuver,
+l'activer, vérifier l'affichage sur l'accueil, cliquer, constater l'agrégat dans
+Statistiques.
