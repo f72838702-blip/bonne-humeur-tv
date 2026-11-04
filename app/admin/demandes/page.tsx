@@ -1,12 +1,21 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Building2, Inbox, Mail, MessageSquare } from "lucide-react";
+import { Building2, Inbox, Mail, MessageSquare, Reply } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
-import { getContactMessages, getPartnershipRequests, markContactMessagesRead, markPartnershipRequestsSeen } from "@/lib/data/requests";
+import {
+  getContactMessages,
+  getPartnershipRequests,
+  markContactMessagesRead,
+  markPartnershipRequestsSeen,
+} from "@/lib/data/requests";
+import { getReplyHistory } from "@/lib/data/replies";
 import { formatDateTime } from "@/lib/utils";
+import { groupRepliesByRequest, isRequestAnswered, replyGroupKey } from "@/lib/replies-core";
+import type { RequestReply } from "@/lib/types";
 import StatusBadge from "@/components/admin/StatusBadge";
 import RequestStatusForm from "@/components/admin/RequestStatusForm";
 import DeleteActionForm from "@/components/admin/DeleteActionForm";
+import ReplyForm from "@/components/admin/ReplyForm";
 import RefreshButton from "@/components/admin/RefreshButton";
 import { ForbiddenScreen, NotFoundScreen, UnconfiguredScreen } from "@/components/admin/AccessDenied";
 import { deleteRequestAction } from "@/lib/actions/admin";
@@ -49,6 +58,57 @@ function UnreadBadge() {
   );
 }
 
+/** Badge « Répondu » — UNIQUEMENT si le fournisseur a accepté un envoi
+ *  (statut 'sent' en base) ; une tentative échouée ne compte jamais. */
+function AnsweredBadge() {
+  return (
+    <span className="rounded-full bg-guinea-green px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
+      Répondu
+    </span>
+  );
+}
+
+/** Historique chronologique des réponses de la demande (0028) : chaque
+ *  ligne = une tentative, lisible du plus ancien au plus récent. */
+function ReplyHistoryBlock({ replies }: { replies: RequestReply[] }) {
+  if (replies.length === 0) {
+    return (
+      <p className="text-xs text-neutral-400">
+        Aucune réponse envoyée pour l&apos;instant — cette demande est « en attente de réponse ».
+      </p>
+    );
+  }
+  return (
+    <ul className="flex flex-col gap-2" aria-label="Historique des réponses">
+      {replies.map((reply) => (
+        <li
+          key={reply.id}
+          className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-white/10 dark:bg-white/5"
+        >
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wide">
+            {reply.status === "sent" ? (
+              <span className="inline-flex items-center gap-1 text-guinea-green">
+                <Reply className="h-3 w-3" /> Envoyée
+              </span>
+            ) : (
+              <span className="text-guinea-red">Échec d&apos;envoi</span>
+            )}
+            <span className="font-semibold lowercase tracking-normal text-neutral-500 dark:text-neutral-400">
+              → {reply.recipient_email} · {formatDateTime(reply.created_at)}
+            </span>
+          </div>
+          {reply.error && (
+            <p className="mt-1 text-[11px] text-guinea-red">{reply.error}</p>
+          )}
+          <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-neutral-700 dark:text-neutral-300">
+            {reply.body}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default async function AdminRequestsPage({
   searchParams,
 }: {
@@ -67,10 +127,14 @@ export default async function AdminRequestsPage({
   const { onglet } = await searchParams;
   const tab = onglet === "contact" ? "contact" : "partenariats";
 
-  const [partnerships, contacts] = await Promise.all([
+  const [partnerships, contacts, replies] = await Promise.all([
     getPartnershipRequests(),
     getContactMessages(),
+    getReplyHistory(),
   ]);
+
+  /** Historique regroupé par demande, trié du plus ancien au plus récent. */
+  const repliesByRequest = groupRepliesByRequest(replies);
 
   // Consultation = lecture : les éléments affichés sont marqués vu/lu
   // (UNIQUEMENT ceux encore à NULL, une seule UPDATE chacun — les
@@ -138,7 +202,10 @@ export default async function AdminRequestsPage({
           <NotFoundScreen what="Aucune demande de partenariat" />
         ) : (
           <ul className="flex flex-col gap-4">
-            {partnerships.map((r) => (
+            {partnerships.map((r) => {
+              const rReplies = repliesByRequest.get(replyGroupKey("partnership", r.id)) ?? [];
+              const answered = isRequestAnswered(rReplies);
+              return (
               <li
                 key={r.id}
                 className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800"
@@ -148,6 +215,7 @@ export default async function AdminRequestsPage({
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusBadge status={r.status} />
                       {!r.seen_at && <NewBadge />}
+                      {answered && <AnsweredBadge />}
                       <span className="rounded-full bg-guinea-green/10 px-2.5 py-0.5 text-[10px] font-bold uppercase text-guinea-green">
                         {SERVICE_LABELS[r.service] ?? r.service}
                       </span>
@@ -190,12 +258,21 @@ export default async function AdminRequestsPage({
                 )}
 
                 <div className="flex flex-col gap-3 border-t border-neutral-200 pt-3 dark:border-white/10">
+                  {isAdmin && (
+                    <ReplyForm
+                      type="partnership"
+                      requestId={r.id}
+                      recipientEmail={r.email}
+                      senderName={r.contact_name}
+                    />
+                  )}
                   <RequestStatusForm
                     type="partnership"
                     id={r.id}
                     status={r.status}
                     adminNote={r.admin_note}
                   />
+                  <ReplyHistoryBlock replies={rReplies} />
                   {isAdmin && (
                     <DeleteActionForm
                       action={deleteRequestAction}
@@ -206,14 +283,18 @@ export default async function AdminRequestsPage({
                   )}
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )
       ) : contacts.length === 0 ? (
         <NotFoundScreen what="Aucun message" />
       ) : (
         <ul className="flex flex-col gap-4">
-          {contacts.map((m) => (
+          {contacts.map((m) => {
+            const mReplies = repliesByRequest.get(replyGroupKey("contact", m.id)) ?? [];
+            const answered = isRequestAnswered(mReplies);
+            return (
             <li
               key={m.id}
               className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800"
@@ -223,6 +304,7 @@ export default async function AdminRequestsPage({
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={m.status} />
                     {!m.read_at && <UnreadBadge />}
+                    {answered && <AnsweredBadge />}
                   </div>
                   <h3 className="mt-2 font-display text-lg font-bold">
                     {m.subject ?? "Message sans sujet"}
@@ -249,12 +331,21 @@ export default async function AdminRequestsPage({
               )}
 
               <div className="flex flex-col gap-3 border-t border-neutral-200 pt-3 dark:border-white/10">
+                {isAdmin && (
+                  <ReplyForm
+                    type="contact"
+                    requestId={m.id}
+                    recipientEmail={m.email}
+                    senderName={m.name}
+                  />
+                )}
                 <RequestStatusForm
                   type="contact"
                   id={m.id}
                   status={m.status}
                   adminNote={m.admin_note}
                 />
+                <ReplyHistoryBlock replies={mReplies} />
                 {isAdmin && (
                   <DeleteActionForm
                     action={deleteRequestAction}
@@ -265,7 +356,8 @@ export default async function AdminRequestsPage({
                 )}
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
 

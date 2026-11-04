@@ -7,6 +7,7 @@ import {
   requestDeleteSchema,
   requestStatusSchema,
   roleChangeSchema,
+  sendReplySchema,
 } from "@/lib/validation/schemas";
 import {
   ActionState,
@@ -14,13 +15,11 @@ import {
   successState,
   zodFieldErrors,
 } from "./helpers";
-import {
-  disableTeamMember,
-  enableTeamMember,
-  inviteTeamMember,
-  updateProfileRole,
-} from "@/lib/data/users";
+import { disableTeamMember, enableTeamMember, inviteTeamMember, updateProfileRole } from "@/lib/data/users";
 import { deleteRequest, updateRequestStatus } from "@/lib/data/requests";
+import { getRequestRecipient, insertFailedReply, insertSentReply } from "@/lib/data/replies";
+import { isBrevoConfigured, sendEmailViaBrevo } from "@/lib/email/brevo";
+import { buildReplySubject, isPlausibleEmail, type ReplyRequestType } from "@/lib/replies-core";
 import { deleteMedia, uploadMediaVariants } from "@/lib/data/media";
 import { MEDIA_PURPOSES, MEDIA_VARIANTS, MediaPurpose, MediaVariant } from "@/lib/media/variants";
 
@@ -107,6 +106,87 @@ export async function deleteRequestAction(
   revalidatePath("/admin/demandes");
   revalidatePath("/admin");
   return successState("Supprimé.");
+}
+
+/**
+ * Envoyer une réponse à une demande/message — ADMIN UNIQUEMENT
+ * (requireRole admin ; la policy INSERT 0028 réapplique la règle en
+ * dernier ressort). SÉCURITÉ :
+ *  - le destinataire provient UNIQUEMENT de la base (requestDeleteSchema
+ *    ne transporte pas d'e-mail : aucun envoi vers une adresse arbitraire) ;
+ *  - l'envoi part du serveur (clé Brevo jamais exposée au navigateur) ;
+ *  - « envoyée » n'est enregistré QUE si Brevo accepte le message (2xx) :
+ *    en échec, la tentative est historisée avec status='failed' et l'erreur
+ *    s'affiche — le texte rédigé reste dans le formulaire (contrôlé React).
+ */
+export async function sendReplyAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const guard = await requireRole(["admin"]);
+  if ("denied" in guard) return deniedState(guard.denied);
+
+  const parsed = sendReplySchema.safeParse({
+    type: formData.get("type"),
+    id: formData.get("id"),
+    body: formData.get("body") ?? "",
+  });
+  if (!parsed.success) {
+    return errorState("Veuillez corriger les champs signalés.", zodFieldErrors(parsed.error));
+  }
+
+  const parent = await getRequestRecipient({
+    type: parsed.data.type,
+    id: parsed.data.id,
+  });
+  if (!parent.ok || !parent.email || !isPlausibleEmail(parent.email)) {
+    return errorState("Demande introuvable ou adresse de destination invalide.");
+  }
+
+  if (!isBrevoConfigured()) {
+    return errorState(
+      "L'envoi d'e-mails n'est pas encore configuré sur le serveur (clé Brevo). Voir le rapport de la direction."
+    );
+  }
+
+  const result = await sendEmailViaBrevo({
+    recipientEmail: parent.email,
+    subject: buildReplySubject(parsed.data.type, parent.subject ?? null),
+    body: parsed.data.body,
+  });
+
+  if (!result.ok) {
+    console.error("[actions/admin] sendReplyAction :", result.error);
+    await insertFailedReply({
+      type: parsed.data.type,
+      requestId: parsed.data.id,
+      recipientEmail: parent.email,
+      body: parsed.data.body,
+      senderProfileId: guard.session.profile?.id ?? null,
+      error: result.error,
+    });
+    return errorState(`Envoi refusé — veuillez réessayer. Détail : ${result.error}`);
+  }
+
+  const recorded = await insertSentReply({
+    type: parsed.data.type as ReplyRequestType,
+    requestId: parsed.data.id,
+    recipientEmail: parent.email,
+    body: parsed.data.body,
+    senderProfileId: guard.session.profile?.id ?? null,
+    providerMessageId: result.messageId,
+  });
+  if (!recorded) {
+    // E-mail parti mais historique refusé : on l'affiche honnêtement plutôt
+    // qu'un succès trompeur — l'admin peut recopier la réponse si besoin.
+    console.error("[actions/admin] sendReplyAction : historique refusé par la base");
+    return errorState(
+      "Le message a été accepté par le fournisseur, mais son enregistrement dans l'historique a échoué. Réessayez uniquement s'il faut le renvoyer."
+    );
+  }
+
+  revalidatePath("/admin/demandes");
+  return successState(`Réponse envoyée à ${parent.email}.`);
 }
 
 // ─────────────────────────────────────────────────────────────

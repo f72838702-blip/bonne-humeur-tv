@@ -114,6 +114,23 @@ export interface PartnershipRequest {
   seen_at: string | null;
 }
 
+/** Réponse de l'administration (0028) — historique chronologique par demande. */
+export type ReplyStatus = "sent" | "failed";
+
+export interface RequestReply {
+  id: string;
+  created_at: string;
+  partnership_request_id: string | null;
+  contact_message_id: string | null;
+  sender_profile_id: string | null;
+  /** Copie du destinataire réel (verrouillé côté serveur, jamais du navigateur). */
+  recipient_email: string;
+  body: string;
+  provider_message_id: string | null;
+  status: ReplyStatus;
+  error: string | null;
+}
+
 export interface ContactMessage {
   id: string;
   created_at: string;

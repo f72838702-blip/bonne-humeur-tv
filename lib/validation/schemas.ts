@@ -206,6 +206,17 @@ export const requestDeleteSchema = z.object({
   id: uuid,
 });
 
+/**
+ * Envoyer une réponse à une demande/message — ADMIN UNIQUEMENT (côté action).
+ * Le destinataire n'est PAS dans le schéma : il est lu depuis la base côté
+ * serveur — impossible d'envoyer à une adresse arbitraire via le formulaire.
+ */
+export const sendReplySchema = z.object({
+  type: z.enum(["partnership", "contact"]),
+  id: uuid,
+  body: trimmed(2, 10000, "Réponse"),
+});
+
 export type ContactInput = z.infer<typeof contactSchema>;
 export type PartnershipInput = z.infer<typeof partnershipSchema>;
 export type ArticleInput = z.infer<typeof articleSchema>;
