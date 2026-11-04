@@ -67,6 +67,42 @@ export const AD_STORED_STATUSES = [
 ] as const;
 export type AdStoredStatus = (typeof AD_STORED_STATUSES)[number];
 
+// ─── Liste blanche des colonnes réelles de ad_campaigns (0025) ────────
+// Le schéma Zod de campagne porte `placements` (liste des emplacements) qui
+// n'est PAS une colonne de la table (table de liaison séparée) : tout payload
+// écrit via Supabase passe par toCampaignRow, qui ne laisse passer QUE ces
+// colonnes (id/created_at/updated_at gérés par Postgres/triggers).
+export const AD_CAMPAIGN_COLUMNS = [
+  "advertiser_id",
+  "name",
+  "reference",
+  "description",
+  "start_at",
+  "end_at",
+  "billing_type",
+  "amount",
+  "currency",
+  "priority",
+  "status",
+  "commercial_manager",
+  "notes",
+  "contract_ref",
+  "contract_signed_at",
+  "contract_start_at",
+  "contract_end_at",
+  "contract_terms",
+  "created_by",
+] as const;
+
+/** Copie filtrée : uniquement les colonnes réelles → jamais de clé fantôme. */
+export function toCampaignRow(values: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const column of AD_CAMPAIGN_COLUMNS) {
+    if (column in values) out[column] = values[column];
+  }
+  return out;
+}
+
 /** État effectif affiché/comportemental (calculé, jamais stocké). */
 export type AdEffectiveState =
   | "draft"

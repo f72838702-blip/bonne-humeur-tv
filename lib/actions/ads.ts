@@ -11,6 +11,7 @@ import {
   canTransition,
   isSafeAdUrl,
   campaignPeriodError,
+  toCampaignRow,
   type AdStoredStatus,
 } from "@/lib/ads/ads-core";
 import { parseConakryInput } from "@/lib/flash/flash-core";
@@ -234,8 +235,10 @@ export async function saveCampaignAction(
   if (!parsed.success) return errorState("Formulaire incomplet.", zodFieldErrors(parsed.error));
 
   const values = stripId(parsed.data);
-  // Les 4 colonnes contrat (3 dates + conditions) ne sont pas dans le
-  // formulaire : à la MODIFICATION, on ne les touche que si le formulaire
+  // Colonne fantôme prévue par le CORRECTIF : `placements` du schéma n'est
+  // PAS une colonne de ad_campaigns (table de liaison séparée) — passer par
+  // la liste blanche toCampaignRow. Les 3 dates de contrat ne sont pas dans
+  // le formulaire : à la MODIFICATION, on ne les touche que si le formulaire
   // en apporte — jamais écraser à null un contrat existant par des champs absents.
   const patch: Record<string, unknown> = { ...values };
   for (const key of ["contract_signed_at", "contract_start_at", "contract_end_at"] as const) {
@@ -244,13 +247,13 @@ export async function saveCampaignAction(
   const reference = values.reference
     ? await ensureUniqueReference(values.reference)
     : `BHTV-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-  const row = {
+  const row = toCampaignRow({
     ...patch,
     reference,
     start_at: dates.start_at,
     end_at: dates.end_at,
     created_by: guard.session.userId,
-  };
+  });
 
   const supabase = await getSupabaseServerClient();
   if (!supabase) return deniedState("unconfigured");
@@ -264,8 +267,8 @@ export async function saveCampaignAction(
       .select("id")
       .single();
     if (error) {
-      console.error("[actions/ads] saveCampaignAction(update) :", error.message);
-      return errorState("Enregistrement impossible.");
+      console.error("[actions/ads] saveCampaignAction(update) : code =", error.code ?? "?", "message =", error.message);
+      return errorState(`Enregistrement de la campagne impossible (erreur ${error.code ?? "inconnue"} — inscrite au journal).`);
     }
     campaignId = data.id;
     // Réécriture des liaisons emplacements (simple et transactionnelle en
@@ -275,7 +278,7 @@ export async function saveCampaignAction(
       .delete()
       .eq("campaign_id", campaignId);
     if (delErr) {
-      console.error("[actions/ads] saveCampaignAction(placements reset) :", delErr.message);
+      console.error("[actions/ads] saveCampaignAction(placements reset) : code =", delErr.code ?? "?", "message =", delErr.message);
       return errorState("Mise à jour des emplacements impossible.");
     }
   } else {
@@ -285,8 +288,12 @@ export async function saveCampaignAction(
       .select("id")
       .single();
     if (error) {
-      console.error("[actions/ads] saveCampaignAction(insert) :", error.message);
-      return errorState("Création impossible (annonceur invalide ?).");
+      console.error("[actions/ads] saveCampaignAction(insert) : code =", error.code ?? "?", "message =", error.message);
+      return errorState(
+        error.code === "23503"
+          ? "Annonceur introuvable ou inutilisable : vérifiez Annonceurs, il est créé et actif."
+          : `Création de la campagne impossible (erreur ${error.code ?? "inconnue"} — inscrite au journal).`
+      );
     }
     campaignId = data.id;
   }
@@ -295,7 +302,7 @@ export async function saveCampaignAction(
     const links = placements.map((code) => ({ campaign_id: campaignId, placement_code: code }));
     const { error } = await supabase.from("ad_campaign_placements").insert(links);
     if (error) {
-      console.error("[actions/ads] saveCampaignAction(placements) :", error.message);
+      console.error("[actions/ads] saveCampaignAction(placements) : code =", error.code ?? "?", "message =", error.message);
       return errorState("Liaisons d'emplacements impossible.");
     }
   }

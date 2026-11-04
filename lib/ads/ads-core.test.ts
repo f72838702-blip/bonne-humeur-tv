@@ -15,6 +15,7 @@ import {
   paymentStateOf,
   PAYMENT_STATE_LABELS,
   rotateAds,
+  toCampaignRow,
   toCsv,
 } from "./ads-core";
 import { parseConakryInput } from "@/lib/flash/flash-core";
@@ -294,5 +295,46 @@ describe("régie — noyau pur", () => {
     expect(parseConakryInput("2026-11-4T10:00")).toBeNull();
     expect(parseConakryInput("04/11/2026 10:00")).toBeNull();
     expect(parseConakryInput("")).toBeNull();
+  });
+
+  // ─── Liste blanche du row de campagne (colonne fantôme `placements`) ───
+  it("toCampaignRow garde chaque colonne RÉELLE de ad_campaigns (0025)", () => {
+    const row = toCampaignRow({
+      advertiser_id: "a-uuid",
+      name: "Campagne",
+      reference: "BHTV-2026-ABC123",
+      start_at: "2026-11-04T10:00:00.000Z",
+      end_at: "2026-11-05T10:00:00.000Z",
+      billing_type: "forfait",
+      amount: 500000,
+      currency: "GNF",
+      priority: 50,
+      status: "draft",
+      created_by: "u-uuid",
+    });
+    expect(Object.keys(row).sort()).toEqual([
+      "advertiser_id", "amount", "billing_type", "created_by", "currency",
+      "end_at", "name", "priority", "reference", "start_at", "status",
+    ]);
+  });
+
+  it("toCampaignRow JAMAIS la colonne fantôme `placements` ni id/created_at/updated_at", () => {
+    const row = toCampaignRow({
+      id: "c-uuid",
+      placements: ["home_top_banner"],
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+      reference: "BHTV-2026-X",
+    });
+    expect(row.placements).toBeUndefined();
+    expect(row.id).toBeUndefined();
+    expect(row.created_at).toBeUndefined();
+    expect(row.updated_at).toBeUndefined();
+    expect(row).toEqual({ reference: "BHTV-2026-X" });
+  });
+
+  it("toCampaignRow : colonnes contrat conservées quand le formulaire les apporte", () => {
+    const row = toCampaignRow({ contract_signed_at: "2026-11-01", contract_terms: "régie manuelle" });
+    expect(row).toEqual({ contract_signed_at: "2026-11-01", contract_terms: "régie manuelle" });
   });
 });
