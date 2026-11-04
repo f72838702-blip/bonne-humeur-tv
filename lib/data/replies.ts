@@ -35,9 +35,13 @@ export async function getRequestRecipient(params: {
   if (!supabase) return { ok: false, error: "backend_not_configured" };
 
   const table = params.type === "partnership" ? "partnership_requests" : "contact_messages";
+  // `subject` n'existe QUE dans contact_messages (partenariats : jamais) —
+  // le sélectionner sur la table partenaires provoque 42703 et ferait
+  // échouer TOUTE réponse à une demande de partenariat.
+  const columns = params.type === "partnership" ? "email" : "email, subject";
   const { data, error } = await supabase
     .from(table)
-    .select("email, subject")
+    .select(columns)
     .eq("id", params.id)
     .limit(1)
     .maybeSingle<{ email: string; subject: string | null }>();
