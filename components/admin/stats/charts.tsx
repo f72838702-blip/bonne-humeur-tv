@@ -51,11 +51,11 @@ export function StatCard({
   delta: number | null;
 }) {
   return (
-    <div className="flex flex-col gap-1 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+    <div className="flex flex-col gap-1 rounded-2xl border border-neutral-200 bg-white p-3.5 sm:p-4 dark:border-white/10 dark:bg-night-800">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-500 sm:text-[11px] dark:text-neutral-400">
         {label}
       </p>
-      <p className="font-display text-3xl font-extrabold tabular-nums">{value}</p>
+      <p className="font-display text-2xl font-extrabold tabular-nums sm:text-3xl">{value}</p>
       <Trend delta={delta} />
       <p className="text-[10px] leading-snug text-neutral-400">{hint}</p>
     </div>
@@ -131,7 +131,7 @@ export function CountryRanking({ stats }: { stats: CountryStat[] }) {
       {stats.map((s) => (
         <li key={s.iso2 || "unknown"} className="flex items-center gap-2 text-xs">
           <span className="w-6 text-center text-sm">{s.iso2 ? countryFlag(s.iso2) : "🌍"}</span>
-          <span className="w-32 shrink-0 truncate font-semibold">
+          <span className="w-24 shrink-0 truncate font-semibold sm:w-32">
             {s.iso2 ? countryName(s.iso2) : "Inconnu"}
           </span>
           <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-neutral-100 dark:bg-white/10">
@@ -140,7 +140,7 @@ export function CountryRanking({ stats }: { stats: CountryStat[] }) {
               style={{ width: `${max ? Math.round((s.views / max) * 100) : 0}%`, background: RED }}
             />
           </span>
-          <span className="w-24 shrink-0 text-right tabular-nums text-neutral-500 dark:text-neutral-400">
+          <span className="w-16 shrink-0 text-right tabular-nums text-neutral-500 sm:w-24 dark:text-neutral-400">
             {s.views} · {s.pct}%
           </span>
         </li>
@@ -254,14 +254,14 @@ export function ReferrerBars<T extends string>({ stats }: { stats: SimpleStat<T>
           s.key;
         return (
           <li key={s.key} className="flex items-center gap-2 text-xs">
-            <span className="w-32 shrink-0 truncate font-semibold">{label}</span>
+            <span className="w-24 shrink-0 truncate font-semibold sm:w-32">{label}</span>
             <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-neutral-100 dark:bg-white/10">
               <span
                 className="block h-full rounded-full"
                 style={{ width: `${max ? Math.round((s.views / max) * 100) : 0}%`, background: RED }}
               />
             </span>
-            <span className="w-24 shrink-0 text-right tabular-nums text-neutral-500 dark:text-neutral-400">
+            <span className="w-16 shrink-0 text-right tabular-nums text-neutral-500 sm:w-24 dark:text-neutral-400">
               {s.views} · {s.pct}%
             </span>
           </li>

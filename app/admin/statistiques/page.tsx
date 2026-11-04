@@ -120,40 +120,50 @@ export default async function AdminStatisticsPage({
     <div className="flex flex-col gap-6">
       <HeaderBlock preset={preset} />
 
-      {/* Filtre de période — liens serveur (aucun JS client), s'applique à TOUT */}
-      <nav className="flex flex-wrap items-center gap-2" aria-label="Période">
-        {PRESETS.map((p) => (
-          <a
-            key={p.key}
-            href={filterLink(p.key)}
-            className={
-              preset === p.key
-                ? "rounded-full border border-guinea-red bg-guinea-red px-4 py-1.5 text-xs font-bold text-white"
-                : "rounded-full border border-neutral-200 px-4 py-1.5 text-xs font-semibold text-neutral-600 hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:text-neutral-300"
-            }
-          >
-            {p.label}
-          </a>
-        ))}
-        <form action="/admin/statistiques" method="get" className="flex items-center gap-2">
+      {/* Filtre de période — liens serveur (aucun JS client), s'applique à TOUT.
+          Mobile : ligne défilante horizontale de presets, puis formulaire dates. */}
+      <nav
+        className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-3 sm:p-4 dark:border-white/10 dark:bg-night-800"
+        aria-label="Période"
+      >
+        <div className="flex gap-2 overflow-x-auto pb-0.5" role="group">
+          {PRESETS.map((p) => (
+            <a
+              key={p.key}
+              href={filterLink(p.key)}
+              className={
+                preset === p.key
+                  ? "shrink-0 whitespace-nowrap rounded-full border border-guinea-red bg-guinea-red px-3.5 py-2 text-xs font-bold text-white sm:px-4 sm:py-1.5"
+                  : "shrink-0 whitespace-nowrap rounded-full border border-neutral-200 px-3.5 py-2 text-xs font-semibold text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red sm:px-4 sm:py-1.5 dark:border-white/10 dark:text-neutral-300"
+              }
+            >
+              {p.label}
+            </a>
+          ))}
+        </div>
+        <form
+          action="/admin/statistiques"
+          method="get"
+          className="flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-2.5 dark:border-white/5"
+        >
           <input type="hidden" name="periode" value="custom" />
           <input
             type="date"
             name="du"
             defaultValue={du}
-            className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-white/10 dark:bg-night-900"
+            className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-xs tabular-nums sm:flex-none dark:border-white/10 dark:bg-night-900"
             aria-label="Du"
           />
           <input
             type="date"
             name="au"
             defaultValue={au}
-            className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs dark:border-white/10 dark:bg-night-900"
+            className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-xs tabular-nums sm:flex-none dark:border-white/10 dark:bg-night-900"
             aria-label="Au"
           />
           <button
             type="submit"
-            className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold hover:border-guinea-red/50 dark:border-white/10"
+            className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold transition-colors hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10"
           >
             Appliquer
           </button>
@@ -270,9 +280,9 @@ export default async function AdminStatisticsPage({
 function HeaderBlock({ preset }: { preset: string }) {
   return (
     <header className="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Statistiques</h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="min-w-0">
+        <h1 className="font-display text-xl font-extrabold sm:text-3xl">Statistiques</h1>
+        <p className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
           Audience du site — {PERIOD_LABELS[preset] ?? preset}. Réservé aux administrateurs.
         </p>
       </div>
@@ -280,7 +290,7 @@ function HeaderBlock({ preset }: { preset: string }) {
         <RefreshButton label="Actualiser" />
         <a
           href={`/admin/statistiques/export?${new URLSearchParams({ periode: preset }).toString()}`}
-          className="rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-semibold text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:text-neutral-300"
+          className="rounded-full border border-neutral-200 px-3 py-2 text-xs font-semibold text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red sm:px-4 sm:text-sm dark:border-white/10 dark:text-neutral-300"
         >
           Export CSV
         </a>
@@ -299,9 +309,9 @@ function ChartBlock({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
+    <section className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-white/10 dark:bg-night-800">
       <div>
-        <h2 className="font-display text-lg font-bold">{title}</h2>
+        <h2 className="font-display text-base font-bold sm:text-lg">{title}</h2>
         <p className="mt-0.5 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">{expl}</p>
       </div>
       {children ?? <EmptyChart label="Aucune donnée." />}
