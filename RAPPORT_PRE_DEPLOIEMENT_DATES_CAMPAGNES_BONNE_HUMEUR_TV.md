@@ -1,6 +1,6 @@
 # RAPPORT PRÉ-DÉPLOIEMENT — CORRECTION DES DATES DES CAMPAGNES (RÉGIE PUBLICITAIRE)
 
-**Date : 04/11/2026 — REDIT À LIRE AVANT DE DONNER L'AUTORISATION DE DÉPLOIEMENT**
+**Date : 04/11/2026 — RAPPORT À LIRE AVANT DE DONNER L'AUTORISATION DE DÉPLOIEMENT**
 **Produit en attente d'autorisation : le déploiement Cloudflare du correctif des dates de campagnes.**
 
 ---
