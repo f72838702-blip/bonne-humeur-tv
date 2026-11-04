@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { ActionState } from "@/lib/actions/helpers";
 import {
   saveAdvertiserAction,
@@ -123,6 +123,9 @@ export function CampaignForm({
   selectedPlacements?: string[];
 }) {
   const [state, formAction] = useActionState(saveCampaignAction, idleActionState);
+  // Garde CLIENT : la fin ne peut pas précéder le début (attribut min du
+  // sélecteur) — la validation UNIQUE reste campaignPeriodError côté serveur.
+  const [startValue, setStartValue] = useState<string>(toDateTimeLocal(item?.start_at));
   return (
     <form action={formAction} className="grid gap-4 sm:grid-cols-2">
       {item && <input type="hidden" name="id" value={item.id} />}
@@ -152,12 +155,29 @@ export function CampaignForm({
       </div>
       <div>
         <label className={labelClass} htmlFor="camp-start">Début de diffusion (Conakry, optionnel)</label>
-        <input id="camp-start" name="start_at" type="datetime-local" defaultValue={toDateTimeLocal(item?.start_at)} className={inputClass} />
+        <input
+          id="camp-start"
+          name="start_at"
+          type="datetime-local"
+          defaultValue={startValue}
+          onChange={(e) => setStartValue(e.target.value)}
+          className={inputClass}
+        />
         <FieldError errors={state.fieldErrors} name="start_at" />
       </div>
       <div>
-        <label className={labelClass} htmlFor="camp-end">Fin de diffusion (Conakry, optionnel)</label>
-        <input id="camp-end" name="end_at" type="datetime-local" defaultValue={toDateTimeLocal(item?.end_at)} className={inputClass} />
+        <label className={labelClass} htmlFor="camp-end">Fin de diffusion (Conakry, optionnelle)</label>
+        <input
+          id="camp-end"
+          name="end_at"
+          type="datetime-local"
+          defaultValue={toDateTimeLocal(item?.end_at)}
+          min={startValue || undefined}
+          className={inputClass}
+        />
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          Doit être postérieure au début — vérifiez l&#39;HEURE, pas seulement le jour.
+        </p>
         <FieldError errors={state.fieldErrors} name="end_at" />
       </div>
       <div>

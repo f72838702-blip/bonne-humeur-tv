@@ -213,6 +213,36 @@ export function computedCtr(clicks: number, impressions: number): number | null 
   return Math.round((clicks / impressions) * 1000) / 10;
 }
 
+// ─── Période de campagne (validation unique client/serveur) ──────────
+/** ISO UTC+0 → lisible Conakry « 04/11/2026 à 10:00 » (messages d'erreur). */
+export function formatConakryReadable(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})/.exec(iso);
+  return m ? `${m[3]}/${m[2]}/${m[1]} à ${m[4]}` : iso;
+}
+
+/**
+ * Validation PURE de la période d'une campagne — une SEULE source de vérité
+ * utilisée côté serveur (action) et côté client (formulaire).
+ * Renvoie null si la période est acceptable ou incomplète (facultative),
+ * sinon un message PRÉCIS qui AFFICHE les deux timestamps reçus (Conakry) :
+ * l'administrateur voit immédiatement ce que le serveur a réellement compris.
+ */
+export function campaignPeriodError(
+  startIso: string | null | undefined,
+  endIso: string | null | undefined
+): string | null {
+  if (!startIso || !endIso) return null;
+  const s = Date.parse(startIso);
+  const e = Date.parse(endIso);
+  if (Number.isNaN(s) || Number.isNaN(e)) {
+    return "Période illisible : reformulez les deux dates (format attendu jj/mm/aaaa hh:mm).";
+  }
+  if (e <= s) {
+    return `La fin (${formatConakryReadable(endIso)}) doit être POSTÉRIEURE au début (${formatConakryReadable(startIso)}) : vérifiez l'heure des deux champs, pas seulement le jour.`;
+  }
+  return null;
+}
+
 /** Règle d'impression uniforme (documentée, affichée dans l'admin). */
 export const IMPRESSION_RULE =
   "Une impression est comptée à chaque rendu d'une création dans la page, avec déduplication : au maximum 1 impression par navigateur (empreinte) et par jour et par création. Impressions ≠ visiteurs uniques ; statistiques indicatives, jamais certifiées.";

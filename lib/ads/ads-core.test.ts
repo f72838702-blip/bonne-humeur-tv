@@ -5,9 +5,11 @@ import {
   adStateOf,
   allowedTransitions,
   canTransition,
+  campaignPeriodError,
   computedCtr,
   csvEscape,
   fingerprintOf,
+  formatConakryReadable,
   isSafeAdUrl,
   isPubliclyDiffused,
   paymentStateOf,
@@ -15,6 +17,7 @@ import {
   rotateAds,
   toCsv,
 } from "./ads-core";
+import { parseConakryInput } from "@/lib/flash/flash-core";
 
 /** Horloge simulée — aucun appel réel à l'horloge dans le noyau. */
 const NOW = "2026-11-05T10:00:00.000Z";
@@ -238,5 +241,58 @@ describe("régie — noyau pur", () => {
     const fp = fingerprintOf(["e3b0c44298fc1c149afbf4c8996fb92427ae41e4", "ua-hash", "c1", "2026-11-05"]);
     expect(fp).not.toContain(" ");
     expect(fp.length).toBeLessThanOrEqual(200);
+  });
+
+  // ─── Période de campagne (les 4 cas de la direction) ───
+  it("formatConakryReadable rend « jj/mm/aaaa à hh:mm »", () => {
+    expect(formatConakryReadable("2026-11-04T10:00:00.000Z")).toBe("04/11/2026 à 10:00");
+    expect(formatConakryReadable("2026-11-05T00:01:00.000Z")).toBe("05/11/2026 à 00:01");
+    expect(formatConakryReadable("pas-iso")).toBe("pas-iso");
+  });
+
+  it("période : fin 12:00 > début 10:00 accepté", () => {
+    expect(campaignPeriodError("2026-11-04T10:00:00.000Z", "2026-11-04T12:00:00.000Z")).toBeNull();
+  });
+
+  it("période : fin = début + 24 h acceptée", () => {
+    expect(campaignPeriodError("2026-11-04T10:00:00.000Z", "2026-11-05T10:00:00.000Z")).toBeNull();
+  });
+
+  it("période : dates égales refusées avec message AFFICHANT les deux timestamps", () => {
+    const err = campaignPeriodError("2026-11-04T10:00:00.000Z", "2026-11-04T10:00:00.000Z");
+    expect(err).toContain("04/11/2026 à 10:00");
+    expect(err?.match(/04\/11\/2026 à 10:00/g)).toHaveLength(2);
+    expect(err).toContain("l'heure");
+  });
+
+  it("période : fin avant début refusée avec message précis", () => {
+    const err = campaignPeriodError("2026-11-04T12:00:00.000Z", "2026-11-04T10:00:00.000Z");
+    expect(err).toContain("04/11/2026 à 10:00");
+    expect(err).toContain("04/11/2026 à 12:00");
+  });
+
+  it("période : passage de minuit et secondes parasites acceptés", () => {
+    expect(campaignPeriodError("2026-11-04T23:59:00.000Z", "2026-11-05T00:01:00.000Z")).toBeNull();
+  });
+
+  it("période : champ manquant (début OU fin absent) = période facultative, jamais erreur", () => {
+    expect(campaignPeriodError(null, "2026-11-05T10:00:00.000Z")).toBeNull();
+    expect(campaignPeriodError("2026-11-04T10:00:00.000Z", null)).toBeNull();
+    expect(campaignPeriodError(null, null)).toBeNull();
+  });
+
+  it("période : valeurs illisibles = message de reformulation", () => {
+    expect(campaignPeriodError("n'importe quoi", "2026-11-05T10:00:00.000Z")).toContain("illisible");
+    expect(campaignPeriodError("n'importe quoi", "n'importe quoi aussi")).toContain("illisible");
+  });
+
+  // ─── Conversions Conakry (UTC+0, une seule normalisation) ───
+  it("parseConakryInput : datetime-local → ISO UTC, une seule fois", () => {
+    expect(parseConakryInput("2026-11-04T10:00")).toBe("2026-11-04T10:00:00.000Z");
+    expect(parseConakryInput("2026-11-04T10:00:30")).toBe("2026-11-04T10:00:00.000Z");
+    expect(parseConakryInput(" 2026-11-04T10:00 ")).toBe("2026-11-04T10:00:00.000Z");
+    expect(parseConakryInput("2026-11-4T10:00")).toBeNull();
+    expect(parseConakryInput("04/11/2026 10:00")).toBeNull();
+    expect(parseConakryInput("")).toBeNull();
   });
 });

@@ -10,6 +10,7 @@ import {
   AD_PLACEMENT_CODES,
   canTransition,
   isSafeAdUrl,
+  campaignPeriodError,
   type AdStoredStatus,
 } from "@/lib/ads/ads-core";
 import { parseConakryInput } from "@/lib/flash/flash-core";
@@ -179,7 +180,7 @@ async function ensureUniqueReference(desired: string): Promise<string> {
   return `${desired}-${Date.now()}`;
 }
 
-function campaignDates(formData: FormData): { start_at: string | null; end_at: string | null; error?: string } {
+function campaignDates(formData: FormData): { start_at: string | null; end_at: string | null; error?: string; field?: string } {
   const startRaw = String(formData.get("start_at") ?? "");
   const endRaw = String(formData.get("end_at") ?? "");
   if (startRaw.trim() === "" && endRaw.trim() === "") {
@@ -187,11 +188,10 @@ function campaignDates(formData: FormData): { start_at: string | null; end_at: s
   }
   const startIso = startRaw.trim() === "" ? null : parseConakryInput(startRaw);
   const endIso = endRaw.trim() === "" ? null : parseConakryInput(endRaw);
-  if (startRaw.trim() !== "" && !startIso) return { start_at: null, end_at: null, error: "Date de début invalide" };
-  if (endRaw.trim() !== "" && !endIso) return { start_at: null, end_at: null, error: "Date de fin invalide" };
-  if (startIso && endIso && Date.parse(endIso) <= Date.parse(startIso)) {
-    return { start_at: null, end_at: null, error: "La date de fin doit être postérieure à la date de début" };
-  }
+  if (startRaw.trim() !== "" && !startIso) return { start_at: null, end_at: null, error: "Date de début invalide (format attendu jj/mm/aaaa hh:mm).", field: "start_at" };
+  if (endRaw.trim() !== "" && !endIso) return { start_at: null, end_at: null, error: "Date de fin invalide (format attendu jj/mm/aaaa hh:mm).", field: "end_at" };
+  const periodError = campaignPeriodError(startIso, endIso);
+  if (periodError) return { start_at: null, end_at: null, error: periodError, field: "end_at" };
   return { start_at: startIso, end_at: endIso };
 }
 
@@ -208,7 +208,7 @@ export async function saveCampaignAction(
     .filter((code) => (AD_PLACEMENT_CODES as readonly string[]).includes(code));
 
   const dates = campaignDates(formData);
-  if (dates.error) return errorState(dates.error, { start_at: dates.error });
+  if (dates.error) return errorState(dates.error, { [dates.field ?? "end_at"]: dates.error });
 
   const parsed = adCampaignSchema.safeParse({
     id: stringOrNull(formData, "id"),
@@ -234,17 +234,21 @@ export async function saveCampaignAction(
   if (!parsed.success) return errorState("Formulaire incomplet.", zodFieldErrors(parsed.error));
 
   const values = stripId(parsed.data);
+  // Les 4 colonnes contrat (3 dates + conditions) ne sont pas dans le
+  // formulaire : à la MODIFICATION, on ne les touche que si le formulaire
+  // en apporte — jamais écraser à null un contrat existant par des champs absents.
+  const patch: Record<string, unknown> = { ...values };
+  for (const key of ["contract_signed_at", "contract_start_at", "contract_end_at"] as const) {
+    if (!patch[key]) delete patch[key];
+  }
   const reference = values.reference
     ? await ensureUniqueReference(values.reference)
     : `BHTV-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   const row = {
-    ...values,
+    ...patch,
     reference,
     start_at: dates.start_at,
     end_at: dates.end_at,
-    contract_signed_at: values.contract_signed_at || null,
-    contract_start_at: values.contract_start_at || null,
-    contract_end_at: values.contract_end_at || null,
     created_by: guard.session.userId,
   };
 
