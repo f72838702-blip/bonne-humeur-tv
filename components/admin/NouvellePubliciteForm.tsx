@@ -246,6 +246,10 @@ export default function NouvellePubliciteForm({ role, advertisers, placements, a
         {/* Contenu — SEULS les champs du format choisi */}
         {format === "banner" && (
           <div className="grid gap-3">
+            {/* L'URL de l'image téléversée (état contrôlé) DOIT voyager dans
+                la FormData : sans ce champ caché, le serveur refuse toute
+                publication (« Création incomplète. ») — cause du bug constaté. */}
+            <input type="hidden" name="image_url" value={imageUrl} />
             <ImageField label="Ajouter une image *" url={imageUrl} uploading={uploading === "image"} onFile={(f) => uploadImage(f, "image")} onClear={() => setImageUrl("")} name="image_url" hint="Grande image horizontale (ex. 1200×300). Elle est compressée automatiquement." />
             <div>
               <label className={labelClass} htmlFor="np-alt">Texte alternatif (lisible par les lecteurs d&apos;écran) *</label>
@@ -258,6 +262,7 @@ export default function NouvellePubliciteForm({ role, advertisers, placements, a
         )}
         {format === "card" && (
           <div className="grid gap-3">
+            <input type="hidden" name="image_url" value={imageUrl} />
             <ImageField label="Ajouter une image (facultative)" url={imageUrl} uploading={uploading === "image"} onFile={(f) => uploadImage(f, "image")} onClear={() => setImageUrl("")} name="image_url" />
             <TextInput name="title" label="Titre *" max={120} value={titleValue} onChange={setTitleValue} errors={state.fieldErrors} />
             <div>
@@ -315,6 +320,7 @@ export default function NouvellePubliciteForm({ role, advertisers, placements, a
         )}
         {format === "partner" && (
           <div className="grid gap-3">
+            <input type="hidden" name="logo_url" value={logoUrl} />
             <ImageField label="Ajouter le logo *" url={logoUrl} uploading={uploading === "logo"} onFile={(f) => uploadImage(f, "logo")} onClear={() => setLogoUrl("")} name="logo_url" hint="Le nom affiché est celui de l'entreprise choisie ci-dessus." />
             <div>
               <label className={labelClass} htmlFor="np-p-alt">Description du logo (facultative — accessibilité)</label>
