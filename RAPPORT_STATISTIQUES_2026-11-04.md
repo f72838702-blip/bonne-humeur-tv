@@ -1,6 +1,6 @@
 # RAPPORT FINAL — TABLEAU DE BORD STATISTIQUES (mission « Statistiques d'audience »)
 
-**Date : 04/11/2026 · Projet : bonne-humeur-tv · Statut : CODE TERMINÉ ET VALIDÉ LOCALEMENT — en attente de VOTRE autorisation pour (1) migration 0029 distante, (2) déploiement Cloudflare, (3) push GitHub.**
+**Date : 04/11/2026 · Projet : bonne-humeur-tv · Statut : DÉPLOYÉ EN RÉEL — migration 0029 appliquée, déploiement Version 7ae82d45, push GitHub effectué (autorisation direction « deploi » + « 0029 + déploiement + push » le 04/11/2026). Voir section 8.**
 
 ---
 
@@ -84,3 +84,12 @@ Formulaires publics, RLS existante, module Demandes/Réponses, régie : rien n'a
 3. **Push GitHub** (branche main).
 
 Après validation, vous pourrez tester : onglet Statistiques, filtres, fiche d'un article, export CSV — et la mention de confidentialité sur /confidentialite.
+
+## 8. Déploiement exécuté (04/11/2026, autorisation direction)
+
+1. **Migration 0029 appliquée sur la base distante** (Supabase beinalmwqkxbqitvuobr, API Management, HTTP 201) puis VÉRIFIÉE par requêtes réelles : table + RLS activée, policy `analytics_page_views_admin_select` (authenticated, SELECT, has_role('admin')), 3 fonctions security definer (`insert_analytics_page_view`, `analytics_engagement`, `purge_analytics`), 7 index (dont unique event_id), grants EXECUTE (`anon` ✓, `authenticated` ✓, `service_role` ✓, PUBLIC révoqué).
+2. **Déploiement Cloudflare** : build OpenNext OK → **Version 7ae82d45-d240-4104-a126-d94d25886789** sur https://bonne-humeur-tv-preview.bonne-humeur-tv.workers.dev.
+   Smoke tests live : accueil 200 ; /admin/statistiques anonyme → 307 (redirection login) ; track avec UA robot → 204 refusé ; track chemin /admin → 204 refusé. **Contrôle final : 0 ligne dans analytics_page_views — les tests n'ont rien pollué.**
+3. **Push GitHub** : `ed3846f..2123238 main → main` — commits `2d0e182` (module Statistiques, 14 fichiers, +2 432 lignes) et `2123238` (rapports).
+
+**À partir de maintenant, la collecte est ACTIVE** : chaque visite réelle du site enregistre une page vue. Les statistiques resteront à zéro « honnêtement » pendant quelques heures/jours (aucune donnée fictive) — ouvrez l'onglet Statistiques après les premières visites.
