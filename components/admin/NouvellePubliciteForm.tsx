@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import type { ActionState } from "@/lib/actions/helpers";
 import { publishSimpleAdAction, uploadAdImageAction } from "@/lib/actions/ads";
 import {
@@ -65,6 +65,45 @@ export default function NouvellePubliciteForm({ role, advertisers, placements, a
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [placementsTouched, setPlacementsTouched] = useState(false);
   const [durationKey, setDurationKey] = useState<string>(DEFAULT_DURATION_KEY);
+  // Champs de saisie TOUS contrôlés : React 19 réinitialise les champs non
+  // contrôlés d'un <form action={…}> après CHAQUE envoi — un alt text non
+  // contrôlé serait vidé au premier refus serveur (bug bloquant constaté).
+  // Contrôlés = la valeur survit à toute erreur de validation jusqu'à la
+  // publication réussie (seul moment où tout est remis à zéro).
+  const [altValue, setAltValue] = useState("");
+  const [descriptionValue, setDescriptionValue] = useState("");
+  const [phoneValue, setPhoneValue] = useState("");
+  const [articleId, setArticleId] = useState("");
+  const [customStartValue, setCustomStartValue] = useState("");
+  const [customEndValue, setCustomEndValue] = useState("");
+
+  // Après une publication RÉUSSIE seulement : formulaire propre (comme si
+  // l'utilisateur revenait pour une nouvelle publicité). Jamais après un refus.
+  useEffect(() => {
+    if (state.status !== "success") return;
+    setFormat("banner");
+    setAdvMode(advertisers.length > 0 ? "existing" : "new");
+    setAdvId(advertisers[0]?.id ?? "");
+    setAdvName("");
+    setAltValue("");
+    setDescriptionValue("");
+    setPhoneValue("");
+    setArticleId("");
+    setCustomStartValue("");
+    setCustomEndValue("");
+    setImageUrl("");
+    setLogoUrl("");
+    setTitleValue("");
+    setTextValue("");
+    setMessageValue("");
+    setBgColor("");
+    setCtaValue("");
+    setYoutubeUrl("");
+    setLinkUrl("");
+    setChosen(new Set());
+    setPlacementsTouched(false);
+    setDurationKey(DEFAULT_DURATION_KEY);
+  }, [state, advertisers.length, advertisers]);
 
   const isCampaign = format !== "partner";
   const compatible = useMemo(
@@ -198,7 +237,7 @@ export default function NouvellePubliciteForm({ role, advertisers, placements, a
               </div>
               <div>
                 <label className={labelClass} htmlFor="np-adv-phone">Téléphone (facultatif)</label>
-                <input id="np-adv-phone" name="new_advertiser_contact_phone" maxLength={40} className={inputClass} />
+                <input id="np-adv-phone" name="new_advertiser_contact_phone" maxLength={40} value={phoneValue} onChange={(e) => setPhoneValue(e.target.value)} className={inputClass} />
               </div>
             </div>
           )}
@@ -210,7 +249,7 @@ export default function NouvellePubliciteForm({ role, advertisers, placements, a
             <ImageField label="Ajouter une image *" url={imageUrl} uploading={uploading === "image"} onFile={(f) => uploadImage(f, "image")} onClear={() => setImageUrl("")} name="image_url" hint="Grande image horizontale (ex. 1200×300). Elle est compressée automatiquement." />
             <div>
               <label className={labelClass} htmlFor="np-alt">Texte alternatif (lisible par les lecteurs d&apos;écran) *</label>
-              <input id="np-alt" name="image_alt" maxLength={200} className={inputClass} />
+              <input id="np-alt" name="image_alt" maxLength={200} value={altValue} onChange={(e) => setAltValue(e.target.value)} className={inputClass} />
               <FieldError errors={state.fieldErrors} name="image_alt" />
             </div>
             <TextInput name="title" label="Titre (facultatif)" max={150} value={titleValue} onChange={setTitleValue} errors={state.fieldErrors} />
@@ -238,14 +277,14 @@ export default function NouvellePubliciteForm({ role, advertisers, placements, a
               <p className="mt-1 text-xs text-neutral-500">Formes acceptées : youtube.com/watch, youtu.be, Shorts.</p>
             </div>
             <TextInput name="title" label="Titre *" max={120} value={titleValue} onChange={setTitleValue} errors={state.fieldErrors} />
-            <TextInput name="description" label="Description (facultative)" max={300} errors={state.fieldErrors} area />
+            <TextInput name="description" label="Description (facultative)" max={300} errors={state.fieldErrors} area value={descriptionValue} onChange={setDescriptionValue} />
           </div>
         )}
         {format === "sponsor_article" && (
           <div className="grid gap-3">
             <div>
               <label className={labelClass} htmlFor="np-article">Choisir l&apos;article à mettre en avant *</label>
-              <select id="np-article" name="article_id" className={inputClass} defaultValue="">
+              <select id="np-article" name="article_id" value={articleId} onChange={(e) => setArticleId(e.target.value)} className={inputClass}>
                 <option value="">— Choisir un article déjà publié —</option>
                 {articles.map((a) => (
                   <option key={a.id} value={a.id}>{a.title}</option>
@@ -279,7 +318,7 @@ export default function NouvellePubliciteForm({ role, advertisers, placements, a
             <ImageField label="Ajouter le logo *" url={logoUrl} uploading={uploading === "logo"} onFile={(f) => uploadImage(f, "logo")} onClear={() => setLogoUrl("")} name="logo_url" hint="Le nom affiché est celui de l'entreprise choisie ci-dessus." />
             <div>
               <label className={labelClass} htmlFor="np-p-alt">Description du logo (facultative — accessibilité)</label>
-              <input id="np-p-alt" name="image_alt" maxLength={200} className={inputClass} />
+              <input id="np-p-alt" name="image_alt" maxLength={200} value={altValue} onChange={(e) => setAltValue(e.target.value)} className={inputClass} />
             </div>
           </div>
         )}
@@ -343,19 +382,19 @@ export default function NouvellePubliciteForm({ role, advertisers, placements, a
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className={labelClass} htmlFor="np-cs">Commence le *</label>
-                <input id="np-cs" name="custom_start_at" type="datetime-local" className={inputClass} />
+                <input id="np-cs" name="custom_start_at" type="datetime-local" value={customStartValue} onChange={(e) => setCustomStartValue(e.target.value)} className={inputClass} />
                 <FieldError errors={state.fieldErrors} name="custom_start_at" />
               </div>
               <div>
                 <label className={labelClass} htmlFor="np-ce">Finit le (après le début) *</label>
-                <input id="np-ce" name="custom_end_at" type="datetime-local" className={inputClass} />
+                <input id="np-ce" name="custom_end_at" type="datetime-local" value={customEndValue} onChange={(e) => setCustomEndValue(e.target.value)} className={inputClass} />
                 <FieldError errors={state.fieldErrors} name="custom_end_at" />
               </div>
             </div>
           ) : (
             <div>
               <label className={labelClass} htmlFor="np-future">Commencer plus tard (facultatif)</label>
-              <input id="np-future" name="custom_start_at" type="datetime-local" className={inputClass} />
+              <input id="np-future" name="custom_start_at" type="datetime-local" value={customStartValue} onChange={(e) => setCustomStartValue(e.target.value)} className={inputClass} />
               <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                 Laissez vide pour commencer tout de suite (heure de Conakry). La fin est calculée toute seule.
               </p>
