@@ -33,25 +33,22 @@ const PLACEMENTS = [
 const NOW = "2026-11-04T14:00:00.000Z";
 
 describe("interface simplifiée — durées", () => {
-  it("8 durées proposées, 7 jours par défaut, « libre » sans heures", () => {
-    expect(SIMPLE_DURATIONS).toHaveLength(8);
+  it("6 durées proposées, 7 jours par défaut, « libre » sans heures", () => {
+    expect(SIMPLE_DURATIONS.map((d) => d.key)).toEqual(["1j", "3j", "7j", "15j", "30j", "libre"]);
     expect(DEFAULT_DURATION_KEY).toBe("7j");
     expect(durationOf("7j")?.hours).toBe(168);
     expect(durationOf("libre")?.hours).toBeNull();
     expect(durationOf("inconnue")).toBeNull();
   });
 
-  it("7 jours : début = maintenant (horloge SERVEUR), fin = +168 h exactes", () => {
-    const p = computeAdPeriod("7j", null, null, NOW);
-    expect(p).toEqual({ start_at: NOW, end_at: "2026-11-11T14:00:00.000Z" });
+  it("1 jour : début = maintenant (horloge SERVEUR), fin = +24 h exactes", () => {
+    const p = computeAdPeriod("1j", null, null, NOW);
+    expect(p).toEqual({ start_at: NOW, end_at: "2026-11-05T14:00:00.000Z" });
   });
 
-  it("24 heures : fin = +24 h ; 90 jours = +2160 h", () => {
-    expect(computeAdPeriod("24h", null, null, NOW)).toEqual({
-      start_at: NOW, end_at: "2026-11-05T14:00:00.000Z",
-    });
-    expect(computeAdPeriod("90j", null, null, NOW)).toEqual({
-      start_at: NOW, end_at: "2027-02-02T14:00:00.000Z",
+  it("30 jours : fin = +720 h", () => {
+    expect(computeAdPeriod("30j", null, null, NOW)).toEqual({
+      start_at: NOW, end_at: "2026-12-04T14:00:00.000Z",
     });
   });
 

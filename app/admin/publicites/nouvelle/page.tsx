@@ -36,9 +36,10 @@ export default async function NouvellePublicitePage() {
         <Link href="/admin/publicites" className="text-xs font-semibold text-guinea-red hover:underline">← Publicités</Link>
         <h1 className="mt-1 font-display text-2xl font-extrabold sm:text-3xl">Nouvelle publicité</h1>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Six étapes simples. À la publication, tout est créé automatiquement
-          (entreprise, diffusion, visuel, emplacements) — vous ne manipulez
-          jamais les termes techniques.
+          Quatre étapes simples : que voulez-vous publier, ajoutez la
+          publicité, choisissez où et combien de temps, puis publiez. À la
+          publication, tout est créé automatiquement (entreprise, diffusion,
+          visuel, emplacements) — jamais de terme technique.
         </p>
       </header>
 

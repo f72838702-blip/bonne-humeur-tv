@@ -25,14 +25,12 @@ export interface SimpleDuration {
 }
 
 export const SIMPLE_DURATIONS: SimpleDuration[] = [
-  { key: "24h", hours: 24, label: "24 heures", days: 1 },
+  { key: "1j", hours: 24, label: "1 jour", days: 1 },
   { key: "3j", hours: 72, label: "3 jours", days: 3 },
   { key: "7j", hours: 168, label: "7 jours", days: 7 },
   { key: "15j", hours: 360, label: "15 jours", days: 15 },
   { key: "30j", hours: 720, label: "30 jours", days: 30 },
-  { key: "60j", hours: 1440, label: "60 jours", days: 60 },
-  { key: "90j", hours: 2160, label: "90 jours", days: 90 },
-  { key: "libre", hours: null, label: "Personnalisée", days: null },
+  { key: "libre", hours: null, label: "Choisir une durée", days: null },
 ];
 
 export const DEFAULT_DURATION_KEY = "7j";
