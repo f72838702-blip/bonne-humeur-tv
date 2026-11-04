@@ -1,6 +1,7 @@
 import { marked } from "marked";
 import { escapeHtml } from "@/lib/utils";
 import { extractYouTubeId } from "@/lib/youtube/url";
+import { addExternalLinkTargets } from "@/lib/links";
 
 /**
  * Rendu Markdown SÛR pour le contenu des articles.
@@ -12,6 +13,10 @@ import { extractYouTubeId } from "@/lib/youtube/url";
  * 3. Seules les balises produites par marked (titres, gras, listes, citations,
  *    liens, images) atteignent le DOM — marked valide par ailleurs les URL des
  *    liens et images (sa fonction interne cleanUrl rejette les schémas dangereux).
+ * 4. Règle de navigation uniforme : les liens HTTP/HTTPS EXTERNES du corps
+ *    reçoivent target="_blank" + rel="noopener noreferrer" (post-traitement
+ *    SÛR de la sortie marked — source échappée, seuls les <a> de marked) ;
+ *    liens internes, mailto:, tel: et ancres inchangés (lib/links).
  *
  * En conséquence : aucun HTML non fiable n'est exécuté (exigence §9.2 de la mission).
  */
@@ -29,7 +34,7 @@ export function renderMarkdownToHtml(markdown: string): string {
     breaks: true,
   }) as string;
 
-  return html;
+  return addExternalLinkTargets(html);
 }
 
 /** Extrait le texte brut d'un Markdown (aperçus, méta-description de secours). */

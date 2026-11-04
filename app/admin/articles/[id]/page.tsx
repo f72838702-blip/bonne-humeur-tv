@@ -56,6 +56,7 @@ export default async function EditArticlePage({
             <Link
               href={`/actualites/${article.slug}`}
               target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 px-4 py-2 text-xs font-bold text-neutral-600 hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:text-neutral-300"
             >
               <ExternalLink className="h-3.5 w-3.5" />

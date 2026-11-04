@@ -45,6 +45,10 @@ export function AdBanner({ creative, placement, href }: { creative: AdPublicCrea
     <a
       href={href ?? adClickHref(creative.id, placement)}
       rel="sponsored noopener noreferrer"
+      // La destination FINALE d'une publicité est un site externe : le clic
+      // s'ouvre dans un nouvel onglet (la route interne /ads/click garde le
+      // comptage, puis redirige vers l'annonceur) — règle de navigation.
+      target="_blank"
       className="block overflow-visible"
     >
       <span className="mb-1 block"><AdBadge /></span>
@@ -83,6 +87,7 @@ export function AdCard({ creative, placement, href }: { creative: AdPublicCreati
     <a
       href={href ?? adClickHref(creative.id, placement)}
       rel="sponsored noopener noreferrer"
+      target="_blank"
       className="group flex items-center gap-4 rounded-2xl border border-dashed border-guinea-yellow/50 bg-white p-4 transition-colors hover:border-guinea-yellow dark:border-guinea-yellow/40 dark:bg-night-800"
     >
       <AdBadge />
@@ -135,6 +140,7 @@ export function AdVideo({ creative, placement, href }: { creative: AdPublicCreat
       <a
         href={href ?? adClickHref(creative.id, placement)}
         rel="sponsored noopener noreferrer"
+        target="_blank"
         className="mt-2 block"
         aria-label={payload.title || `Vidéo publicitaire : ${creative.name}`}
       >
@@ -189,7 +195,7 @@ export function PromoStrip({ creative, placement, href }: { creative: AdPublicCr
       style={inline}
     >
       {payload.cta_text ? (
-        <a href={href ?? adClickHref(creative.id, placement)} rel="sponsored noopener noreferrer" className="flex w-full items-center gap-3">
+        <a href={href ?? adClickHref(creative.id, placement)} rel="sponsored noopener noreferrer" target="_blank" className="flex w-full items-center gap-3">
           {inner}
         </a>
       ) : (

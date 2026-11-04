@@ -45,6 +45,24 @@ describe("renderMarkdownToHtml — rendu éditorial", () => {
     const html = renderMarkdownToHtml("[site](https://exemple.gn)");
     expect(html).toContain('href="https://exemple.gn"');
   });
+
+  it("règle de navigation : lien EXTERNE du corps → target=_blank + rel sécurisé", () => {
+    const html = renderMarkdownToHtml("[Lire la source](https://source.gn/info)");
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noopener noreferrer"');
+  });
+
+  it("règle de navigation : lien INTERNE (/actualites) → même onglet", () => {
+    const html = renderMarkdownToHtml("[Actualités](/actualites)");
+    expect(html).toContain('<a href="/actualites">');
+    expect(html).not.toContain("target=");
+  });
+
+  it("règle de navigation : mailto: et tel: → inchangés", () => {
+    const html = renderMarkdownToHtml("[Écrivez-nous](mailto:contact@bonnehumeur.tv)");
+    expect(html).toContain('href="mailto:contact@bonnehumeur.tv"');
+    expect(html).not.toContain("target=");
+  });
 });
 
 describe("markdownToPlainText", () => {

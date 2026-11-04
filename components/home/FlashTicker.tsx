@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { expiryEvents } from "@/lib/flash/flash-core";
 import { FLASH_BANNER_STYLES } from "@/lib/flash/flash-style";
+import { externalAnchorProps } from "@/lib/links";
 
 /**
  * Bandeau de flash-infos CÔTÉ NAVIGATEUR (§8) :
@@ -101,8 +102,10 @@ export default function FlashTicker({ items }: { items: FlashTickerItem[] }) {
               {news.link ? (
                 <Link
                   href={news.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  // Règle de navigation : SEUL un lien externe (autre domaine)
+                  // s'ouvre dans un nouvel onglet — un lien interne (vers une
+                  // page du site) garde le même onglet.
+                  {...externalAnchorProps(news.link)}
                   className="px-6 underline-offset-4 hover:underline"
                 >
                   {news.content}
