@@ -38,8 +38,8 @@ export default async function AdminDashboardPage() {
     { label: "Publications programmées", value: stats.articlesScheduled, href: "/admin/articles?statut=scheduled", icon: FileText, staffOnly: true },
     { label: "Vidéos publiées", value: stats.videosPublished, href: "/admin/videos", icon: Video, staffOnly: true },
     { label: "Flash-infos actifs", value: stats.breakingNewsActive, href: "/admin/flash-infos", icon: Zap, staffOnly: true },
-    { label: "Demandes de partenariat", value: stats.partnershipRequests, href: "/admin/demandes", icon: Inbox, staffOnly: true },
-    { label: "Messages non traités", value: stats.contactMessagesNew, href: "/admin/demandes?onglet=contact", icon: Inbox, staffOnly: true },
+    { label: "Nouvelle demande de partenariat", value: stats.partnershipRequestsUnseen, href: "/admin/demandes", icon: Inbox, staffOnly: true },
+    { label: "Messages non lus", value: stats.contactMessagesUnread, href: "/admin/demandes?onglet=contact", icon: Inbox, staffOnly: true },
   ];
 
   const quickLinks = [

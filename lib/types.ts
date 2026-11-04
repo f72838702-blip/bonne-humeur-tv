@@ -110,6 +110,8 @@ export interface PartnershipRequest {
   status: RequestStatus;
   admin_note: string | null;
   processed_at: string | null;
+  /** Suivi de lecture GLOBAL (0027) : NULL = jamais vue (badge « Nouveau »). */
+  seen_at: string | null;
 }
 
 export interface ContactMessage {
@@ -123,6 +125,8 @@ export interface ContactMessage {
   status: RequestStatus;
   admin_note: string | null;
   processed_at: string | null;
+  /** Suivi de lecture GLOBAL (0027) : NULL = jamais lu (badge « Non lu »). */
+  read_at: string | null;
 }
 
 /** Statistiques réelles du tableau de bord (jamais de chiffres fictifs). */
@@ -133,8 +137,10 @@ export interface DashboardStats {
   articlesScheduled: number;
   videosPublished: number;
   breakingNewsActive: number;
-  partnershipRequests: number;
-  contactMessagesNew: number;
+  /** Demandes JAMAIS vues (0027) — notifications utiles seulement. */
+  partnershipRequestsUnseen: number;
+  /** Messages JAMAIS lus (0027) — notifications utiles seulement. */
+  contactMessagesUnread: number;
 }
 
 /** État de configuration du backend — affiché honnêtement dans l'UI. */

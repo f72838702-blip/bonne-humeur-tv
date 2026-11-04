@@ -44,9 +44,13 @@ const ROLE_LABELS: Record<UserRole, string> = {
 export default function Sidebar({
   role,
   userName,
+  demandsCount = 0,
 }: {
   role: UserRole;
   userName: string;
+  /** Demandes jamais vues + messages jamais lus (notifications utiles
+   *  SEULEMENT — les éléments déjà consultés ne comptent jamais). */
+  demandsCount?: number;
 }) {
   const pathname = usePathname();
   const items = ALL_ITEMS.filter((item) =>
@@ -85,6 +89,11 @@ export default function Sidebar({
             >
               <Icon className="h-4 w-4 shrink-0" />
               {item.label}
+              {item.href === "/admin/demandes" && demandsCount > 0 && (
+                <span className="ml-auto rounded-full bg-guinea-red px-2 py-0.5 text-[10px] font-extrabold leading-none text-white">
+                  {demandsCount}
+                </span>
+              )}
             </Link>
           );
         })}

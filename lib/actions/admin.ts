@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
 import {
   inviteUserSchema,
+  requestDeleteSchema,
   requestStatusSchema,
   roleChangeSchema,
 } from "@/lib/validation/schemas";
@@ -19,7 +20,7 @@ import {
   inviteTeamMember,
   updateProfileRole,
 } from "@/lib/data/users";
-import { updateRequestStatus } from "@/lib/data/requests";
+import { deleteRequest, updateRequestStatus } from "@/lib/data/requests";
 import { deleteMedia, uploadMediaVariants } from "@/lib/data/media";
 import { MEDIA_PURPOSES, MEDIA_VARIANTS, MediaPurpose, MediaVariant } from "@/lib/media/variants";
 
@@ -72,6 +73,40 @@ export async function setRequestStatus(
 
   revalidatePath("/admin/demandes");
   return successState("Statut mis à jour.");
+}
+
+/**
+ * Suppression DÉFINITIVE d'une demande/message — ADMIN UNIQUEMENT
+ * (requireRole admin + policy DELETE 0027 en dernière barrière : un
+ * éditeur, même avec l'URL, est refusé par la base). Confirmation gérée
+ * par DeleteActionForm côté interface ; jamais déclenchée par une
+ * simple consultation.
+ */
+export async function deleteRequestAction(
+  formData: FormData
+): Promise<ActionState> {
+  const guard = await requireRole(["admin"]);
+  if ("denied" in guard) return deniedState(guard.denied);
+
+  const parsed = requestDeleteSchema.safeParse({
+    type: formData.get("type"),
+    id: formData.get("id"),
+  });
+  if (!parsed.success) return errorState("Données invalides.");
+
+  const result = await deleteRequest({
+    type: parsed.data.type,
+    id: parsed.data.id,
+  });
+  if (!result.ok) {
+    console.error("[actions/admin] deleteRequestAction :", result.error);
+    return errorState("Suppression impossible.");
+  }
+
+  // Liste + compteurs (sidebar, tableau de bord) immédiatement à jour.
+  revalidatePath("/admin/demandes");
+  revalidatePath("/admin");
+  return successState("Supprimé.");
 }
 
 // ─────────────────────────────────────────────────────────────

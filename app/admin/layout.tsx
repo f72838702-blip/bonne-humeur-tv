@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getSessionInfo } from "@/lib/auth/session";
 import Sidebar from "@/components/admin/Sidebar";
+import { getDemandesNotificationCount } from "@/lib/data/requests";
 
 /**
  * Layout du back-office.
@@ -28,9 +29,20 @@ export default async function AdminLayout({
     session.profile?.full_name?.trim() || session.email || "Membre de la rédaction";
   const role = session.profile?.role ?? "reporter";
 
+  // Badge de notification « Demandes » : nouveau partenariat OU message
+  // non lu, UNIQUEMENT pour les rôles qui voient cet onglet (reporter :
+  // aucune requête — RLS et quotas préservés).
+  const count =
+    role === "admin" || role === "editor" ? await getDemandesNotificationCount() : null;
+  const demandsTotal = count ? count.unseenPartnerships + count.unreadContacts : 0;
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:flex-row">
-      <Sidebar role={role} userName={fullName} />
+      <Sidebar
+        role={role}
+        userName={fullName}
+        demandsCount={role === "admin" || role === "editor" ? demandsTotal : undefined}
+      />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );

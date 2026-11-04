@@ -200,6 +200,12 @@ export const requestStatusSchema = z.object({
   admin_note: optionalText(1000),
 });
 
+/** Suppression d'une demande/message — ADMIN UNIQUEMENT (côté action). */
+export const requestDeleteSchema = z.object({
+  type: z.enum(["partnership", "contact"]),
+  id: uuid,
+});
+
 export type ContactInput = z.infer<typeof contactSchema>;
 export type PartnershipInput = z.infer<typeof partnershipSchema>;
 export type ArticleInput = z.infer<typeof articleSchema>;
