@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   FolderTree,
   ImagesIcon,
   Inbox,
@@ -29,6 +30,7 @@ const ALL_ITEMS = [
   { href: "/admin/videos", label: "Vidéos", icon: Video, roles: ["admin", "editor"] },
   { href: "/admin/flash-infos", label: "Flash-infos", icon: Zap, roles: ["admin", "editor"] },
   { href: "/admin/demandes", label: "Demandes", icon: Inbox, roles: ["admin", "editor"] },
+  { href: "/admin/statistiques", label: "Statistiques", icon: BarChart3, roles: ["admin"] },
   { href: "/admin/categories", label: "Catégories", icon: FolderTree, roles: ["admin", "editor"] },
   { href: "/admin/medias", label: "Médiathèque", icon: ImagesIcon, roles: ["admin", "editor"] },
   { href: "/admin/publicites", label: "Publicités", icon: Megaphone, roles: ["admin", "editor"] },

@@ -20,7 +20,7 @@ export default function ConfidentialitePage() {
         Politique de <span className="text-guinea-red">confidentialité</span>
       </h1>
       <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-        Dernière mise à jour : octobre 2026
+        Dernière mise à jour : novembre 2026
       </p>
 
       <div className="mt-10 space-y-10 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
@@ -62,6 +62,22 @@ export default function ConfidentialitePage() {
           <p className="mt-2">
             Aucune donnée n&apos;est collectée à votre insu, aucun compteur de
             vues nominatif n&apos;est mis en place.
+          </p>
+          <p className="mt-3">
+            <strong>Mesure d&apos;audience anonyme</strong> : pour comprendre
+            l&apos;audience générale du site (pages visitées, pays d&apos;origine
+            approximatif, durée de consultation, appareil), le site mesure des
+            événements strictement anonymes. Cette mesure{" "}
+            <strong>n&apos;utilise ni cookie, ni adresse IP stockée, ni
+            identifiant personnel, ni profil de navigation individuelle</strong> : le
+            seul identifiant de session est un nombre aléatoire qui disparaît à
+            la fermeture de l&apos;onglet (sessionStorage), le pays est déduit
+            par l&apos;infrastructure d&apos;hébergement sans jamais conserver
+            l&apos;adresse IP, et la durée mesurée est celle où la page est
+            réellement visible. Les administrateurs du site et les robots
+            d&apos;indexation sont exclus de ces compteurs. Les données
+            agrégées ne sont visibles que par les administrateurs du site et
+            pour une durée de conservation de 12 mois maximum.
           </p>
         </div>
 

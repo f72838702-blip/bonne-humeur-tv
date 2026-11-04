@@ -3,6 +3,7 @@ import { Inter, Archivo } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import WhatsAppFloat from "@/components/layout/WhatsAppFloat";
+import TrackerStats from "@/components/analytics/TrackerStats";
 import JsonLd from "@/components/shared/JsonLd";
 import "./globals.css";
 
@@ -99,6 +100,9 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
         <Footer />
         <WhatsAppFloat />
+        {/* Collecte d'audience ANONYME (0029) : aucune IP, aucun cookie,
+            aucun profil — s'auto-exclut en dev, sur /admin, et en dev. */}
+        <TrackerStats />
       </body>
     </html>
   );
