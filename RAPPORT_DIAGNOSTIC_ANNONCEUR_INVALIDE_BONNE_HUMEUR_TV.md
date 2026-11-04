@@ -103,3 +103,19 @@ migration modifiée ; aucun secret ; aucun push ; aucun déploiement.
   correctif des dates mais SANS celui de `placements`** (il est écrit
   maintenant). Le symptôme observé est donc totalement cohérent avec le
   code déployé : cette version contient encore le payload fantôme.
+
+## 7. ADDITIF (04/11/2026) — CORRECTIF DÉPLOYÉ (autorisation direction : « deploi »)
+
+- Contrôles re-joués avant deploy : tsc 0, lint 0/0, vitest 170/170.
+- `npx wrangler deploy` exit 0 — worker `bonne-humeur-tv-preview`,
+  **Version `6b7f9500-d2b2-4c19-87f5-220b7e3a2692`**, startup 24 ms,
+  1 fichier chargé (75 en cache), total 10,81 MiB / gzip 2,48 MiB.
+- Contrôles live 10/10 : `/`, `/actualites`, `/videos`, `/admin/login` = 200 ;
+  `/admin/publicites` + campagnes + **annonceurs** = 307 ;
+  `/ads/click/<invalide>` = 302 vers l'accueil ;
+  `POST /ads/track` = `{"counted":false}` ; CSP intacts, `X-Frame-Options: DENY`.
+- Base vérifiée intacte juste après (lecture seule) : 1 annonceur (aucun
+  doublon), 0 campagne, 8 emplacements.
+- **Fin de diagnostic : au CMS, « Créer la campagne » doit maintenant
+  fonctionner** ; si une autre erreur apparaît, elle est dès maintenant
+  PRÉCISE (code d'erreur affiché + cause réelle inscrite au journal).
