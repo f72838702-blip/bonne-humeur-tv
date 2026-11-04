@@ -239,6 +239,116 @@ export async function listDailyStats(filters: DailyFilters = {}) {
   return (data ?? []) as unknown as DailyRow[];
 }
 
+// ─── LISTE SIMPLIFIÉE « Publicités » (une ligne = une publicité) ──────
+
+export interface PubliciteRow {
+  id: string;
+  name: string;
+  reference: string | null;
+  status: string;
+  start_at: string | null;
+  end_at: string | null;
+  created_at: string;
+  advertiser_name: string | null;
+  advertiser_id: string | null;
+  placements: string[];
+  creative: {
+    id: string;
+    format: string;
+    name: string;
+    status: string;
+    payload: Record<string, unknown> | null;
+  } | null;
+}
+
+/**
+ * Toutes les publicités (campagnes + visuel + emplacements) en 2 requêtes
+ * — jamais N+1. Le visuel affiché est la PREMIÈRE création (ordre de
+ * création) ; les emplacements viennent de la table de liaison.
+ */
+export async function listPubliciteAds(limit = 200): Promise<PubliciteRow[]> {
+  const supabase = await server();
+  if (!supabase) return [];
+
+  const [campaigns, links] = await Promise.all([
+    supabase
+      .from("ad_campaigns")
+      .select(
+        "id, name, reference, status, start_at, end_at, created_at, advertisers ( id, name )"
+      )
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    supabase
+      .from("ad_campaign_placements")
+      .select("campaign_id, placement_code")
+      .order("placement_code")
+      .limit(2000),
+  ]);
+  if (campaigns.error) {
+    console.error("[data/ads] listPubliciteAds(campaigns) :", campaigns.error.message);
+    return [];
+  }
+  if (links.error) {
+    console.error("[data/ads] listPubliciteAds(links) :", links.error.message);
+  }
+
+  const campaignIds = (campaigns.data ?? []).map((c) => c.id);
+  const creatives = campaignIds.length
+    ? await supabase
+        .from("ad_creatives")
+        .select("id, campaign_id, format, name, status, payload")
+        .in("campaign_id", campaignIds)
+        .order("created_at", { ascending: true })
+    : null;
+
+  interface CreativeLite {
+    id: string;
+    campaign_id: string;
+    format: string;
+    name: string;
+    status: string;
+    payload: Record<string, unknown> | null;
+  }
+  const placementsByCampaign = new Map<string, string[]>();
+  for (const l of (links.data ?? []) as unknown as { campaign_id: string; placement_code: string }[]) {
+    placementsByCampaign.set(l.campaign_id, [...(placementsByCampaign.get(l.campaign_id) ?? []), l.placement_code]);
+  }
+  const creativeByCampaign = new Map<string, CreativeLite>();
+  for (const c of (creatives?.data ?? []) as unknown as CreativeLite[]) {
+    if (!creativeByCampaign.has(c.campaign_id)) creativeByCampaign.set(c.campaign_id, c);
+  }
+
+  return (campaigns.data ?? []).map((c) => {
+    const row = c as unknown as {
+      id: string; name: string; reference: string | null; status: string;
+      start_at: string | null; end_at: string | null; created_at: string;
+      advertisers: { id: string; name: string } | null;
+    };
+    const creative = creativeByCampaign.get(row.id);
+    return {
+      id: row.id,
+      name: row.name,
+      reference: row.reference,
+      status: row.status,
+      start_at: row.start_at,
+      end_at: row.end_at,
+      created_at: row.created_at,
+      advertiser_name: row.advertisers?.name ?? null,
+      advertiser_id: row.advertisers?.id ?? null,
+      placements: placementsByCampaign.get(row.id) ?? [],
+      creative: creative
+        ? {
+            id: creative.id,
+            format: creative.format,
+            name: creative.name,
+            status: creative.status,
+            payload: creative.payload,
+          }
+        : null,
+    } satisfies PubliciteRow;
+  });
+}
+
 /** Compteurs réels du tableau de bord régie (aucune estimation). */
 export async function getAdsDashboardCounters() {
   const supabase = await server();

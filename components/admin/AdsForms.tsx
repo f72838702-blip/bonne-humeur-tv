@@ -11,6 +11,7 @@ import {
   recordPaymentAction,
   changeCampaignStatusAction,
   decideCreativeAction,
+  extendCampaignAction,
 } from "@/lib/actions/ads";
 import {
   AD_DEVICES,
@@ -400,6 +401,45 @@ const TRANSITION_LABELS: Record<AdStoredStatus, string> = {
   cancelled: "Annuler la campagne",
   refused: "Refuser",
 };
+
+// ─── Liste simplifiée : actions directes d'une ligne ─────────────────
+/** Suspendre ou Reprendre d'un clic (même action durcie, même machine à états). */
+export function SimpleStatusButton({ adId, to, label }: { adId: string; to: "active" | "suspended"; label: string }) {
+  const [state, formAction] = useActionState(
+    async (_prev: ActionState, formData: FormData) => changeCampaignStatusAction(formData),
+    idleActionState
+  );
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="id" value={adId} />
+      <input type="hidden" name="to" value={to} />
+      <SubmitButton label={label} pendingLabel="Application…" />
+      {state.status === "error" && <span className="ml-2 text-xs font-semibold text-guinea-red">{state.message}</span>}
+    </form>
+  );
+}
+
+/** Prolonger d'un clic : durée choisie dans la liste (fin = max(maintenant, fin) + N jours). */
+export function ExtendControl({ adId }: { adId: string }) {
+  const [state, formAction] = useActionState(
+    async (_prev: ActionState, formData: FormData) => extendCampaignAction(formData),
+    idleActionState
+  );
+  return (
+    <form action={formAction} className="flex items-center gap-1.5">
+      <input type="hidden" name="id" value={adId} />
+      <select name="days" defaultValue="7" aria-label="Durée de prolongation" className="rounded-lg border border-neutral-300 bg-transparent px-2 py-1.5 text-xs dark:border-white/15">
+        {DURATION_DAYS.map((d) => (
+          <option key={d} value={d}>{d} j</option>
+        ))}
+      </select>
+      <SubmitButton label="Prolonger" pendingLabel="…" />
+      {state.status === "error" && <span className="text-xs font-semibold text-guinea-red">{state.message}</span>}
+    </form>
+  );
+}
+
+const DURATION_DAYS = [1, 3, 7, 15, 30, 60, 90];
 
 // ─── Emplacements ────────────────────────────────────────────────────
 export function PlacementForm({ item }: { item: AdPlacement }) {

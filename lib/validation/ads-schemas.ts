@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isSafeAdUrl, AD_FORMATS, AD_STORED_STATUSES, PAYMENT_METHODS } from "@/lib/ads/ads-core";
+import { SIMPLE_FORMAT_KEYS } from "@/lib/ads/simple-ad";
 import { extractYouTubeId } from "@/lib/youtube/url";
 
 /** Tableau mutable pour z.enum (zod 4 : tuple lisible obligatoire). */
@@ -163,6 +164,46 @@ export const adPartnerSchema = z.object({
   visible_from: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]).optional(),
   visible_to: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")]).optional(),
   is_active: z.boolean().default(true),
+});
+
+// ─── PUBLICITÉ SIMPLIFIÉE (un formulaire = une publication) ──────────
+// Le schéma porte LE FORMULAIRE (pas la structure SQL) : l'action
+// publishSimpleAdAction traduit ensuite en annonceur + campagne +
+// création + liaisons + approbation réelles. « partner » n'est pas un
+// format SQL : la carte 6 écrit la table ad_partners dédiée.
+export const simpleAdSchema = z.object({
+  submit_mode: z.enum(["draft", "publish"]),
+  advertiser_mode: z.enum(["existing", "new"]).default("existing"),
+  advertiser_id: z.union([z.literal(""), z.string().uuid("Annonceur invalide")]).optional(),
+  new_advertiser_name: optText(120),
+  new_advertiser_sector: optText(80),
+  new_advertiser_contact_name: optText(120),
+  new_advertiser_contact_phone: z
+    .string()
+    .trim()
+    .max(40)
+    .regex(/^[0-9+ ()\-.]*$/, "Téléphone invalide")
+    .optional(),
+  new_advertiser_contact_email: z.union([z.literal(""), z.email("E-mail invalide")]).optional(),
+  format: z.enum(SIMPLE_FORMAT_KEYS, { message: "Choisissez un format" }),
+  name: optText(140), // auto « Entreprise · Format » si vide
+  link_url: z.union([z.literal(""), safeAdUrl]).optional(),
+  placements: z.array(z.string().min(2).max(40)).max(8).default([]),
+  duration_key: z.string().min(1).max(10).default("7j"),
+  custom_start_at: conakryDateTime("Début personnalisé").optional(),
+  custom_end_at: conakryDateTime("Fin personnalisée").optional(),
+  // Champs de contenu (le ZOD PAR FORMAT revalide dans l'action) :
+  image_url: optSafeAdUrl(),
+  image_alt: optText(200),
+  title: optText(150),
+  text: optText(300),
+  description: optText(300),
+  cta_text: optText(40),
+  message: optText(200),
+  bg_color: bgColor,
+  youtube_url: optText(500),
+  article_id: z.union([z.literal(""), z.string().uuid()]).optional(),
+  logo_url: optSafeAdUrl(), // partenaire
 });
 
 // ─── Règlements (ADMIN exclusivement) ────────────────────────────────
