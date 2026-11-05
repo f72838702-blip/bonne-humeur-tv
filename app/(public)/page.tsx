@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays, Newspaper, Radio, Tv } from "lucide-react";
 import BreakingNews from "@/components/home/BreakingNews";
 import HeroPlayer from "@/components/home/HeroPlayer";
+import LiveSection from "@/components/home/LiveSection";
 import VideosGrid from "@/components/home/VideosGrid";
 import B2BCta from "@/components/home/B2BCta";
 import ArticleCard from "@/components/shared/ArticleCard";
@@ -66,6 +67,10 @@ export default async function HomePage() {
           EN DIRECT MAINTENANT : {liveVideo.title}
         </Link>
       )}
+
+      {/* ─── Section « EN DIRECT » YouTube (module live, additive) ─── */}
+      <LiveSection />
+
 
       {/* ─── Hero : vidéo à la une + dernières actualités ─── */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
