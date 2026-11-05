@@ -116,8 +116,8 @@ export default async function ArticleStatsPage({
 
       {own.length === 0 && (
         <p className="rounded-2xl border border-neutral-200 bg-white px-4 py-6 text-sm text-neutral-600 dark:border-white/10 dark:bg-night-800 dark:text-neutral-300">
-          Aucune lecture de cet article sur la période — la collecte démarre après le déploiement,
-          et cet article n&apos;a pas encore été ouvert par un visiteur.
+          Aucune lecture de cet article enregistrée sur la période — la collecte est active depuis
+          le 04/11/2026 et aucun visiteur n&apos;a ouvert cet article ici encore.
         </p>
       )}
 

@@ -91,7 +91,7 @@ export default async function AdminStatisticsPage({
     // Cap de sécurité atteint : refuse de présenter un chiffre tronqué.
     return (
       <div className="flex flex-col gap-6">
-        <HeaderBlock preset={preset} />
+        <HeaderBlock preset={preset} du={du} au={au} />
         <p className="rounded-2xl border border-amber-300/40 bg-amber-50 px-4 py-6 text-sm text-amber-800 dark:bg-amber-400/10 dark:text-amber-300">
           Période trop volumineuse pour un calcul instantané (plus de 25 000 visites). Essayez une
           période plus courte ou demandez l&apos;export CSV, qui traite les données par lots.
@@ -118,7 +118,7 @@ export default async function AdminStatisticsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <HeaderBlock preset={preset} />
+      <HeaderBlock preset={preset} du={du} au={au} />
 
       {/* Filtre de période — liens serveur (aucun JS client), s'applique à TOUT.
           Mobile : ligne défilante horizontale de presets, puis formulaire dates. */}
@@ -172,9 +172,9 @@ export default async function AdminStatisticsPage({
 
       {noData && (
         <p className="rounded-2xl border border-neutral-200 bg-white px-4 py-6 text-sm text-neutral-600 dark:border-white/10 dark:bg-night-800 dark:text-neutral-300">
-          Aucune donnée disponible pour l&apos;instant. La collecte démarre après le déploiement de la
-          migration 0029 et la navigation des visiteurs — ce message disparaît dès les premières
-          visites. <strong>Aucun chiffre fictif n&apos;est jamais affiché.</strong>
+          Aucune visite enregistrée pour l&apos;instant. La collecte est active depuis le
+          04/11/2026 (déploiement réel) — ce message disparaît dès les premières navigations.
+          <strong>Aucun chiffre fictif n&apos;est jamais affiché.</strong>
         </p>
       )}
 
@@ -277,7 +277,22 @@ export default async function AdminStatisticsPage({
   );
 }
 
-function HeaderBlock({ preset }: { preset: string }) {
+function HeaderBlock({
+  preset,
+  du,
+  au,
+}: {
+  preset: string;
+  du?: string;
+  au?: string;
+}) {
+  // L'export CSV hérite EXACTEMENT de la période affichée (dates personnalisées
+  // comprises) — sinon il exporterait 7 j par défaut, un chiffre déroutant.
+  const exportQuery = new URLSearchParams({
+    periode: preset,
+    ...(du ? { du } : {}),
+    ...(au ? { au } : {}),
+  }).toString();
   return (
     <header className="flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
@@ -289,7 +304,7 @@ function HeaderBlock({ preset }: { preset: string }) {
       <div className="flex flex-wrap gap-2">
         <RefreshButton label="Actualiser" />
         <a
-          href={`/admin/statistiques/export?${new URLSearchParams({ periode: preset }).toString()}`}
+          href={`/admin/statistiques/export?${exportQuery}`}
           className="rounded-full border border-neutral-200 px-3 py-2 text-xs font-semibold text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red sm:px-4 sm:text-sm dark:border-white/10 dark:text-neutral-300"
         >
           Export CSV

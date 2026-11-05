@@ -71,7 +71,7 @@ export function VisitsLineChart({
   prevPoints: DailyPoint[];
 }) {
   if (points.length === 0) {
-    return <EmptyChart label="Aucune visite enregistrée sur cette période (la collecte démarre après le déploiement)." />;
+    return <EmptyChart label="Aucune visite enregistrée sur cette période (collecte active depuis le 04/11/2026)." />;
   }
   const W = 640;
   const H = 220;
