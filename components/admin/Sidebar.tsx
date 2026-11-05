@@ -12,6 +12,7 @@ import {
   Megaphone,
   FileText,
   Radio,
+  Sparkles,
   Users,
   Video,
   Zap,
@@ -29,6 +30,8 @@ import { signOut } from "@/lib/actions/auth";
 const ALL_ITEMS = [
   { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard, roles: ["admin", "editor", "reporter"] },
   { href: "/admin/articles", label: "Articles", icon: FileText, roles: ["admin", "editor", "reporter"] },
+  // Assistant IA de rédaction — le rapporteur n'y a pas accès (rédaction staff).
+  { href: "/admin/assistant", label: "Assistant IA", icon: Sparkles, roles: ["admin", "editor"] },
   { href: "/admin/videos", label: "Vidéos", icon: Video, roles: ["admin", "editor"] },
   { href: "/admin/direct", label: "Direct", icon: Radio, roles: ["admin"] },
   { href: "/admin/flash-infos", label: "Flash-infos", icon: Zap, roles: ["admin", "editor"] },

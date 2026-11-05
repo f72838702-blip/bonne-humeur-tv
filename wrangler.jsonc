@@ -8,6 +8,9 @@
   // Date de compatibilité : généraux, nodejs_compat requis par OpenNext (Server Actions, Supabase ssr…)
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
+  // Workers AI — plan Free (10 000 Neurons/jour), AUCUN moyen de paiement.
+  // Le binding est l'ACCÈS UNIQUE aux modèles (aucune clé API, aucun secret).
+  "ai": { "binding": "AI" },
   "main": ".open-next/worker.js",
   "assets": {
     "directory": ".open-next/assets",

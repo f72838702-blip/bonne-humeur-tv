@@ -57,7 +57,11 @@ export async function getRequestIdentifier(): Promise<string> {
  *                  le traitement continue SANS limite, état documenté.
  */
 export async function checkRateLimit(
-  formType: "contact" | "partnership",
+  // Types autorisés côté SQL (contrainte form_submissions, migration 0032) :
+  // les 2 formulaires publics existants + les 2 assistants IA. Avant
+  // application de 0032, la RPC renvoie une erreur → état « degraded »,
+  // géré par l'appelant (filet mémoire pour les assistants).
+  formType: "contact" | "partnership" | "assistant_public" | "assistant_admin",
   identifier: string,
   maxRequests: number,
   windowSeconds: number

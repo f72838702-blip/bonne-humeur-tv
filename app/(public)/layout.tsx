@@ -1,6 +1,7 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import WhatsAppFloat from "@/components/layout/WhatsAppFloat";
+import AiChatWidget from "@/components/home/AiChatWidget";
 import TrackerStats from "@/components/analytics/TrackerStats";
 import JsonLd from "@/components/shared/JsonLd";
 
@@ -38,6 +39,9 @@ export default function PublicLayout({
       <main className="flex-1">{children}</main>
       <Footer />
       <WhatsAppFloat />
+      {/* Assistant public (bas gauche — aucun chevauchement avec WhatsApp).
+          Monté UNIQUEMENT ici : le back-office ne l'exécute pas. */}
+      <AiChatWidget />
       {/* Collecte d'audience ANONYME (0029) — MONTÉE UNIQUEMENT ICI : le
           back-office n'exécute même plus ce composant (auto-exclusions
           conservées en défense en profondeur). */}
