@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/session";
 import { listMedia } from "@/lib/data/media";
 import { deleteMediaAction } from "@/lib/actions/admin";
 import MediaUploader from "@/components/admin/MediaUploader";
+import CopyableInput from "@/components/admin/CopyableInput";
 import DeleteActionForm from "@/components/admin/DeleteActionForm";
 import { ForbiddenScreen, NotFoundScreen, UnconfiguredScreen } from "@/components/admin/AccessDenied";
 
@@ -76,14 +77,10 @@ export default async function AdminMediaPage() {
                     {Math.max(1, Math.round(obj.size / 1024))} Ko
                     {obj.type ? ` · ${obj.type.replace("image/", "")}` : ""}
                   </p>
-                  {/* URL copiable — affichée en texte, sélectionnable */}
-                  <input
-                    readOnly
-                    value={obj.url}
-                    aria-label={`URL de ${obj.name}`}
-                    onFocus={(e) => e.currentTarget.select()}
-                    className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 text-[10px] text-neutral-500 dark:border-white/10 dark:bg-night-900 dark:text-neutral-400"
-                  />
+                  {/* URL copiable — sélection au clic (composant client isolé :
+                      un handler onFocus ne peut pas passer d'un composant
+                      serveur — c'était la cause de l'erreur 500) */}
+                  <CopyableInput value={obj.url} label={`URL de ${obj.name}`} />
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <span className="text-[9px] text-neutral-400">
                       {obj.purpose}/ · {obj.type}
