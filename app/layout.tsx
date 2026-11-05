@@ -1,10 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Archivo } from "next/font/google";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import WhatsAppFloat from "@/components/layout/WhatsAppFloat";
-import TrackerStats from "@/components/analytics/TrackerStats";
-import JsonLd from "@/components/shared/JsonLd";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -79,30 +74,12 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
+      {/* Châssis minimal : thème + polices SEULEMENT. Aucun élément public
+          ici — la façade visiteur (navigation, pied de page, WhatsApp,
+          publicités, collecte) vit exclusivement dans app/(public)/layout.tsx,
+          donc /admin/* en est totalement isolé (correction UX 05/11/2026). */}
       <body className={`${inter.variable} ${archivo.variable} flex min-h-screen flex-col`}>
-        {/* Identité de l'organisation — données réelles, aucune invention */}
-        <JsonLd
-          data={{
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            name: "Bonne Humeur TV",
-            url: siteUrl,
-            slogan: "La Télé de la nouvelle génération",
-            areaServed: "GN",
-            address: {
-              "@type": "PostalAddress",
-              addressLocality: "Conakry",
-              addressCountry: "GN",
-            },
-          }}
-        />
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <WhatsAppFloat />
-        {/* Collecte d'audience ANONYME (0029) : aucune IP, aucun cookie,
-            aucun profil — s'auto-exclut en dev, sur /admin, et en dev. */}
-        <TrackerStats />
+        {children}
       </body>
     </html>
   );

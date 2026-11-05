@@ -1,10 +1,20 @@
 import Link from "next/link";
 import { Tv } from "lucide-react";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import WhatsAppFloat from "@/components/layout/WhatsAppFloat";
 
-/** Page 404 — honnête et utile : aucun contenu inventé. */
+/**
+ * Page 404 — honnête et utile : aucun contenu inventé. Les URL inconnues
+ * hors groupes ne passent plus par le layout racine nu : le chrome public
+ * est rendu ICI explicitement. (Les URL inconnues sous /admin/* ont leur
+ * propre not-found dans app/admin/not-found.tsx — sans chrome public.)
+ */
 export default function NotFound() {
   return (
-    <section className="mx-auto flex max-w-2xl flex-col items-center px-4 py-24 text-center sm:px-6">
+    <>
+      <Header />
+      <section className="mx-auto flex max-w-2xl flex-1 flex-col items-center px-4 py-24 text-center sm:px-6">
       <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-guinea-red/10 text-guinea-red">
         <Tv className="h-8 w-8" />
       </span>
@@ -36,6 +46,9 @@ export default function NotFound() {
           Les vidéos
         </Link>
       </div>
-    </section>
+      </section>
+      <Footer />
+      <WhatsAppFloat />
+    </>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  ExternalLink,
   FolderTree,
   ImagesIcon,
   Inbox,
@@ -72,6 +73,18 @@ export default function Sidebar({
         <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-guinea-red">
           {ROLE_LABELS[role]}
         </p>
+        {/* SEUL accès évident vers le site public depuis l'administration
+            (demande direction) : nouvel onglet, session et page de travail
+            préservées. Aucune autre navigation publique dans le back-office. */}
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-guinea-red dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-guinea-red"
+        >
+          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+          Voir le site public
+        </a>
       </div>
 
       <nav className="flex flex-col gap-1" aria-label="Navigation du back-office">
