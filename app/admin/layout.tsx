@@ -37,7 +37,7 @@ export default async function AdminLayout({
   const demandsTotal = count ? count.unseenPartnerships + count.unreadContacts : 0;
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:flex-row">
+    <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:flex-row">
       <Sidebar
         role={role}
         userName={fullName}

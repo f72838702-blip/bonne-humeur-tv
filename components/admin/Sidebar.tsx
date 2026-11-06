@@ -9,6 +9,7 @@ import {
   ImagesIcon,
   Inbox,
   LayoutDashboard,
+  LogOut,
   Megaphone,
   Palette,
   FileText,
@@ -75,13 +76,40 @@ export default function Sidebar({
   }
 
   return (
-    <aside className="flex w-full shrink-0 flex-col gap-6 lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] lg:w-64 lg:overflow-y-auto lg:pb-2">
-      {/* Logo officiel — discret (h-7), jamais plus grand que la carte
-          utilisateur : aucun espace de menu sacrifié (direction §2/§4). */}
-      <Logo className="h-7 w-auto shrink-0 select-none object-contain" />
+    <aside className="flex w-full shrink-0 flex-col gap-3 lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] lg:w-64 lg:gap-6 lg:overflow-y-auto lg:pb-2">
+      {/* ── MOBILE (<lg) : ligne compacte logo + identité + déconnexion,
+          puis bandes de navigation horizontales — le contenu suit
+          immédiatement, sans interminable menu vertical. ── */}
+      <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-surface p-3 dark:border-white/10 dark:bg-night-800 lg:hidden">
+        <Logo className="h-7 w-auto shrink-0 select-none object-contain" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-display text-sm font-bold">{userName}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-guinea-red">
+            {ROLE_LABELS[role]}
+          </p>
+        </div>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Voir le site public"
+          className="shrink-0 rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-guinea-red dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-guinea-red"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </a>
+        <form action={signOut}>
+          <button
+            type="submit"
+            aria-label="Se déconnecter"
+            className="shrink-0 rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-guinea-red dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-guinea-red"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </form>
+      </div>
 
-      {/* Identité de l'utilisateur connecté (données réelles de la session) */}
-      <div className="rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800">
+      {/* ── DESKTOP (lg+) : carte utilisateur complète, inchangée. ── */}
+      <div className="hidden rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800 lg:block">
         <p className="truncate font-display text-sm font-bold">{userName}</p>
         <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-guinea-red">
           {ROLE_LABELS[role]}
@@ -100,7 +128,13 @@ export default function Sidebar({
         </a>
       </div>
 
-      <nav className="flex flex-col gap-1" aria-label="Navigation du back-office">
+      {/* Navigation : bandes à défilement horizontal sur téléphone
+          (barre de défilement masquée, chaque entrée reste cliquable),
+          colonne verticale classique sur ordinateur. */}
+      <nav
+        className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0"
+        aria-label="Navigation du back-office"
+      >
         {items.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -109,7 +143,8 @@ export default function Sidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors",
+                "flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-transparent px-3.5 py-2 text-xs font-semibold transition-colors",
+                "lg:w-full lg:rounded-xl lg:px-4 lg:py-2.5 lg:text-sm lg:whitespace-normal",
                 active
                   ? "bg-guinea-red/10 text-guinea-red"
                   : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-white"
@@ -127,7 +162,7 @@ export default function Sidebar({
         })}
       </nav>
 
-      <form action={signOut} className="mt-auto">
+      <form action={signOut} className="hidden lg:mt-auto lg:block">
         <button
           type="submit"
           className="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-semibold text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:text-neutral-300"
