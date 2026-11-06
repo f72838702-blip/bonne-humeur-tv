@@ -9,7 +9,7 @@ const archivo = Archivo({
   variable: "--font-display",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
 
 /**
  * Correctif FOUC (A3-2) : applique le thème persisté AVANT le premier

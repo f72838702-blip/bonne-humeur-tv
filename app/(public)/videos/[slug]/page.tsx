@@ -9,7 +9,7 @@ import JsonLd from "@/components/shared/JsonLd";
 import { getPublishedVideoBySlug, getRelatedVideos } from "@/lib/data/videos";
 import { formatDate } from "@/lib/utils";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
 
 /** Page vidéo — données réelles uniquement ; JSON-LD si et seulement si les champs requis existent. */
 export const revalidate = 120;

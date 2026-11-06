@@ -48,10 +48,22 @@ export default function AiChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),
       });
-      const json = (await res.json()) as { message?: string };
+      // DÉCODAGE (correction diagnostic 06/11) : le serveur renvoie le succès
+      // dans `reply` ({ok:true, reply, fallback?:bool}) et les erreurs
+      // utilisateur dans `message` (403 bots / 413 trop long / 429 quota).
+      // Lire `message` d'abord montrait TOUJOURS le recadrage au lieu de la
+      // vraie réponse — « reply » en succès, « message » en erreur.
+      const json = (await res.json()) as {
+        ok?: boolean;
+        reply?: string;
+        message?: string;
+      };
       const reply =
-        json.message ??
-        "Je ne dispose pas actuellement de cette information sur Bonne Humeur TV. Vous pouvez contacter notre équipe pour en savoir davantage.";
+        json.ok === true && typeof json.reply === "string" && json.reply.length > 0
+          ? json.reply
+          : typeof json.message === "string" && json.message.length > 0
+            ? json.message
+            : "Je ne dispose pas actuellement de cette information sur Bonne Humeur TV. Vous pouvez contacter notre équipe pour en savoir davantage.";
       setLines((l) => [...l, { role: "assistant", content: reply }]);
     } catch {
       setLines((l) => [
@@ -82,7 +94,7 @@ export default function AiChatWidget() {
 
       {open && (
         <div
-          className="fixed inset-x-0 bottom-[4.75rem] z-40 flex flex-col overflow-hidden rounded-t-2xl border border-neutral-200 bg-white shadow-2xl dark:border-white/10 dark:bg-night-800 sm:inset-x-auto sm:bottom-5 sm:left-5 sm:h-[26rem] sm:w-[22rem] sm:rounded-2xl"
+          className="fixed inset-x-0 bottom-[4.75rem] z-40 flex flex-col overflow-hidden rounded-t-2xl border border-neutral-200 bg-white shadow-2xl dark:border-white/10 dark:bg-night-800 sm:inset-x-auto sm:bottom-[4.75rem] sm:left-5 sm:h-[26rem] sm:w-[22rem] sm:rounded-2xl"
           role="dialog"
           aria-label="Assistant Bonne Humeur TV"
         >

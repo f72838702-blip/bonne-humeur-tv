@@ -5,7 +5,7 @@ import AiChatWidget from "@/components/home/AiChatWidget";
 import TrackerStats from "@/components/analytics/TrackerStats";
 import JsonLd from "@/components/shared/JsonLd";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
 
 /**
  * Layout du SITE PUBLIC uniquement (route group — n'affecte pas les URL).

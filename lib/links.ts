@@ -13,15 +13,18 @@
 /** Hôtes appartenant à Bonne Humeur TV (jamais considérés comme externes). */
 export const SITE_HOSTS: readonly string[] = (() => {
   const hosts = new Set<string>();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.vercel.app";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
   try {
     hosts.add(new URL(siteUrl).hostname.replace(/^www\./i, ""));
   } catch {
     /* URL d'environnement invalide : les domaines connus ci-dessous suffisent */
   }
-  // Domaines de production/préparation réellement servis (Vercel + Cloudflare).
-  hosts.add("bonne-humeur-tv.vercel.app");
+  // Domaines de production/préparation réellement servis (Cloudflare).
+  hosts.add("bonne-humeur-tv.bonne-humeur-tv.workers.dev"); // Phase J : production
   hosts.add("bonne-humeur-tv-preview.bonne-humeur-tv.workers.dev");
+  // Ancien domaine Vercel : 404, conservé « interne » pour les liens
+  // historiques contenus dans les articles déjà publiés.
+  hosts.add("bonne-humeur-tv.vercel.app");
   return [...hosts];
 })();
 

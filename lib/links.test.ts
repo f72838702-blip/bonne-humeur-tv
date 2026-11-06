@@ -30,6 +30,10 @@ describe("isExternalHttpUrl — propriété du domaine", () => {
     expect(
       isExternalHttpUrl("https://bonne-humeur-tv-preview.bonne-humeur-tv.workers.dev/videos")
     ).toBe(false);
+    // Phase J : l'hôte PRODUCTION Workers est interne lui aussi.
+    expect(
+      isExternalHttpUrl("https://bonne-humeur-tv.bonne-humeur-tv.workers.dev/videos")
+    ).toBe(false);
     expect(isExternalHttpUrl("https://www.bonne-humeur-tv.vercel.app/")).toBe(false);
     for (const host of SITE_HOSTS) {
       expect(isExternalHttpUrl(`https://${host}/x`)).toBe(false);

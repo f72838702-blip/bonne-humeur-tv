@@ -14,7 +14,7 @@ import { renderArticleSegments, extractArticleYouTubeIds, markdownToPlainText } 
 import { youtubeEmbedUrl, youtubeThumbnailUrl, youtubeWatchUrl } from "@/lib/youtube/url";
 import { formatDate, readingTimeMinutes, truncateWords } from "@/lib/utils";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
 
 export const revalidate = 120;
 
