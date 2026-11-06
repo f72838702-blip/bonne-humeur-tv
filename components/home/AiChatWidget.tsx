@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MessageCircleQuestion, Send, X } from "lucide-react";
+import Logo from "@/components/shared/Logo";
 
 /**
  * Chatbot PUBLIC « Assistant Bonne Humeur TV » (demande direction §4).
@@ -98,9 +99,16 @@ export default function AiChatWidget() {
           role="dialog"
           aria-label="Assistant Bonne Humeur TV"
         >
-          <header className="flex items-center gap-2 border-b border-neutral-200 bg-guinea-red px-4 py-3 text-white dark:border-white/10">
-            <MessageCircleQuestion className="h-4 w-4" />
-            <p className="font-display text-sm font-bold">Assistant Bonne Humeur TV</p>
+          {/* Logo officiel sur fond clair (sur le rouge actuel, le bloc
+              rouge BONNE HUMEUR du logo disparaîtrait — le logo est utilisé
+              tel quel, jamais d'altération) ; identité « Assistant » gardée
+              par la pastille à droite (aria sur le dialog). */}
+          <header className="flex items-center gap-3 border-b border-neutral-200 bg-white px-4 py-2.5 dark:border-white/10 dark:bg-night-800">
+            <Logo className="h-6 w-auto shrink-0 select-none object-contain" />
+            <span className="ml-auto flex items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
+              <MessageCircleQuestion className="h-3 w-3" />
+              Assistant
+            </span>
           </header>
 
           <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-3 min-h-0 max-h-[45vh] sm:max-h-none">
