@@ -29,6 +29,7 @@ const homeSections = (
 /* ─── 1. Premium Média — élégant, professionnel, éditorial ───────────── */
 export const THEME_PREMIUM_MEDIA: DesignConfig = {
   schemaVersion: 1,
+  mode: null,
   colors: HUE(
     {
       bg: "#fafaf7",
@@ -84,6 +85,7 @@ export const THEME_PREMIUM_MEDIA: DesignConfig = {
 /* ─── 2. Modern TV — dynamique, visuel, orienté vidéo ─────────────────── */
 export const THEME_MODERN_TV: DesignConfig = {
   schemaVersion: 1,
+  mode: null,
   colors: HUE(
     {
       bg: "#f4f4f6",
@@ -139,6 +141,7 @@ export const THEME_MODERN_TV: DesignConfig = {
 /* ─── 3. Magazine — grandes images, typographie expressive ────────────── */
 export const THEME_MAGAZINE: DesignConfig = {
   schemaVersion: 1,
+  mode: null,
   colors: HUE(
     {
       bg: "#f7f5f1",
@@ -194,6 +197,7 @@ export const THEME_MAGAZINE: DesignConfig = {
 /* ─── 4. Minimaliste — épuré, lisible, très moderne ───────────────────── */
 export const THEME_MINIMAL: DesignConfig = {
   schemaVersion: 1,
+  mode: null,
   colors: HUE(
     {
       bg: "#fdfdfd",

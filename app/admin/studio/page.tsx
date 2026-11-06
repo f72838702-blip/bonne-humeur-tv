@@ -55,10 +55,12 @@ export default async function StudioPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-extrabold text-neutral-900 dark:text-neutral-50">
-          Studio de design
+          Personnalisez l’apparence de votre site
         </h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Personnalisez l’apparence du site — prévisualisez, puis publiez.{" "}
+        <p className="mt-1 text-sm font-medium text-neutral-600 dark:text-neutral-200">
+          Choisissez un design, visualisez-le et publiez-le en quelques clics.
+        </p>
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
           {published.updatedAt
             ? `Design publié pour la dernière fois le ${new Date(published.updatedAt).toLocaleString("fr-FR")}.`
             : "Aucun design personnalisé publié — le socle par défaut s'applique."}

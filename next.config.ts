@@ -24,14 +24,16 @@ const securityHeaders = [
       "media-src 'self'",
       "font-src 'self'",
       "connect-src 'self' https://challenges.cloudflare.com https://*.supabase.co",
-      "frame-src https://www.youtube-nocookie.com https://challenges.cloudflare.com",
+      "frame-src 'self' https://www.youtube-nocookie.com https://challenges.cloudflare.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "frame-ancestors 'none'",
+      // 'self' requis : l'aperçu du Studio (iframe INTERNE /studio-preview)
+      // est une frame de même origine — les sites tiers restent bannis.
+      "frame-ancestors 'self'",
     ].join("; "),
   },
-  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {

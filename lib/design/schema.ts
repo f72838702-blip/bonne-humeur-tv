@@ -125,9 +125,20 @@ export const footerSchema = z.object({
   links: z.array(footerLink).max(10).optional(),
 });
 
+/** Apparence par défaut des NOUVELLES visites (Studio simplifié).
+ *  null = comportement historique (nuit d'abord) — le commutateur manuel
+ *  clair/sombre de l'en-tête reste MAÎTRE pour chaque visiteur. */
+export const modeChoice = z.enum(["light", "dark"]);
+
 export const designConfigSchema = z.object({
   /** Version du schéma — évolution future sans migration. */
   schemaVersion: z.literal(1),
+  /**
+   * Apparence par défaut (null = nuit, historique). .catch(null) : un
+   * brouillon/design antérieur sans cette clé reste VALIDE (valeur nulle
+   * réintroduite) — aucune rupture de compatibilité, jamais de migration.
+   */
+  mode: modeChoice.nullable().catch(null),
   colors: z.object({ light: colorSetSchema, dark: colorSetSchema }),
   typography: typographySchema,
   components: componentsSchema,

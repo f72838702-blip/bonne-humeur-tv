@@ -8,6 +8,8 @@ import type { DesignConfig } from "./schema";
  */
 export const DEFAULT_DESIGN: DesignConfig = {
   schemaVersion: 1,
+  /** null = apparence historique (site nuit d'abord — socle inchangé). */
+  mode: null,
   colors: {
     light: {
       bg: null,

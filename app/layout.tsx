@@ -8,6 +8,7 @@ import {
   Oswald,
 } from "next/font/google";
 import "./globals.css";
+import { getPublishedDesignCached } from "@/lib/design/data";
 
 /* Jeu FERMÉ de polices du média (Studio de design) — toutes self-hostées
    par next/font (aucune requête externe, CSP intacte, 0 USD) et à
@@ -33,12 +34,20 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bon
  * Correctif FOUC (A3-2) : applique le thème persisté AVANT le premier
  * rendu du navigateur. Le store Zustand persiste l'état sous la clé
  * « bhtv-theme » au format {"state":{"dark":boolean},"version":0}.
+ *
+ * Studio de design : si le design publié choisit une apparence par défaut
+ * (« mode »), elle s'applique aux visites SANS préférence enregistrée.
+ * Le commutateur manuel de l'en-tête reste maître (préférence stockée).
  */
-const themeInitScript = `
+function buildThemeInitScript(defaultMode: "light" | "dark" | null): string {
+  // Valeur de BOOT uniquement — littéral sérialisé côté serveur depuis
+  // la config validée par le schéma (aucune donnée visiteur ici).
+  const bootDark = defaultMode === "light" ? false : true;
+  return `
 (function () {
   try {
     var raw = localStorage.getItem("bhtv-theme");
-    var dark = true;
+    var dark = ${bootDark ? "true" : "false"};
     if (raw) {
       var stored = JSON.parse(raw);
       if (stored && stored.state && typeof stored.state.dark === "boolean") {
@@ -46,11 +55,13 @@ const themeInitScript = `
       }
     }
     document.documentElement.classList.toggle("dark", dark);
+    document.documentElement.dataset.bhtvMode = dark ? "dark" : "light";
   } catch (e) {
     document.documentElement.classList.add("dark");
   }
 })();
 `;
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -84,13 +95,23 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Lecture dégradable (dédupliquée avec le layout public via cache()) :
+  // le design publié peut définir l'apparence par défaut des visites.
+  let defaultMode: "light" | "dark" | null = null;
+  try {
+    const design = await getPublishedDesignCached();
+    defaultMode = design.config?.mode ?? null;
+  } catch {
+    defaultMode = null; // jamais de page cassée
+  }
+
   return (
     <html lang="fr" className="dark" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: buildThemeInitScript(defaultMode) }} />
       </head>
       {/* Châssis minimal : thème + polices SEULEMENT. Aucun élément public
           ici — la façade visiteur (navigation, pied de page, WhatsApp,

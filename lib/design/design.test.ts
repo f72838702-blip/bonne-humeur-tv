@@ -214,3 +214,29 @@ describe("Studio de design — thèmes prédéfinis", () => {
     }
   });
 });
+
+describe("Studio de design — mode d'apparence (simplification)", () => {
+  it("D16 — mode clair/sombre acceptés, valeur hors liste refusée", () => {
+    expect(parseDesignConfig({ ...DEFAULT_DESIGN, mode: "light" })?.mode).toBe("light");
+    expect(parseDesignConfig({ ...DEFAULT_DESIGN, mode: "dark" })?.mode).toBe("dark");
+    expect(parseDesignConfig({ ...DEFAULT_DESIGN, mode: "system" })?.mode).toBeNull();
+    expect(parseDesignConfig({ ...DEFAULT_DESIGN, mode: 1 })?.mode).toBeNull();
+  });
+
+  it("D17 — config antérieure SANS mode : toujours valide, mode retombe à null (zéro rupture, sans migration)", () => {
+    const legacy = { ...DEFAULT_DESIGN } as Record<string, unknown>;
+    delete legacy.mode; // brouillon d'avant l'ajout du champ
+    const parsed = parseDesignConfig(legacy);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.mode).toBeNull();
+  });
+
+  it("D18 — mode null = apparence historique (site nuit d'abord) : aucune variable émise", () => {
+    const parsed = parseDesignConfig({ ...DEFAULT_DESIGN, mode: "light" });
+    expect(parsed?.mode).toBe("light");
+    // Le mode ne change RIEN au <style> : c'est un comportement de boot.
+    const parsedNull = parseDesignConfig(DEFAULT_DESIGN);
+    if (!parsed || !parsedNull) throw new Error("invalide");
+    expect(cssDesignStyle(parsed)).toBe(cssDesignStyle(parsedNull));
+  });
+});

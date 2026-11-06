@@ -18,6 +18,7 @@ import { FooterPanel } from "./panels/FooterPanel";
 import { ThemesPanel } from "./panels/ThemesPanel";
 import { HistoriquePanel, type HistoryEntry } from "./panels/HistoriquePanel";
 import { StudioPreviewFrame } from "./StudioPreviewFrame";
+import { StudioSimple } from "./StudioSimple";
 
 const TABS = [
   { id: "themes", label: "Thèmes" },
@@ -32,10 +33,14 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 /**
- * ÉDITEUR DU STUDIO — état local + piles Annuler/Rétablir (chaque
- * modification pousse dans « Annuler »). Aucun réglage ne touche le
- * site public : « Publier les modifications » passe par l'action
- * serveur VALIDÉE (admin seul) — revérification côté serveur.
+ * ÉDITEUR DU STUDIO — deux vues sur le MÊME état :
+ *  • « VUE SIMPLIFIÉE » (par défaut) : parcours 3 étapes (choisir →
+ *    regarder → publier) — StudioSimple ;
+ *  • « VUE AVANCÉE » : l'interface à onglets COMPLÈTE (rien retiré).
+ * Piles Annuler/Rétablir communes (chaque modification pousse dans
+ * « Annuler »). Aucun réglage ne touche le site public : « Publier »
+ * passe par l'action serveur VALIDÉE (admin seul) — revérification côté
+ * serveur.
  */
 export default function StudioEditor({
   initial,
@@ -56,13 +61,16 @@ export default function StudioEditor({
   const [config, setConfig] = useState<DesignConfig>(() => initial);
   const [past, setPast] = useState<DesignConfig[]>([]);
   const [future, setFuture] = useState<DesignConfig[]>([]);
+  const [view, setView] = useState<"simple" | "advanced">("simple");
   const [tab, setTab] = useState<TabId>("themes");
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [publishedFlash, setPublishedFlash] = useState(false);
   const [pending, startTransition] = useTransition();
 
   /** Modifie la config : entrée dans « past », « future » vidé. */
   const update = useCallback((fn: (c: DesignConfig) => DesignConfig) => {
+    setPublishedFlash(false);
     setConfig((current) => {
       const next = fn(current);
       if (JSON.stringify(next) === JSON.stringify(current)) return current;
@@ -106,11 +114,17 @@ export default function StudioEditor({
   /* ─── Actions (Server Actions revérifiées côté serveur) ───────────── */
   const publish = () => {
     if (!canPublish) return;
-    if (!window.confirm("Publier ce design sur le site public ? L'ancien design sera archivé.")) return;
+    if (
+      !window.confirm(
+        "Publier ce design maintenant ? Le site public prendra cette apparence et l’ancien design sera archivé automatiquement.",
+      )
+    )
+      return;
     startTransition(async () => {
       const r = await publishDesignAction(config, "Publication depuis le Studio");
       if (r.status === "success") {
         setMessage({ kind: "ok", text: "Design publié — le site public est mis à jour." });
+        setPublishedFlash(true);
         router.refresh();
       } else {
         setMessage({ kind: "err", text: r.message ?? "Publication refusée." });
@@ -139,7 +153,7 @@ export default function StudioEditor({
     update(() => structuredClone(publishedConfig));
     setMessage({
       kind: "ok",
-      text: "Revenu au design publié — ajustez et republiez à votre rythme.",
+      text: "Vos changements ont été annulés — vous êtes revenu au dernier design publié.",
     });
   };
 
@@ -157,6 +171,27 @@ export default function StudioEditor({
       }
     });
   };
+
+  /* ─── VUE SIMPLIFIÉE (défaut) ─────────────────────────────────────── */
+  if (view === "simple") {
+    return (
+      <StudioSimple
+        config={config}
+        update={update}
+        publishedConfig={publishedConfig}
+        canPublish={canPublish}
+        pending={pending}
+        preview={preview}
+        publish={publish}
+        revert={revertToPublished}
+        onOpenAdvanced={() => setView("advanced")}
+        reloadKey={reloadKey}
+        unpub={unpub}
+        message={message}
+        publishedFlash={publishedFlash}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -179,6 +214,13 @@ export default function StudioEditor({
           Rétablir
         </button>
         <span className="grow" />
+        <button
+          type="button"
+          onClick={() => setView("simple")}
+          className="rounded-full border border-guinea-red/50 px-3 py-1.5 text-xs font-semibold text-guinea-red hover:bg-guinea-red/10"
+        >
+          ← Vue simple
+        </button>
         <button
           type="button"
           onClick={revertToPublished}

@@ -71,7 +71,11 @@ const FONT_VARS: Record<string, string> = {
   oswald: "var(--font-oswald)",
 };
 
-const RADIUS_SETS: Record<NonNullable<ComponentsConfig["radius"]>, [string, string]> = {
+/** Exporté pour les MINIATURES du Studio simplifié (rendu fidèle) —
+ *  mêmes cartes, sources uniques partagées avec designToVars. */
+export const FONT_VAR_FOR = FONT_VARS;
+
+export const RADIUS_SETS: Record<NonNullable<ComponentsConfig["radius"]>, [string, string]> = {
   // [radius-xl, radius-2xl] — le 3xl suit à 1,5 × le 2xl (échelle relative) :
   sharp: ["0", "0"],
   small: ["0.25rem", "0.25rem"],
@@ -79,14 +83,14 @@ const RADIUS_SETS: Record<NonNullable<ComponentsConfig["radius"]>, [string, stri
   round: ["1.25rem", "1.75rem"],
 };
 
-const SHADOW_SETS: Record<NonNullable<ComponentsConfig["shadows"]>, string> = {
+export const SHADOW_SETS: Record<NonNullable<ComponentsConfig["shadows"]>, string> = {
   soft: "0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px -2px rgb(0 0 0 / 0.08)",
   strong:
     "0 10px 15px -3px rgb(0 0 0 / 0.12), 0 18px 32px -8px rgb(0 0 0 / 0.18)",
   none: "none",
 };
 
-const SPACING_SETS: Record<NonNullable<ComponentsConfig["spacing"]>, string> = {
+export const SPACING_SETS: Record<NonNullable<ComponentsConfig["spacing"]>, string> = {
   compact: "1.25rem",
   standard: "1.5rem",
   airy: "2rem",

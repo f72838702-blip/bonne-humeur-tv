@@ -45,6 +45,11 @@ export default function Header({
   const { dark, toggle } = useTheme();
   const [open, setOpen] = useState(false);
   const [shrunk, setShrunk] = useState(false);
+  // Icône du commutateur : figée côté serveur (rendu nuit — historique)
+  // puis réévaluée après montage = apparence par défaut du design publié
+  // (boot), évite tout risque de déshydratation.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -131,7 +136,7 @@ export default function Header({
             aria-label="Basculer le thème"
             className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-white/10"
           >
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {mounted ? (dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />) : <Sun className="h-4 w-4" />}
           </button>
           <button
             onClick={() => setOpen((v) => !v)}

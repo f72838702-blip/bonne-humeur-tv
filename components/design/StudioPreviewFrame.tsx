@@ -35,10 +35,16 @@ export function StudioPreviewFrame({
   // Injection LIVE des variables dans le document de l'iframe.
   useEffect(() => {
     const iframe = iframeRef.current;
-    if (!iframe || !loaded) return;
+    if (!iframe) return;
+    const doc = iframe.contentDocument;
+    if (!doc) return;
+    // Rattrapage : si l'iframe a chargé AVANT l'hydration, l'événement
+    // load a été manqué — readyState fait foi (sans rechargement).
+    if (!loaded) {
+      if (doc.readyState !== "complete") return;
+      setLoaded(true);
+    }
     try {
-      const doc = iframe.contentDocument;
-      if (!doc) return;
       let el = doc.querySelector<HTMLStyleElement>("style[data-bhtv-design]");
       if (!el) {
         el = doc.createElement("style");
@@ -64,13 +70,13 @@ export function StudioPreviewFrame({
               type="button"
               onClick={() => setDevice(d)}
               className={cn(
-                "rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors",
+                "rounded-xl border px-4 py-2 text-xs font-bold transition-colors sm:text-sm",
                 device === d
                   ? "border-guinea-red bg-guinea-red/10 text-guinea-red"
                   : "border-neutral-600 text-neutral-400 hover:text-neutral-200",
               )}
             >
-              {d === "desktop" ? "Ordinateur" : d === "tablet" ? "Tablette" : "Mobile"}
+              {d === "desktop" ? "💻 Ordinateur" : d === "tablet" ? "▭ Tablette" : "📱 Téléphone"}
             </button>
           ))}
           <button
@@ -80,7 +86,7 @@ export function StudioPreviewFrame({
               setLocalKey((k) => k + 1);
             }}
             aria-label="Recharger l'aperçu"
-            className="ml-1 rounded-full border border-neutral-600 px-2.5 py-1 text-[11px] font-semibold text-neutral-400 hover:text-neutral-200"
+            className="ml-1 rounded-xl border border-neutral-600 px-3 py-2 text-sm font-semibold text-neutral-400 hover:text-neutral-200"
           >
             ↻
           </button>
