@@ -502,7 +502,7 @@ function Preview(p: {
   return (
     <div className="rounded-2xl border-2 border-dashed border-neutral-300 p-5 dark:border-white/15">
       <p className="mb-3 text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">Aperçu — {p.format === "banner" ? "bannière" : "carte"}</p>
-      <div className={`overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-white/10 dark:bg-white/5 ${p.format === "banner" ? "" : "max-w-sm"}`}>
+      <div className={`overflow-hidden rounded-xl border border-neutral-200 bg-surface dark:border-white/10 dark:bg-white/5 ${p.format === "banner" ? "" : "max-w-sm"}`}>
         {p.imageUrl
           ? // eslint-disable-next-line @next/next/no-img-element
             <img src={p.imageUrl} alt="" className={p.format === "banner" ? "h-24 w-full object-cover" : "h-40 w-full object-cover"} />
@@ -510,7 +510,7 @@ function Preview(p: {
         <div className="p-3">
           {p.title && <p className="text-sm font-extrabold">{p.title}</p>}
           {p.text && <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-300">{p.text}</p>}
-          {cta && <span className="mt-2 inline-block rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-extrabold text-white dark:bg-white dark:text-neutral-900">{cta}</span>}
+          {cta && <span className="mt-2 inline-block rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-extrabold text-white dark:bg-surface dark:text-neutral-900">{cta}</span>}
         </div>
       </div>
     </div>
@@ -520,7 +520,7 @@ function Preview(p: {
 // ─── Petits blocs réutilisables ─────────────────────────────────────
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
+    <section className="rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800">
       <h2 className="mb-4 flex items-center gap-3 font-display text-lg font-extrabold">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-guinea-red text-sm font-extrabold text-white">{n}</span>
         {title}

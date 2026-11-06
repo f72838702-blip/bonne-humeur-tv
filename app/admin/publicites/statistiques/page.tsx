@@ -70,15 +70,15 @@ export default async function AdminAdsStatsPage({
       </form>
 
       <section className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
+        <div className="rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800">
           <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Impressions (période)</p>
           <p className="mt-1 font-display text-3xl font-extrabold">{impressions}</p>
         </div>
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
+        <div className="rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800">
           <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Clics (période)</p>
           <p className="mt-1 font-display text-3xl font-extrabold">{clicks}</p>
         </div>
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
+        <div className="rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800">
           <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">CTR</p>
           <p className="mt-1 font-display text-3xl font-extrabold">{ctr === null ? "—" : `${ctr} %`}</p>
         </div>
@@ -96,7 +96,7 @@ export default async function AdminAdsStatsPage({
                 <Link
                   key={campaignId}
                   href={`/admin/publicites/campagnes/${campaignId}`}
-                  className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-sm hover:border-guinea-red/40 dark:border-white/10 dark:bg-night-800"
+                  className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 text-sm hover:border-guinea-red/40 dark:border-white/10 dark:bg-night-800"
                 >
                   <span className="min-w-0 flex-1 truncate font-bold">{entry.name}</span>
                   <span className="text-xs text-neutral-400">{entry.reference}</span>

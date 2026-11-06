@@ -10,13 +10,16 @@ import VideoCard from "@/components/video/VideoCard";
 export default function VideosGrid({
   videos,
   showAllLink = true,
+  /** Surcharge des colonnes (Studio de design — section « videos »). */
+  gridClassName = "grid gap-5 sm:grid-cols-2 lg:grid-cols-3",
 }: {
   videos: VideoWithRelations[];
   showAllLink?: boolean;
+  gridClassName?: string;
 }) {
   return (
     <div>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={gridClassName}>
         {videos.map((video) => (
           <VideoCard key={video.slug} video={video} />
         ))}

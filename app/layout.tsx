@@ -1,13 +1,31 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Archivo } from "next/font/google";
+import {
+  Inter,
+  Archivo,
+  DM_Sans,
+  Lora,
+  Newsreader,
+  Oswald,
+} from "next/font/google";
 import "./globals.css";
 
+/* Jeu FERMÉ de polices du média (Studio de design) — toutes self-hostées
+   par next/font (aucune requête externe, CSP intacte, 0 USD) et à
+   séries variables. Seules les polices EFFECTIVEMENT utilisées par la
+   variable CSS active sont téléchargées par le navigateur (font-face
+   déclarées mais jamais requêtées tant que la famille n'est pas rendue).
+   Le Studio publie --bhtv-font-body / --bhtv-font-display avec la bonne
+   variable — aucune autre police ne pourra être injectée (liste fermée). */
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const archivo = Archivo({
   subsets: ["latin"],
   weight: ["500", "700", "800", "900"],
   variable: "--font-display",
 });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
+const lora = Lora({ subsets: ["latin"], variable: "--font-lora" });
+const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-newsreader" });
+const oswald = Oswald({ subsets: ["latin"], variable: "--font-oswald" });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
 
@@ -78,7 +96,7 @@ export default function RootLayout({
           ici — la façade visiteur (navigation, pied de page, WhatsApp,
           publicités, collecte) vit exclusivement dans app/(public)/layout.tsx,
           donc /admin/* en est totalement isolé (correction UX 05/11/2026). */}
-      <body className={`${inter.variable} ${archivo.variable} flex min-h-screen flex-col`}>
+      <body className={`${inter.variable} ${archivo.variable} ${dmSans.variable} ${lora.variable} ${newsreader.variable} ${oswald.variable} flex min-h-screen flex-col`}>
         {children}
       </body>
     </html>

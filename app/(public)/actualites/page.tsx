@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Newspaper } from "lucide-react";
 import ArticleCard from "@/components/shared/ArticleCard";
 import EmptyState from "@/components/shared/EmptyState";
+import PageTitle from "@/components/shared/PageTitle";
 import FilterChips from "@/components/shared/FilterChips";
 import Pagination from "@/components/shared/Pagination";
 import AdSlot from "@/components/publicite/AdSlot";
@@ -47,12 +48,12 @@ export default async function ActualitesPage({
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-3xl font-extrabold sm:text-4xl">
-        Toutes les <span className="text-guinea-red">actualités</span>
-      </h1>
-      <p className="mt-2 max-w-xl text-sm text-neutral-500 dark:text-neutral-400">
-        L&apos;information vérifiée de la rédaction de Bonne Humeur TV.
-      </p>
+      <PageTitle
+        kicker="Rédaction"
+        title="Toutes les"
+        highlight="actualités"
+        subtitle="L'information vérifiée de la rédaction de Bonne Humeur TV."
+      />
 
       {categories.length > 0 && (
         <div className="mt-8">

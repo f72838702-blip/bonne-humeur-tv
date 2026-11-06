@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Newspaper } from "lucide-react";
 import ArticleCard from "@/components/shared/ArticleCard";
 import EmptyState from "@/components/shared/EmptyState";
+import PageTitle from "@/components/shared/PageTitle";
 import FilterChips from "@/components/shared/FilterChips";
 import Pagination from "@/components/shared/Pagination";
 import { getPublishedArticles } from "@/lib/data/articles";
@@ -51,14 +52,14 @@ export default async function CategoryPage({ params, searchParams }: Params) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-3xl font-extrabold sm:text-4xl">
-        Rubrique <span className="text-guinea-red">{category.name}</span>
-      </h1>
-      {category.description && (
-        <p className="mt-2 max-w-xl text-sm text-neutral-500 dark:text-neutral-400">
-          {category.description}
-        </p>
-      )}
+      <PageTitle
+        kicker="Rubrique"
+        title="Rubrique"
+        highlight={category.name}
+        subtitle={category.description ?? undefined}
+      />
+      {/* L'ancien bloc doublonné (h1 + description) est remplacé par le
+          composant unifié — description passée en sous-titre ci-dessus. */}
 
       {categories.length > 0 && (
         <div className="mt-8">

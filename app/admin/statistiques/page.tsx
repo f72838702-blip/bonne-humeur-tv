@@ -123,7 +123,7 @@ export default async function AdminStatisticsPage({
       {/* Filtre de période — liens serveur (aucun JS client), s'applique à TOUT.
           Mobile : ligne défilante horizontale de presets, puis formulaire dates. */}
       <nav
-        className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-3 sm:p-4 dark:border-white/10 dark:bg-night-800"
+        className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-surface p-3 sm:p-4 dark:border-white/10 dark:bg-night-800"
         aria-label="Période"
       >
         <div className="flex gap-2 overflow-x-auto pb-0.5" role="group">
@@ -151,14 +151,14 @@ export default async function AdminStatisticsPage({
             type="date"
             name="du"
             defaultValue={du}
-            className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-xs tabular-nums sm:flex-none dark:border-white/10 dark:bg-night-900"
+            className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-surface px-2 py-1.5 text-xs tabular-nums sm:flex-none dark:border-white/10 dark:bg-night-900"
             aria-label="Du"
           />
           <input
             type="date"
             name="au"
             defaultValue={au}
-            className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-xs tabular-nums sm:flex-none dark:border-white/10 dark:bg-night-900"
+            className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-surface px-2 py-1.5 text-xs tabular-nums sm:flex-none dark:border-white/10 dark:bg-night-900"
             aria-label="Au"
           />
           <button
@@ -171,7 +171,7 @@ export default async function AdminStatisticsPage({
       </nav>
 
       {noData && (
-        <p className="rounded-2xl border border-neutral-200 bg-white px-4 py-6 text-sm text-neutral-600 dark:border-white/10 dark:bg-night-800 dark:text-neutral-300">
+        <p className="rounded-2xl border border-neutral-200 bg-surface px-4 py-6 text-sm text-neutral-600 dark:border-white/10 dark:bg-night-800 dark:text-neutral-300">
           Aucune visite enregistrée pour l&apos;instant. La collecte est active depuis le
           04/11/2026 (déploiement réel) — ce message disparaît dès les premières navigations.
           <strong>Aucun chiffre fictif n&apos;est jamais affiché.</strong>
@@ -324,7 +324,7 @@ function ChartBlock({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-white/10 dark:bg-night-800">
+    <section className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 sm:p-5 dark:border-white/10 dark:bg-night-800">
       <div>
         <h2 className="font-display text-base font-bold sm:text-lg">{title}</h2>
         <p className="mt-0.5 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">{expl}</p>

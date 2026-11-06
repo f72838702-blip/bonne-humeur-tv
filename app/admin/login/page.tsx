@@ -17,7 +17,7 @@ export default async function AdminLoginPage() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center px-4 py-16 sm:px-6">
-      <div className="w-full rounded-3xl border border-neutral-200 bg-white p-8 shadow-xl dark:border-white/10 dark:bg-night-800">
+      <div className="w-full rounded-3xl border border-neutral-200 bg-surface p-8 shadow-xl dark:border-white/10 dark:bg-night-800">
         <div className="mb-8 flex flex-col items-center text-center">
           {/* Logo officiel (original tel quel — aucune retouche) */}
           <Logo className="h-10 w-auto select-none object-contain" />

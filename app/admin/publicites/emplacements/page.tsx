@@ -38,7 +38,7 @@ export default async function AdminPlacementsPage() {
         placements.map((p) => (
           <section
             key={p.code}
-            className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800"
+            className="rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800"
           >
             <header className="mb-3 flex flex-wrap items-center gap-3">
               <span className="rounded-full bg-neutral-500/15 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase text-neutral-500">

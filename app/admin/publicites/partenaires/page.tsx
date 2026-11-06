@@ -29,7 +29,7 @@ export default async function AdminPartnersPage() {
         </p>
       </header>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-4 font-display text-base font-bold">Nouveau partenaire</h2>
         <PartnerForm />
       </section>
@@ -40,7 +40,7 @@ export default async function AdminPartnersPage() {
           <NotFoundScreen what="Partenaire" />
         ) : (
           partners.map((p) => (
-            <div key={p.id} className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800">
+            <div key={p.id} className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800">
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${p.is_active ? "bg-guinea-green/15 text-guinea-green" : "bg-neutral-500/15 text-neutral-500"}`}>
                   {p.is_active ? "Actif" : "Inactif"}

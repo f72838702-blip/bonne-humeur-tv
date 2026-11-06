@@ -71,7 +71,7 @@ export default function HeroPlayer({ video }: { video: VideoWithRelations }) {
 
         {video.is_live && (
           <span className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-guinea-red px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-white shadow-glow">
-            <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-white" />
+            <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-surface" />
             En direct
           </span>
         )}

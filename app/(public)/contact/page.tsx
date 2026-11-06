@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import ContactForm from "@/components/contact/ContactForm";
+import PageTitle from "@/components/shared/PageTitle";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -11,16 +12,16 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-3xl font-extrabold sm:text-4xl">
-        Nous <span className="text-guinea-red">contacter</span>
-      </h1>
-      <p className="mt-2 max-w-xl text-sm text-neutral-500 dark:text-neutral-400">
-        Une question, un projet, un événement à couvrir ? Écrivez-nous.
-      </p>
+      <PageTitle
+        kicker="À votre écoute"
+        title="Nous"
+        highlight="contacter"
+        subtitle="Une question, un projet, un événement à couvrir ? Écrivez-nous."
+      />
 
       <div className="mt-10 grid gap-8 lg:grid-cols-2">
         <div className="flex flex-col gap-5">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+          <div className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
             <h2 className="font-display text-lg font-bold">Coordonnées officielles</h2>
             <ul className="mt-4 space-y-4 text-sm text-neutral-600 dark:text-neutral-300">
               <li className="flex items-start gap-3">
@@ -72,7 +73,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800 sm:p-8">
+        <div className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800 sm:p-8">
           <h2 className="font-display text-lg font-bold">Formulaire de contact</h2>
           <div className="mt-5">
             <ContactForm />

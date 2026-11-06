@@ -64,7 +64,7 @@ export default async function AdminDirectPage() {
         </p>
       </header>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-4 flex items-center gap-2 font-display text-base font-bold">
           <Radio className="h-4 w-4 text-guinea-red" />
           Configuration
@@ -73,7 +73,7 @@ export default async function AdminDirectPage() {
       </section>
 
       {previewId && (
-        <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+        <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
           <h2 className="mb-4 font-display text-base font-bold">
             Prévisualisation du lecteur
           </h2>
@@ -99,7 +99,7 @@ export default async function AdminDirectPage() {
         </section>
       )}
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-4 font-display text-base font-bold">
           Détection — état réel
         </h2>

@@ -48,8 +48,8 @@ export default async function LiveSection() {
           >
             <span className="flex items-center gap-2 rounded-full bg-guinea-red px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-white">
               <span className="relative flex h-2 w-2">
-                <span className="absolute h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                <span className="relative h-2 w-2 rounded-full bg-white" />
+                <span className="absolute h-full w-full animate-ping rounded-full bg-surface opacity-75" />
+                <span className="relative h-2 w-2 rounded-full bg-surface" />
               </span>
               En direct
             </span>
@@ -67,7 +67,7 @@ export default async function LiveSection() {
         </div>
       ) : (
         /* Présentation discrète — JAMAIS un lecteur qui simule un direct */
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-6 text-center dark:border-white/10 dark:bg-night-800 sm:p-8">
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-neutral-200 bg-surface p-6 text-center dark:border-white/10 dark:bg-night-800 sm:p-8">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-guinea-red/10 text-guinea-red">
             <Radio className="h-6 w-6" />
           </span>

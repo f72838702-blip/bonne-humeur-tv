@@ -115,7 +115,7 @@ export default async function ArticleStatsPage({
       </nav>
 
       {own.length === 0 && (
-        <p className="rounded-2xl border border-neutral-200 bg-white px-4 py-6 text-sm text-neutral-600 dark:border-white/10 dark:bg-night-800 dark:text-neutral-300">
+        <p className="rounded-2xl border border-neutral-200 bg-surface px-4 py-6 text-sm text-neutral-600 dark:border-white/10 dark:bg-night-800 dark:text-neutral-300">
           Aucune lecture de cet article enregistrée sur la période — la collecte est active depuis
           le 04/11/2026 et aucun visiteur n&apos;a ouvert cet article ici encore.
         </p>
@@ -161,7 +161,7 @@ export default async function ArticleStatsPage({
       </section>
 
       {own.length > 0 && (
-        <section className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
+        <section className="rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800">
           <h2 className="font-display text-lg font-bold">Évolution des lectures</h2>
           <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
             Pages vues de CET article par jour.

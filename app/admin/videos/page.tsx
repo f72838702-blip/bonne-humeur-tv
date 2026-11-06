@@ -47,7 +47,7 @@ export default async function AdminVideosPage() {
           {videos.map((video) => (
             <li
               key={video.id}
-              className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-night-800"
+              className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-night-800"
             >
               <div className="flex min-w-0 items-center gap-4">
                 {/* Miniature réelle depuis l'ID YouTube — dimension adaptée

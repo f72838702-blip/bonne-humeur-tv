@@ -88,7 +88,7 @@ export function AdCard({ creative, placement, href }: { creative: AdPublicCreati
       href={href ?? adClickHref(creative.id, placement)}
       rel="sponsored noopener noreferrer"
       target="_blank"
-      className="group flex items-center gap-4 rounded-2xl border border-dashed border-guinea-yellow/50 bg-white p-4 transition-colors hover:border-guinea-yellow dark:border-guinea-yellow/40 dark:bg-night-800"
+      className="group flex items-center gap-4 rounded-2xl border border-dashed border-guinea-yellow/50 bg-surface p-4 transition-colors hover:border-guinea-yellow dark:border-guinea-yellow/40 dark:bg-night-800"
     >
       <AdBadge />
       {isRenderableUrl(payload.logo_url || payload.image_url) ? (

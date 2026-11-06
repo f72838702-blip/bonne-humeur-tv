@@ -62,7 +62,7 @@ export default async function EditVideoPage({
         </div>
       </header>
 
-      <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <div className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <VideoForm categories={categories} video={video} />
       </div>
     </div>

@@ -114,7 +114,7 @@ export default function MediaUploader() {
           setPreview(null);
           setPrepError("");
         }}
-        className="block w-full cursor-pointer rounded-xl border border-neutral-300 bg-white p-2.5 text-sm text-neutral-600 file:mr-3 file:rounded-lg file:border-0 file:bg-guinea-red/10 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-guinea-red dark:border-white/15 dark:bg-night-800 dark:text-neutral-300"
+        className="block w-full cursor-pointer rounded-xl border border-neutral-300 bg-surface p-2.5 text-sm text-neutral-600 file:mr-3 file:rounded-lg file:border-0 file:bg-guinea-red/10 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-guinea-red dark:border-white/15 dark:bg-night-800 dark:text-neutral-300"
       />
       <p className="text-[11px] leading-relaxed text-neutral-400">
         JPEG, PNG, WebP ou GIF. Compression dans votre navigateur avant l’envoi

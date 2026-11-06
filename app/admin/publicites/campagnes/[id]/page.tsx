@@ -96,7 +96,7 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
       </header>
 
       {/* ─── Machine à états ─── */}
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-3 font-display text-base font-bold">Cycle de vie</h2>
         <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">
           État effectif : {AD_STATE_LABELS[state]}. {state === "paused" && "Aucune date → jamais diffusée, même activée (fail-closed)."}
@@ -107,7 +107,7 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
       </section>
 
       {/* ─── Édition de la campagne ─── */}
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-4 font-display text-base font-bold">Modifier la campagne</h2>
         <p className="mb-3 text-xs text-neutral-500 dark:text-neutral-400">
           Modifier les dates ou les emplacements ne RÉINITIALISE JAMAIS le
@@ -121,7 +121,7 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
       </section>
 
       {/* ─── Contrat ─── */}
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="font-display text-base font-bold">Contrat — {payState ? PAYMENT_STATE_LABELS[payState] : "montant non fixé"}</h2>
         <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
           <Detail label="Facturation" value={campaign.billing_type === "forfait_plus_production" ? "Forfait + production" : "Forfait"} />
@@ -145,7 +145,7 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
       </section>
 
       {/* ─── Statistiques (réelles, indicatives) ─── */}
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="font-display text-base font-bold">Statistiques (indicatives — jamais certifiées)</h2>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           {impressions} impressions · {clicks} clics · CTR {ctr === null ? "—" : `${ctr} %`} —
@@ -158,7 +158,7 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-bold">Créations ({creatives.length})</h2>
         {creatives.map((creative) => (
-          <div key={creative.id} className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800">
+          <div key={creative.id} className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800">
             <StatusRow title={creative.name} note={`${AD_FORMAT_LABELS[creative.format]} · poids ${creative.weight}${creative.article_id ? " · article lié" : ""}`} status={creative.status} />
             <CreativeDecisionButtons creativeId={creative.id} />
             <details>
@@ -169,7 +169,7 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
             </details>
           </div>
         ))}
-        <details className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800">
+        <details className="rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800">
           <summary className="cursor-pointer text-sm font-bold">+ Nouvelle création</summary>
           <div className="mt-3">
             <CreativeForm campaignId={id} articleOptions={articleOptions} />
@@ -182,7 +182,7 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-lg font-bold">Règlements ({payments?.length ?? 0})</h2>
           {(payments ?? []).map((p) => (
-            <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-night-800">
+            <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 text-sm dark:border-white/10 dark:bg-night-800">
               <span className="font-bold">{Number(p.amount).toLocaleString("fr-FR")} {p.currency}</span>
               <span className="text-xs text-neutral-400">{formatDate(p.paid_on)} · {p.method}</span>
               {p.transaction_reference && <span className="text-xs text-neutral-500">réf. {p.transaction_reference}</span>}
@@ -191,7 +191,7 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
               </span>
             </div>
           ))}
-          <details className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800">
+          <details className="rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800">
             <summary className="cursor-pointer text-sm font-bold">+ Enregistrer un règlement (paiement MANUEL — aucune passerelle externe)</summary>
             <div className="mt-3"><PaymentForm campaignId={id} /></div>
           </details>

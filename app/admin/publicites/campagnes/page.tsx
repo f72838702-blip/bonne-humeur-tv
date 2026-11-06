@@ -56,7 +56,7 @@ export default async function AdminCampaignsPage({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Rechercher…"
-            className="w-48 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none dark:border-white/15 dark:bg-night-800"
+            className="w-48 rounded-xl border border-neutral-300 bg-surface px-3 py-2 text-sm outline-none dark:border-white/15 dark:bg-night-800"
           />
           <button type="submit" className="rounded-xl border border-neutral-300 px-4 text-sm font-semibold dark:border-white/15">Rechercher</button>
         </form>
@@ -74,7 +74,7 @@ export default async function AdminCampaignsPage({
                 <Link
                   key={c.id}
                   href={`/admin/publicites/campagnes/${c.id}`}
-                  className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-sm transition-colors hover:border-guinea-red/40 dark:border-white/10 dark:bg-night-800"
+                  className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 text-sm transition-colors hover:border-guinea-red/40 dark:border-white/10 dark:bg-night-800"
                 >
                   <span className="rounded-full bg-neutral-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase text-neutral-600 dark:text-neutral-300">
                     {AD_STATE_LABELS[state]}

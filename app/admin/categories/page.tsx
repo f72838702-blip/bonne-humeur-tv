@@ -29,7 +29,7 @@ export default async function AdminCategoriesPage() {
         </p>
       </header>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-4 flex items-center gap-2 font-display text-base font-bold">
           <FolderTree className="h-4 w-4 text-guinea-red" />
           Nouvelle rubrique
@@ -48,7 +48,7 @@ export default async function AdminCategoriesPage() {
           categories.map((c) => (
             <details
               key={c.id}
-              className="rounded-2xl border border-neutral-200 bg-white dark:border-white/10 dark:bg-night-800"
+              className="rounded-2xl border border-neutral-200 bg-surface dark:border-white/10 dark:bg-night-800"
             >
               <summary className="flex cursor-pointer flex-wrap items-center gap-3 p-4">
                 <span className="text-xs font-bold uppercase tracking-wide text-guinea-green">

@@ -164,7 +164,7 @@ export default async function ArticlePage({ params }: Params) {
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
         <article className="min-w-0">
           {article.categories && (
-            <span className="rounded-full bg-guinea-green/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-guinea-green">
+            <span className="rounded-full bg-guinea-green/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-catink">
               {article.categories.name}
             </span>
           )}

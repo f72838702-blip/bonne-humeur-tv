@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CalendarDays, Newspaper, Search, SearchX, Tv } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
+import PageTitle from "@/components/shared/PageTitle";
 import { searchPublishedContent } from "@/lib/data/search";
 import { formatDate } from "@/lib/utils";
 import { mediaVariantUrl } from "@/lib/media/variants";
@@ -31,12 +32,11 @@ export default async function SearchPage({
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-3xl font-extrabold sm:text-4xl">
-        <span className="text-guinea-red">Recherche</span>
-      </h1>
-      <p className="mt-2 max-w-xl text-sm text-neutral-500 dark:text-neutral-400">
-        Explorez les actualités et vidéos publiées par la rédaction.
-      </p>
+      <PageTitle
+        kicker="Explorer"
+        title="Recherche"
+        subtitle="Explorez les actualités et vidéos publiées par la rédaction."
+      />
 
       <form action="/recherche" method="GET" className="mt-8 max-w-2xl">
         <div className="relative">
@@ -48,7 +48,7 @@ export default async function SearchPage({
             placeholder="Mot-clé, titre, sujet…"
             minLength={2}
             aria-label="Terme de recherche"
-            className="w-full rounded-full border border-neutral-300 bg-white py-3.5 pl-11 pr-32 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-guinea-red focus:ring-2 focus:ring-guinea-red/20 dark:border-white/15 dark:bg-night-800"
+            className="w-full rounded-full border border-neutral-300 bg-surface py-3.5 pl-11 pr-32 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-guinea-red focus:ring-2 focus:ring-guinea-red/20 dark:border-white/15 dark:bg-night-800"
           />
           <button
             type="submit"
@@ -104,10 +104,10 @@ export default async function SearchPage({
                         <Link
                           key={a.id}
                           href={`/actualites/${a.slug}`}
-                          className="group rounded-2xl border border-neutral-200 bg-white p-4 transition-all hover:border-guinea-red/40 hover:shadow-lg dark:border-white/10 dark:bg-night-800"
+                          className="group rounded-2xl border border-neutral-200 bg-surface p-4 transition-all hover:border-guinea-red/40 hover:shadow-lg dark:border-white/10 dark:bg-night-800"
                         >
                           {a.category_name && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-guinea-green">
+                            <span className="text-xs font-bold uppercase tracking-wider text-catink">
                               {a.category_name}
                             </span>
                           )}
@@ -120,7 +120,7 @@ export default async function SearchPage({
                             </p>
                           )}
                           {a.published_at && (
-                            <span className="mt-2 flex items-center gap-1.5 text-[11px] text-neutral-400">
+                            <span className="mt-2 flex items-center gap-1.5 text-xs text-neutral-400">
                               <CalendarDays className="h-3 w-3" />
                               {formatDate(a.published_at)}
                             </span>
@@ -142,7 +142,7 @@ export default async function SearchPage({
                         <Link
                           key={v.id}
                           href={`/videos/${v.slug}`}
-                          className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-night-800"
+                          className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-surface transition-all hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-night-800"
                         >
                           <span className="relative flex aspect-video w-full items-center justify-center bg-gradient-to-br from-night-800 via-night-900 to-black">
                             {v.thumbnail_url && (
@@ -160,7 +160,7 @@ export default async function SearchPage({
                           </span>
                           <span className="flex flex-1 flex-col gap-2 p-4">
                             {v.category_name && (
-                              <span className="w-fit rounded-full bg-guinea-green/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-guinea-green">
+                              <span className="w-fit rounded-full bg-guinea-green/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-catink">
                                 {v.category_name}
                               </span>
                             )}
@@ -168,7 +168,7 @@ export default async function SearchPage({
                               {v.title}
                             </span>
                             {v.published_at && (
-                              <span className="mt-auto flex items-center gap-1.5 text-[11px] text-neutral-400">
+                              <span className="mt-auto flex items-center gap-1.5 text-xs text-neutral-400">
                                 <CalendarDays className="h-3.5 w-3.5" />
                                 {formatDate(v.published_at)}
                               </span>

@@ -32,7 +32,7 @@ export default async function PartnerShowcase({ className }: { className?: strin
           return (
             <div
               key={partner.id}
-              className="flex items-center justify-center rounded-xl border border-neutral-200 bg-white p-3 dark:border-white/10 dark:bg-night-800"
+              className="flex items-center justify-center rounded-xl border border-neutral-200 bg-surface p-3 dark:border-white/10 dark:bg-night-800"
             >
               {partner.link_url ? (
                 <a

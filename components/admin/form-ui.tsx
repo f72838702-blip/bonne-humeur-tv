@@ -91,7 +91,7 @@ export function SubmitButton({
 
 /** Label + champs : styles communs des inputs admin. */
 export const inputClass =
-  "w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-guinea-red dark:border-white/15 dark:bg-night-800 dark:text-neutral-100";
+  "w-full rounded-xl border border-neutral-300 bg-surface px-4 py-2.5 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-guinea-red dark:border-white/15 dark:bg-night-800 dark:text-neutral-100";
 
 export const labelClass =
   "mb-1.5 block text-xs font-bold uppercase tracking-wide text-neutral-500 dark:text-neutral-400";

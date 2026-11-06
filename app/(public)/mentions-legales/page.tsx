@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PageTitle from "@/components/shared/PageTitle";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
@@ -14,12 +15,12 @@ export const metadata: Metadata = {
 export default function MentionsLegalesPage() {
   return (
     <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-3xl font-extrabold sm:text-4xl">
-        Mentions <span className="text-guinea-red">légales</span>
-      </h1>
-      <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-        Dernière mise à jour : octobre 2026
-      </p>
+      <PageTitle
+        kicker="Transparence"
+        title="Mentions"
+        highlight="légales"
+        subtitle="Dernière mise à jour : octobre 2026"
+      />
 
       <div className="mt-10 space-y-10 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
         <div>

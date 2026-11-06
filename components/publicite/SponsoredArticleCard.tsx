@@ -26,12 +26,12 @@ export default async function SponsoredArticleCard({
   return (
     <Link
       href={`/actualites/${article.slug}`}
-      className="group block rounded-2xl border border-dashed border-guinea-yellow/60 bg-white p-4 transition-colors hover:border-guinea-yellow dark:border-guinea-yellow/50 dark:bg-night-800"
+      className="group block rounded-2xl border border-dashed border-guinea-yellow/60 bg-surface p-4 transition-colors hover:border-guinea-yellow dark:border-guinea-yellow/50 dark:bg-night-800"
     >
       <span className="flex items-center justify-between">
         <SponsoredArticleBadge />
         {article.categories && (
-          <span className="text-[10px] font-bold uppercase tracking-wider text-guinea-green">
+          <span className="text-xs font-bold uppercase tracking-wider text-catink">
             {article.categories.name}
           </span>
         )}

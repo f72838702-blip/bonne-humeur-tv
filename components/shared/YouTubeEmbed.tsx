@@ -28,7 +28,7 @@ export default function YouTubeEmbed({ id }: { id: string }) {
           className="absolute inset-0 h-full w-full"
         />
       </div>
-      <figcaption className="bg-white px-4 py-2 text-[11px] font-medium uppercase tracking-wide text-neutral-400 dark:bg-night-800 dark:text-neutral-500">
+      <figcaption className="bg-surface px-4 py-2 text-[11px] font-medium uppercase tracking-wide text-neutral-400 dark:bg-night-800 dark:text-neutral-500">
         <a
           href={youtubeWatchUrl(id)}
           target="_blank"

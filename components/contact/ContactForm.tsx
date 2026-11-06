@@ -26,7 +26,7 @@ import { firstErrorFieldId } from "@/lib/form-errors";
 const initialState: ActionState = { status: "idle", message: "" };
 
 const inputClass =
-  "w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-guinea-red focus:ring-2 focus:ring-guinea-red/20 dark:border-white/15 dark:bg-night-900";
+  "w-full rounded-xl border border-neutral-300 bg-surface px-4 py-3 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-guinea-red focus:ring-2 focus:ring-guinea-red/20 dark:border-white/15 dark:bg-night-900";
 
 /** Bordure rouge permanente tant que le champ est fautif (aria-invalid lié). */
 const invalidClass = "border-guinea-red";

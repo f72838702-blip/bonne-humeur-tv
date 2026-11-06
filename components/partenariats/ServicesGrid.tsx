@@ -44,7 +44,7 @@ export default function ServicesGrid() {
       {SERVICES.map((service) => (
         <article
           key={service.title}
-          className="group rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-night-800 dark:hover:border-white/25"
+          className="group rounded-2xl border border-neutral-200 bg-surface p-6 transition-all hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-night-800 dark:hover:border-white/25"
         >
           <span
             className={`flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-110 ${service.accent}`}

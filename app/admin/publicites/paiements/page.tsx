@@ -48,7 +48,7 @@ export default async function AdminPaymentsPage() {
       {totalByCurrency.size > 0 && (
         <section className="flex flex-wrap gap-3">
           {[...totalByCurrency.entries()].map(([currency, total]) => (
-            <div key={currency} className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
+            <div key={currency} className="rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800">
               <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Total {currency}</p>
               <p className="mt-1 font-display text-2xl font-extrabold">{total.toLocaleString("fr-FR")}</p>
             </div>
@@ -63,7 +63,7 @@ export default async function AdminPaymentsPage() {
         ) : (
           <div className="grid gap-3">
             {payments.map((p) => (
-              <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-night-800">
+              <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 text-sm dark:border-white/10 dark:bg-night-800">
                 <span className="font-bold">{Number(p.amount).toLocaleString("fr-FR")} {p.currency}</span>
                 {p.ad_campaigns ? (
                   <span className="min-w-0 flex-1 truncate">

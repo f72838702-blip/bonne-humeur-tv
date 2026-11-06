@@ -59,8 +59,8 @@ export default function DirectLivePlayer({
               {isLive && (
                 <span className="relative mt-5 inline-flex items-center gap-2 rounded-full bg-guinea-red px-4 py-1.5 text-xs font-extrabold uppercase tracking-widest text-white">
                   <span className="relative flex h-2 w-2">
-                    <span className="absolute h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                    <span className="relative h-2 w-2 rounded-full bg-white" />
+                    <span className="absolute h-full w-full animate-ping rounded-full bg-surface opacity-75" />
+                    <span className="relative h-2 w-2 rounded-full bg-surface" />
                   </span>
                   En direct
                 </span>
@@ -69,7 +69,7 @@ export default function DirectLivePlayer({
           </button>
         )}
       </div>
-      <p className="bg-white px-4 py-2.5 text-sm font-semibold dark:bg-night-800">
+      <p className="bg-surface px-4 py-2.5 text-sm font-semibold dark:bg-night-800">
         {isLive ? "En direct : " : "Émission (rediffusion) : "}
         <span className="text-guinea-red">{label}</span>
       </p>

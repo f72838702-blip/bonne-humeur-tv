@@ -43,7 +43,7 @@ export default async function AdminAdvertiserPage({ params }: { params: Promise<
         </span>
       </header>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-4 font-display text-base font-bold">Modifier</h2>
         <AdvertiserForm item={advertiser} />
       </section>
@@ -58,7 +58,7 @@ export default async function AdminAdvertiserPage({ params }: { params: Promise<
               <Link
                 key={c.id}
                 href={`/admin/publicites/campagnes/${c.id}`}
-                className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-sm hover:border-guinea-red/40 dark:border-white/10 dark:bg-night-800"
+                className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 text-sm hover:border-guinea-red/40 dark:border-white/10 dark:bg-night-800"
               >
                 <span className="font-bold">{c.name}</span>
                 <span className="rounded-full bg-neutral-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase text-neutral-500">

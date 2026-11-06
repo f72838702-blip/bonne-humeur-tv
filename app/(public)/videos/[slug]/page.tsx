@@ -104,7 +104,7 @@ export default async function VideoDetailPage({ params }: Params) {
                   <CalendarDays className="h-4 w-4" /> Publiée le {formatDate(video.published_at)}
                 </span>
                 {video.is_live && (
-                  <span className="rounded-full bg-guinea-red px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                  <span className="rounded-full bg-guinea-red px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-white">
                     En direct
                   </span>
                 )}

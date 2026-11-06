@@ -57,7 +57,7 @@ export default function FilterChips({
             "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
             chip.active
               ? "border-guinea-red bg-guinea-red text-white shadow-glow"
-              : "border-neutral-200 bg-white text-neutral-600 hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:bg-night-800 dark:text-neutral-300"
+              : "border-neutral-200 bg-surface text-neutral-600 hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:bg-night-800 dark:text-neutral-300"
           )}
         >
           {chip.label}

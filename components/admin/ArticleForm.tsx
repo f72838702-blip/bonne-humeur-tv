@@ -380,7 +380,7 @@ export default function ArticleForm({
                           return (
                             <li
                               key={`${occurrence.start}-${occurrence.id}`}
-                              className="rounded-xl border border-neutral-300 bg-white p-2 text-sm dark:border-white/10 dark:bg-night-800"
+                              className="rounded-xl border border-neutral-300 bg-surface p-2 text-sm dark:border-white/10 dark:bg-night-800"
                             >
                               <span className="block text-xs font-bold text-neutral-600 dark:text-neutral-300">
                                 #{index + 1} · <code>[[youtube:{occurrence.id}]]</code>

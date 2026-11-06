@@ -84,7 +84,7 @@ export default async function AdminArticlesPage({
           {articles.map((article) => (
             <li
               key={article.id}
-              className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-night-800"
+              className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-night-800"
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">

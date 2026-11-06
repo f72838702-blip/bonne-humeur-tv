@@ -36,7 +36,7 @@ export default async function NewCampaignPage() {
         </p>
       </header>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <CampaignForm advertisers={advertisers.map((a) => ({ id: a.id, name: a.name, is_active: a.is_active }))} />
       </section>
     </div>

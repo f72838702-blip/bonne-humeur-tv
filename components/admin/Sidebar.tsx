@@ -10,6 +10,7 @@ import {
   Inbox,
   LayoutDashboard,
   Megaphone,
+  Palette,
   FileText,
   Radio,
   Sparkles,
@@ -41,6 +42,8 @@ const ALL_ITEMS = [
   { href: "/admin/categories", label: "Catégories", icon: FolderTree, roles: ["admin", "editor"] },
   { href: "/admin/medias", label: "Médiathèque", icon: ImagesIcon, roles: ["admin", "editor"] },
   { href: "/admin/publicites", label: "Publicités", icon: Megaphone, roles: ["admin", "editor"] },
+  // Studio de design — personnalisation de l'apparence sans code.
+  { href: "/admin/studio", label: "Studio de design", icon: Palette, roles: ["admin", "editor"] },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, roles: ["admin"] },
 ] as const;
 
@@ -78,7 +81,7 @@ export default function Sidebar({
       <Logo className="h-7 w-auto shrink-0 select-none object-contain" />
 
       {/* Identité de l'utilisateur connecté (données réelles de la session) */}
-      <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800">
+      <div className="rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800">
         <p className="truncate font-display text-sm font-bold">{userName}</p>
         <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-guinea-red">
           {ROLE_LABELS[role]}

@@ -7,6 +7,7 @@ import { Menu, Moon, Search, Sun, X } from "lucide-react";
 import { useTheme } from "@/store/theme";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/shared/Logo";
+import type { HeaderConfig } from "@/lib/design/schema";
 
 const NAV_LINKS = [
   { href: "/", label: "Accueil" },
@@ -16,10 +17,34 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function Header() {
+/* Styles d'arrière-plan (listes fermées — aucune chaîne libre possible). */
+const HEADER_STYLES = {
+  glass: "bg-white/80 backdrop-blur-xl dark:bg-night-950/80 border-neutral-200/60 dark:border-white/10",
+  solid: "bg-surface dark:bg-night-950 border-neutral-200 dark:border-white/10",
+  flat: "bg-transparent border-transparent",
+} as const;
+
+const LOGO_SIZES = {
+  small: "h-6 sm:h-7 lg:h-8",
+  standard: "h-8 sm:h-9 lg:h-10",
+  large: "h-9 sm:h-10 lg:h-12",
+} as const;
+
+/**
+ * En-tête configurable (Studio de design). La config vient du layout
+ * serveur (défauts = comportement historique EXACT). Le logo officiel
+ * garde en toutes configurations h-fixe + w-auto + object-contain :
+ * jamais déformé (règle §8).
+ */
+export default function Header({
+  config,
+}: {
+  config?: HeaderConfig | null;
+}) {
   const pathname = usePathname();
   const { dark, toggle } = useTheme();
   const [open, setOpen] = useState(false);
+  const [shrunk, setShrunk] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -29,19 +54,48 @@ export default function Header() {
     setOpen(false);
   }, [pathname]);
 
+  // behavior = "compact" : la barre se réduit discrètement au défilement.
+  const compact = config?.behavior === "compact";
+  useEffect(() => {
+    if (!compact) return;
+    const onScroll = () => setShrunk(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [compact]);
+
+  const style = headerStyleOr(config?.style);
+  const position =
+    config?.behavior === "static" ? "relative" : "sticky top-0";
+
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-200/60 bg-white/80 backdrop-blur-xl dark:border-white/10 dark:bg-night-950/80">
+    <header
+      className={cn(
+        "z-50 border-b transition-[background-color,border-color,height]",
+        HEADER_STYLES[style],
+        position,
+      )}
+    >
       <div className="tricolor-line h-1 w-full" />
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Logo officiel (PNG transparent, original tel quel) — remplace
-            l'ancien badge Play + nom textuel ; h-8 mobile / h-10 desktop,
-            aucune déformation (w-auto + object-contain). */}
+      <div
+        className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6"
+        style={{
+          height: compact && shrunk ? "3rem" : "var(--bhtv-header-h)",
+          transition: "height 200ms ease",
+        }}
+      >
+        {/* Logo officiel (PNG transparent, original tel quel) — hauteur
+            choisie au Studio, jamais de déformation (w-auto + contain). */}
         <Link
           href="/"
           aria-label="Bonne Humeur TV — Accueil"
           className="group flex min-w-0 items-center"
         >
-          <Logo className="h-8 w-auto select-none object-contain transition-transform group-hover:scale-[1.02] sm:h-9 lg:h-10" />
+          <Logo
+            className={cn(
+              "w-auto select-none object-contain transition-transform group-hover:scale-[1.02]",
+              LOGO_SIZES[config?.logoScale ?? "standard"],
+            )}
+          />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
@@ -90,7 +144,7 @@ export default function Header() {
       </div>
 
       {open && (
-        <nav className="border-t border-neutral-200/60 bg-white px-4 py-3 dark:border-white/10 dark:bg-night-950 md:hidden">
+        <nav className="border-t border-neutral-200/60 bg-surface px-4 py-3 dark:border-white/10 dark:bg-night-950 md:hidden">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -109,4 +163,9 @@ export default function Header() {
       )}
     </header>
   );
+}
+
+/** Enum fermée — repli défensif (jamais de valeur inconnue). */
+function headerStyleOr(s: HeaderConfig["style"] | undefined): keyof typeof HEADER_STYLES {
+  return s === "solid" || s === "flat" ? s : "glass";
 }

@@ -232,7 +232,7 @@ export default function AiAssistant(props: Props) {
   return (
     <div className="grid gap-4 lg:grid-cols-[16rem_1fr] lg:items-start">
       {/* ─── Colonne latérale : conversations ─── */}
-      <aside className="rounded-2xl border border-neutral-200 bg-white p-3 dark:border-white/10 dark:bg-night-800">
+      <aside className="rounded-2xl border border-neutral-200 bg-surface p-3 dark:border-white/10 dark:bg-night-800">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="flex items-center gap-1.5 font-display text-xs font-bold text-neutral-500 dark:text-neutral-300">
             <Sparkles className="h-3.5 w-3.5 text-guinea-red" /> Conversations
@@ -369,7 +369,7 @@ export default function AiAssistant(props: Props) {
         </section>
 
         {/* Conversation */}
-        <section className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800">
+        <section className="rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800">
           <h2 className="mb-3 flex items-center gap-2 font-display text-sm font-bold">
             <Sparkles className="h-4 w-4 text-guinea-red" /> Conversation
             <span className="ml-auto text-xs font-normal text-neutral-500 dark:text-neutral-400">
@@ -449,7 +449,7 @@ export default function AiAssistant(props: Props) {
               rows={3}
               maxLength={6000}
               placeholder="Votre demande (article, correction, idées…)"
-              className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
+              className="w-full rounded-xl border border-neutral-200 bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
             />
             <button
               type="submit"
@@ -463,7 +463,7 @@ export default function AiAssistant(props: Props) {
 
         {/* Envoi vers le CMS — formulaire ÉDITABLE, relecture obligatoire */}
         {lastAssistant && draft.title && (
-          <section className="rounded-2xl border border-guinea-red/30 bg-white p-5 dark:border-guinea-red/40 dark:bg-night-800">
+          <section className="rounded-2xl border border-guinea-red/30 bg-surface p-5 dark:border-guinea-red/40 dark:bg-night-800">
             <h2 className="mb-2 flex items-center gap-2 font-display text-sm font-bold">
               <Bot className="h-4 w-4 text-guinea-red" /> Envoyer vers le CMS
             </h2>

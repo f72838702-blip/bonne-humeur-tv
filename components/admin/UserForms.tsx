@@ -115,7 +115,7 @@ export function UserDisableForm({ userId }: { userId: string }) {
       <summary className="inline-flex cursor-pointer list-none items-center rounded-lg px-2 py-1 text-xs font-semibold text-guinea-red transition-colors hover:bg-guinea-red/10">
         Compte…
       </summary>
-      <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-guinea-red/40 bg-white p-4 shadow-lg dark:bg-night-800">
+      <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-guinea-red/40 bg-surface p-4 shadow-lg dark:bg-night-800">
         <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-300">
           Désactivation = le membre ne peut plus se connecter (ses contenus
           restent en place). Réactivation = accès restauré.

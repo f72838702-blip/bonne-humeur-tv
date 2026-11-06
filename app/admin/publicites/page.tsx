@@ -77,7 +77,7 @@ export default async function AdminPublicitesPage() {
 
       {/* ─── Les publicités, groupées ─── */}
       {rows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-10 text-center dark:border-white/15 dark:bg-night-800">
+        <div className="rounded-2xl border border-dashed border-neutral-300 bg-surface p-10 text-center dark:border-white/15 dark:bg-night-800">
           <p className="font-display text-lg font-bold">Aucune publicité pour l&apos;instant</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
             Cliquez sur « Créer une publicité » : choisissez un format, ajoutez
@@ -107,7 +107,7 @@ export default async function AdminPublicitesPage() {
 
       {/* ─── Gestion avancée : réservée aux ADMINISTRATEURS, repliée ─── */}
       {role === "admin" && (
-        <details className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+        <details className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
           <summary className="cursor-pointer font-display text-base font-bold">Gestion avancée</summary>
           <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
             Outils commerciaux complets : fiches détaillées, contrats et
@@ -155,7 +155,7 @@ function AdRow({
   const ended = state === "expired" || state === "completed" || state === "cancelled" || state === "refused";
 
   return (
-    <article className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800">
+    <article className="rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         {/* Aperçu RÉEL (image / vignette YouTube / initiale) */}
         <div className="flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-neutral-100 dark:bg-white/5">
@@ -260,7 +260,7 @@ function endDateText(end: string | null): string {
 
 function StatCard({ label, value, hint }: { label: string; value: number; hint: string }) {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800">
+    <div className="rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800">
       <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">{label}</p>
       <p className="mt-1 font-display text-3xl font-extrabold">{value}</p>
       <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{hint}</p>

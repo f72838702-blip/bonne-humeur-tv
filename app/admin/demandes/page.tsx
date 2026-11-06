@@ -208,7 +208,7 @@ export default async function AdminRequestsPage({
               return (
               <li
                 key={r.id}
-                className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800"
+                className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -297,7 +297,7 @@ export default async function AdminRequestsPage({
             return (
             <li
               key={m.id}
-              className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 dark:border-white/10 dark:bg-night-800"
+              className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-surface p-5 dark:border-white/10 dark:bg-night-800"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>

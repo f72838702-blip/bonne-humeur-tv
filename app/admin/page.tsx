@@ -67,7 +67,7 @@ export default async function AdminDashboardPage() {
               <Link
                 key={card.label}
                 href={card.href}
-                className="group flex flex-col rounded-2xl border border-neutral-200 bg-white p-5 transition-all hover:border-guinea-red/40 hover:shadow-lg dark:border-white/10 dark:bg-night-800 dark:hover:border-guinea-red/50"
+                className="group flex flex-col rounded-2xl border border-neutral-200 bg-surface p-5 transition-all hover:border-guinea-red/40 hover:shadow-lg dark:border-white/10 dark:bg-night-800 dark:hover:border-guinea-red/50"
               >
                 <span className="flex items-center justify-between">
                   <Icon className="h-4 w-4 text-guinea-red" />

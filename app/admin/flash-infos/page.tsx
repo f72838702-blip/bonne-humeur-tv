@@ -30,7 +30,7 @@ export default async function AdminFlashInfosPage() {
         </p>
       </header>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-4 flex items-center gap-2 font-display text-base font-bold">
           <Zap className="h-4 w-4 text-guinea-red" />
           Nouveau flash-info
@@ -49,7 +49,7 @@ export default async function AdminFlashInfosPage() {
           items.map((item) => (
             <details
               key={item.id}
-              className="rounded-2xl border border-neutral-200 bg-white dark:border-white/10 dark:bg-night-800"
+              className="rounded-2xl border border-neutral-200 bg-surface dark:border-white/10 dark:bg-night-800"
             >
               <summary className="flex cursor-pointer flex-wrap items-center gap-3 p-4">
                 <span

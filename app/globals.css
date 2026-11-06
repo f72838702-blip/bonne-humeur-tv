@@ -2,6 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — BONNE HUMEUR TV (socle du Studio de design)
+
+   Toute la palette du site est exprimée en variables CSS. Tailwind ne
+   fait que les consommer (tailwind.config.ts → rgb(triplet / <alpha>)).
+   Les valeurs par défaut = valeurs historiques EXACTES du site : aucun
+   changement visuel tant que le Studio n'a pas publié autre chose.
+
+   Le Studio de design (/admin/studio) publie un <style> server-renderé
+   APRÈS cette feuille : il surcharge les variables suivantes avec des
+   valeurs VALIDÉES (hex normalisé, listes fermées) — jamais de CSS
+   arbitraire. Variables réglables par le Studio (non exhaustif) :
+   - Couleurs : --bhtv-nt-*, --bhtv-night-*, --bhtv-guinea-(red|green|yellow)
+     en triplets canal (r g b) pour préserver les modificateur /opacité.
+   - Typographie : --bhtv-font-body, --bhtv-font-display (polices
+     self-hostées déjà chargées par next/font), --bhtv-base-size,
+     --bhtv-title-scale (multiplicateur des composants de titres unifiés).
+   - Composants : --bhtv-radius-(xl|2xl|3xl), --bhtv-shadow-(lg|xl|glow),
+     --bhtv-header-h.
+   Thème sombre : les mêmes variables redéfinies sous .dark (défauts
+   indépendamment personnalisables par le Studio).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* — Échelle neutre (gris du thème clair, valeurs historiques) —— */
+  --bhtv-nt-50: 250 250 250;
+  --bhtv-nt-100: 245 245 245;
+  --bhtv-nt-200: 229 229 229;
+  --bhtv-nt-300: 212 212 212;
+  --bhtv-nt-400: 163 163 163;
+  --bhtv-nt-500: 115 115 115;
+  --bhtv-nt-600: 82 82 82;
+  --bhtv-nt-700: 64 64 64;
+  --bhtv-nt-800: 38 38 38;
+  --bhtv-nt-900: 23 23 23;
+
+  /* — Échelle nuit (panneaux sombres + thème nuit) — valeurs historiques */
+  --bhtv-night-700: 34 34 44;
+  --bhtv-night-800: 23 23 31;
+  --bhtv-night-900: 16 16 22;
+  --bhtv-night-950: 10 10 15;
+
+  /* — Signaux de marque — drapeau guinéen (valeurs historiques) ———— */
+  --bhtv-guinea-red: 206 17 38;
+  --bhtv-guinea-green: 0 154 68;
+  --bhtv-guinea-yellow: 252 209 22;
+
+  /* Libellés de catégories : nuance distincte en thème clair, car le vert
+     du drapeau sur fond clair ≈ 3.0:1 (sous WCAG AA) — le texte de
+     catégorie emploie une nuance plus profonde (5.5:1). En thème nuit,
+     le vert drapeau reste parfait (≈ 8:1). Correction audit F6. */
+  --bhtv-cat-ink: 11 122 55;
+
+  /* Surface unifiée (cartes blancs, header glass, footer, badges) —
+     blanc historique en thème clair ; en thème nuit les surfaces sombres
+     passent par l'échelle nuit (dark:bg-night-*), blanc reste blanc. */
+  --bhtv-surface: 255 255 255;
+
+  /* — Typographie — polices self-hostées (variables next/font) ———— */
+  --bhtv-font-body: var(--font-sans);
+  --bhtv-font-display: var(--font-display);
+
+  /* Taille de base : 100 % = 16 px réglable par le Studio (14-18 px). */
+  font-size: var(--bhtv-base-size, 100%);
+
+  /* Multiplicateur des titres (composants unifiés PageTitle/SectionTitle) */
+  --bhtv-title-scale: 1;
+  --bhtv-title-weight: 800;
+  --bhtv-title-tracking: -0.01em;
+  --bhtv-leading: 1.6;
+
+  /* — Composants — arrondis (valeurs historiques Tailwind) ————————— */
+  --bhtv-radius-xl: 0.75rem;
+  --bhtv-radius-2xl: 1rem;
+  --bhtv-radius-3xl: 1.5rem;
+
+  /* — Composants — ombres (échelle historique Tailwind exacte) ————— */
+  --bhtv-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --bhtv-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --bhtv-shadow-glow: 0 0 40px -10px rgb(206 17 38 / 0.45);
+
+  /* — En-tête — hauteur réglable par le Studio (56/64/72 px) ——————— */
+  --bhtv-header-h: 4rem;
+}
+
+/* Thème nuit : mêmes clés, valeurs PAR DÉFAUT identiques (le mode
+   sombre actuel = mêmes gris, fonds nuit). Le Studio peut les surcharger
+   indépendamment de la palette claire. */
+.dark {
+  --bhtv-nt-50: 250 250 250;
+  --bhtv-nt-100: 245 245 245;
+  --bhtv-nt-200: 229 229 229;
+  --bhtv-nt-300: 212 212 212;
+  --bhtv-nt-400: 163 163 163;
+  --bhtv-nt-500: 115 115 115;
+  --bhtv-nt-600: 82 82 82;
+  --bhtv-nt-700: 64 64 64;
+  --bhtv-nt-800: 38 38 38;
+  --bhtv-nt-900: 23 23 23;
+
+  --bhtv-night-700: 34 34 44;
+  --bhtv-night-800: 23 23 31;
+  --bhtv-night-900: 16 16 22;
+  --bhtv-night-950: 10 10 15;
+
+  --bhtv-guinea-red: 206 17 38;
+  --bhtv-guinea-green: 0 154 68;
+  --bhtv-guinea-yellow: 252 209 22;
+
+  /* Catégories en thème nuit : le vert drapeau est parfait sur fond sombre */
+  --bhtv-cat-ink: 0 154 68;
+
+  /* Surface du thème nuit : blanche (badges, textes sur plaques de marque) */
+  --bhtv-surface: 255 255 255;
+}
+
+/* ═══ fin des tokens ═══════════════════════════════════════════════════ */
+
 @layer base {
   html {
     @apply scroll-smooth;
@@ -18,6 +136,18 @@
   }
   ::selection {
     @apply bg-guinea-red text-white;
+  }
+  /* Focus clavier systématique (audit F10) : anneau de 2 px dans la
+     couleur de marque — visible au clavier seulement, jamais à la souris. */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid rgb(var(--bhtv-guinea-red) / 0.9);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
   }
 }
 
@@ -57,5 +187,39 @@
   }
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* ═══ Titres unifiés (utilise --bhtv-title-*) — composants PageTitle et
+   SectionTitle : taille pilotée par le Studio, responsive par clamp. ══ */
+@layer components {
+  .bhtv-title {
+    font-family: var(--bhtv-font-display);
+    font-weight: var(--bhtv-title-weight, 800);
+    letter-spacing: var(--bhtv-title-tracking, -0.01em);
+    line-height: 1.15;
+    font-size: calc(clamp(1.875rem, 4vw, 2.25rem) * var(--bhtv-title-scale, 1));
+  }
+  .bhtv-title-compact {
+    font-family: var(--bhtv-font-display);
+    font-weight: var(--bhtv-title-weight, 800);
+    letter-spacing: var(--bhtv-title-tracking, -0.01em);
+    line-height: 1.2;
+    font-size: calc(clamp(1.25rem, 2.6vw, 2rem) * var(--bhtv-title-scale, 1));
+  }
+  /* « Kicker » de section — sur-titre court avec trait de marque :
+     signature télévisuelle des en-têtes unifiés. */
+  .bhtv-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .bhtv-kicker::before {
+    content: "";
+    display: inline-block;
+    width: 2rem;
+    height: 3px;
+    border-radius: 2px;
+    background: rgb(var(--bhtv-guinea-red) / 1);
   }
 }

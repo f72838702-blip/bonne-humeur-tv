@@ -42,7 +42,7 @@ export default function DeleteActionForm({
       <summary className={`inline-flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition-colors ${summaryTone}`}>
         {buttonLabel}
       </summary>
-      <div className={`absolute z-10 mt-2 w-72 rounded-xl border bg-white p-4 shadow-lg dark:bg-night-800 ${tone === "green" ? "border-guinea-green/40" : "border-guinea-red/40"}`}>
+      <div className={`absolute z-10 mt-2 w-72 rounded-xl border bg-surface p-4 shadow-lg dark:bg-night-800 ${tone === "green" ? "border-guinea-green/40" : "border-guinea-red/40"}`}>
         <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-300">{confirmLabel}</p>
         <form action={formAction} className="mt-3">
           {Object.entries(hiddenFields).map(([name, value]) => (

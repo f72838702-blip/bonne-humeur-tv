@@ -51,7 +51,7 @@ export function StatCard({
   delta: number | null;
 }) {
   return (
-    <div className="flex flex-col gap-1 rounded-2xl border border-neutral-200 bg-white p-3.5 sm:p-4 dark:border-white/10 dark:bg-night-800">
+    <div className="flex flex-col gap-1 rounded-2xl border border-neutral-200 bg-surface p-3.5 sm:p-4 dark:border-white/10 dark:bg-night-800">
       <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-500 sm:text-[11px] dark:text-neutral-400">
         {label}
       </p>
@@ -280,7 +280,7 @@ export function TopArticlesTable({ stats }: { stats: ArticleStat[] }) {
         <li key={a.articleId}>
           <a
             href={`/admin/statistiques/articles/${a.articleId}`}
-            className="flex flex-col gap-1 rounded-xl border border-neutral-200 bg-white p-3 transition-colors hover:border-guinea-red/40 dark:border-white/10 dark:bg-night-800"
+            className="flex flex-col gap-1 rounded-xl border border-neutral-200 bg-surface p-3 transition-colors hover:border-guinea-red/40 dark:border-white/10 dark:bg-night-800"
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-guinea-red/10 px-2 py-0.5 text-[10px] font-extrabold text-guinea-red">

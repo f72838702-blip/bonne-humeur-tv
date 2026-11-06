@@ -34,7 +34,7 @@ export default async function AdminUsersPage() {
         </p>
       </header>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-4 flex items-center gap-2 font-display text-base font-bold">
           <UserPlus className="h-4 w-4 text-guinea-red" />
           Inviter un membre
@@ -57,7 +57,7 @@ export default async function AdminUsersPage() {
               return (
                 <li
                   key={p.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-night-800"
+                  className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-night-800"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">

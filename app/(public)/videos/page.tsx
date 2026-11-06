@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Tv } from "lucide-react";
 import VideoCard from "@/components/video/VideoCard";
 import EmptyState from "@/components/shared/EmptyState";
+import PageTitle from "@/components/shared/PageTitle";
 import FilterChips from "@/components/shared/FilterChips";
 import AdSlot from "@/components/publicite/AdSlot";
 import { getPublishedVideos } from "@/lib/data/videos";
@@ -38,12 +39,12 @@ export default async function VideosPage({
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-3xl font-extrabold sm:text-4xl">
-        Vidéos & <span className="text-guinea-red">Émissions</span>
-      </h1>
-      <p className="mt-2 max-w-xl text-sm text-neutral-500 dark:text-neutral-400">
-        Retrouvez l&apos;intégralité de nos programmes, filtrables par thématique.
-      </p>
+      <PageTitle
+        kicker="Programmes"
+        title="Vidéos &"
+        highlight="Émissions"
+        subtitle="Retrouvez l'intégralité de nos programmes, filtrables par thématique."
+      />
 
       {categories.length > 0 && (
         <div className="mt-8">

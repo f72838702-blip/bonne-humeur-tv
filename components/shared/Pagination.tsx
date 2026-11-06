@@ -26,7 +26,7 @@ export default function Pagination({
       {currentPage > 1 && (
         <Link
           href={buildHref(currentPage - 1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:bg-night-800 dark:text-neutral-300"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-surface text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:bg-night-800 dark:text-neutral-300"
           aria-label="Page précédente"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -40,7 +40,7 @@ export default function Pagination({
           className={
             p === currentPage
               ? "flex h-9 w-9 items-center justify-center rounded-full bg-guinea-red font-bold text-white"
-              : "flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:bg-night-800 dark:text-neutral-300"
+              : "flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-surface text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:bg-night-800 dark:text-neutral-300"
           }
         >
           {p}
@@ -49,7 +49,7 @@ export default function Pagination({
       {currentPage < totalPages && (
         <Link
           href={buildHref(currentPage + 1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:bg-night-800 dark:text-neutral-300"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-surface text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red dark:border-white/10 dark:bg-night-800 dark:text-neutral-300"
           aria-label="Page suivante"
         >
           <ChevronRight className="h-4 w-4" />

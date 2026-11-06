@@ -34,7 +34,7 @@ export default async function AdminAdvertisersPage({
         </p>
       </header>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800">
+      <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
         <h2 className="mb-4 font-display text-base font-bold">Nouvel annonceur</h2>
         <AdvertiserForm />
       </section>
@@ -47,7 +47,7 @@ export default async function AdminAdvertisersPage({
               name="q"
               defaultValue={q ?? ""}
               placeholder="Rechercher…"
-              className="w-48 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none dark:border-white/15 dark:bg-night-800"
+              className="w-48 rounded-xl border border-neutral-300 bg-surface px-3 py-2 text-sm outline-none dark:border-white/15 dark:bg-night-800"
             />
             <button type="submit" className="rounded-xl border border-neutral-300 px-4 text-sm font-semibold dark:border-white/15">
               Rechercher
@@ -62,7 +62,7 @@ export default async function AdminAdvertisersPage({
             {advertisers.map((a) => (
               <div
                 key={a.id}
-                className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800"
+                className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800"
               >
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${

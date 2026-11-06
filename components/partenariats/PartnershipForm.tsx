@@ -23,7 +23,7 @@ import { firstErrorFieldId } from "@/lib/form-errors";
 const initialState: ActionState = { status: "idle", message: "" };
 
 const inputClass =
-  "w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-guinea-red focus:ring-2 focus:ring-guinea-red/20 dark:border-white/15 dark:bg-night-900 dark:focus:border-guinea-red";
+  "w-full rounded-xl border border-neutral-300 bg-surface px-4 py-3 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-guinea-red focus:ring-2 focus:ring-guinea-red/20 dark:border-white/15 dark:bg-night-900 dark:focus:border-guinea-red";
 
 /** Bordure rouge permanente tant que le champ est fautif (aria-invalid lié). */
 const invalidClass = "border-guinea-red";
@@ -138,7 +138,7 @@ export default function PartnershipForm() {
   return (
     <form
       action={formAction}
-      className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-white/10 dark:bg-night-800 sm:p-8"
+      className="grid gap-4 rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800 sm:p-8"
       noValidate
     >
       {/* Honeypot anti-bots : invisible pour les humains */}
