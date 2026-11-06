@@ -5,6 +5,15 @@
 {
   // Nom du Worker en prévisualisation isolée (jamais de domaine réel)
   "name": "bonne-humeur-tv-preview",
+  // Domaine officiel acheté par la direction (Namecheap) — zone Cloudflare
+  // Free même compte ; certificat HTTPS Universal (gratuit) provisionné
+  // automatiquement par Cloudflare pour domain + www.
+  "routes": [
+    { "pattern": "bonnehumeur.info", "custom_domain": true },
+    { "pattern": "www.bonnehumeur.info", "custom_domain": true },
+  ],
+  // workers.dev reste actif comme URL de secours (continuité des signets).
+  "workers_dev": true,
   // Date de compatibilité : généraux, nodejs_compat requis par OpenNext (Server Actions, Supabase ssr…)
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
