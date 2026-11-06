@@ -1,15 +1,18 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { ForbiddenScreen, UnconfiguredScreen } from "@/components/admin/AccessDenied";
-import AiAssistant from "@/components/admin/AiAssistant";
+import AiAssistant, { type ConversationInfo } from "@/components/admin/AiAssistant";
+import { listConversations } from "@/lib/data/ai-conversations";
 
 export const metadata = { title: "Assistant IA — Rédaction" };
 
 /**
- * Assistant IA PRIVÉ de rédaction (demande direction §3).
+ * Assistant IA PRIVÉ de rédaction AVEC mémoire conversationnelle (0033).
  * Garde serveur requireRole (admin/editor) — l'entrée est aussi masquée
  * dans la Sidebar, mais la page revérifie toujours.
- * Le composant client appelle l'endpoint POST /api/ai/admin (même garde).
+ * Liste des conversations chargée CÔTÉ SERVEUR (client session sous RLS,
+ * identité session) et PROPRIÉTÉ de la dernière conversation :
+ * sa restauration automatique au montage n'expose rien à un autre compte.
  */
 export default async function AdminAssistantPage() {
   const guard = await requireRole(["admin", "editor"]);
@@ -18,6 +21,13 @@ export default async function AdminAssistantPage() {
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
     return <ForbiddenScreen />;
   }
+
+  const rows = await listConversations(guard.session.userId);
+  const conversations: ConversationInfo[] = rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    updated_at: r.updated_at,
+  }));
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,9 +41,14 @@ export default async function AdminAssistantPage() {
           publications Facebook, descriptions YouTube, questions d’interview et
           idées de sujets. L’assistant NE PUBLIE JAMAIS : tout texte généré doit
           être relu et enregistré en brouillon avant publication par la rédaction.
+          Vos conversations sont conservées sur votre compte (privées),
+          avec une mémoire de vos décisions et préférences de travail.
         </p>
       </header>
-      <AiAssistant />
+      <AiAssistant
+        initialConversations={conversations}
+        initialConversationId={conversations[0]?.id ?? null}
+      />
     </div>
   );
 }
