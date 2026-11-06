@@ -110,8 +110,9 @@ export default function Sidebar({
 
       {/* ── DESKTOP (lg+) : carte utilisateur complète, inchangée. ── */}
       <div className="hidden rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800 lg:block">
-        <p className="truncate font-display text-sm font-bold">{userName}</p>
-        <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-guinea-red">
+        <Logo className="h-8 w-auto select-none object-contain" />
+        <p className="mt-3 truncate font-display text-sm font-bold">{userName}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-guinea-red">
           {ROLE_LABELS[role]}
         </p>
         {/* SEUL accès évident vers le site public depuis l'administration
