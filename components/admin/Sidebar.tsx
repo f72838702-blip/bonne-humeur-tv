@@ -20,6 +20,7 @@ import {
 import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/actions/auth";
+import Logo from "@/components/shared/Logo";
 
 /**
  * Navigation du back-office. Les entrées sont masquées selon le rôle
@@ -72,6 +73,10 @@ export default function Sidebar({
 
   return (
     <aside className="flex w-full shrink-0 flex-col gap-6 lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] lg:w-64 lg:overflow-y-auto lg:pb-2">
+      {/* Logo officiel — discret (h-7), jamais plus grand que la carte
+          utilisateur : aucun espace de menu sacrifié (direction §2/§4). */}
+      <Logo className="h-7 w-auto shrink-0 select-none object-contain" />
+
       {/* Identité de l'utilisateur connecté (données réelles de la session) */}
       <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-night-800">
         <p className="truncate font-display text-sm font-bold">{userName}</p>

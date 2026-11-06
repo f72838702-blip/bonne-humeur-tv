@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Play } from "lucide-react";
 import { getSessionInfo } from "@/lib/auth/session";
 import LoginForm from "@/components/admin/LoginForm";
+import Logo from "@/components/shared/Logo";
 
 export const metadata: Metadata = {
   title: "Espace rédaction",
@@ -19,9 +19,8 @@ export default async function AdminLoginPage() {
     <div className="mx-auto flex max-w-md flex-col items-center px-4 py-16 sm:px-6">
       <div className="w-full rounded-3xl border border-neutral-200 bg-white p-8 shadow-xl dark:border-white/10 dark:bg-night-800">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-guinea-red shadow-glow">
-            <Play className="ml-0.5 h-5 w-5 fill-white text-white" />
-          </span>
+          {/* Logo officiel (original tel quel — aucune retouche) */}
+          <Logo className="h-10 w-auto select-none object-contain" />
           <h1 className="mt-4 font-display text-2xl font-extrabold">Espace rédaction</h1>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             Bonne Humeur TV — gestion des contenus

@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, Moon, Play, Search, Sun, X } from "lucide-react";
+import { Menu, Moon, Search, Sun, X } from "lucide-react";
 import { useTheme } from "@/store/theme";
 import { cn } from "@/lib/utils";
+import Logo from "@/components/shared/Logo";
 
 const NAV_LINKS = [
   { href: "/", label: "Accueil" },
@@ -32,18 +33,15 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-neutral-200/60 bg-white/80 backdrop-blur-xl dark:border-white/10 dark:bg-night-950/80">
       <div className="tricolor-line h-1 w-full" />
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="group flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-guinea-red shadow-glow transition-transform group-hover:scale-105">
-            <Play className="ml-0.5 h-4 w-4 fill-white text-white" />
-          </span>
-          <span className="leading-tight">
-            <span className="block font-display text-base font-extrabold tracking-tight">
-              Bonne Humeur <span className="text-guinea-red">TV</span>
-            </span>
-            <span className="block text-[10px] uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
-              La Télé de la nouvelle génération
-            </span>
-          </span>
+        {/* Logo officiel (PNG transparent, original tel quel) — remplace
+            l'ancien badge Play + nom textuel ; h-8 mobile / h-10 desktop,
+            aucune déformation (w-auto + object-contain). */}
+        <Link
+          href="/"
+          aria-label="Bonne Humeur TV — Accueil"
+          className="group flex min-w-0 items-center"
+        >
+          <Logo className="h-8 w-auto select-none object-contain transition-transform group-hover:scale-[1.02] sm:h-9 lg:h-10" />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
