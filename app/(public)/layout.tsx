@@ -56,7 +56,7 @@ export default async function PublicLayout({
           disparaissent comme avant : côté client (FlashTicker) à
           l'heure exacte, et côté serveur à la prochaine requête. Le
           back-office (/admin/*) ne passe JAMAIS par ce layout. */}
-      <BreakingNews />
+      <BreakingNews headerBehavior={design.config?.header?.behavior} />
       <main className="flex-1">{children}</main>
       <Footer config={design.config?.footer} />
       <WhatsAppFloat />

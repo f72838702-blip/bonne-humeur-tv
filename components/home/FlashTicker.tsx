@@ -31,7 +31,20 @@ export interface FlashTickerItem {
 /** Sévère le plus haut présent (aiguise la couleur global du bandeau). */
 const SEVERITY: Record<string, number> = { normal: 0, important: 1, urgent: 2 };
 
-export default function FlashTicker({ items }: { items: FlashTickerItem[] }) {
+/**
+ * stickyClass (facultatif) : positionnement COLlant fourni par le layout —
+ * le bandeau reste visible pendant le défilement, SOUS l'en-tête sticky
+ * (top = hauteur de l'en-tête, z-40 < z-50). Purement CSS : aucun JS
+ * client ajouté, animation et retrait à l'échéance exactement comme avant.
+ * Absent → comportement historique (bandeau en flux normal).
+ */
+export default function FlashTicker({
+  items,
+  stickyClass,
+}: {
+  items: FlashTickerItem[];
+  stickyClass?: string;
+}) {
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
   // Retrait à échéance : un temporisateur par flash — recalculé après
@@ -87,7 +100,9 @@ export default function FlashTicker({ items }: { items: FlashTickerItem[] }) {
   const loop = [...visible, ...visible];
 
   return (
-    <div className={`flex items-stretch overflow-hidden ${style.band}`}>
+    <div
+      className={`flex items-stretch overflow-hidden ${style.band}${stickyClass ? ` ${stickyClass}` : ""}`}
+    >
       <span className="flex shrink-0 items-center gap-2 bg-black/25 px-4 py-2 text-[11px] font-extrabold uppercase tracking-widest">
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-surface opacity-75" />

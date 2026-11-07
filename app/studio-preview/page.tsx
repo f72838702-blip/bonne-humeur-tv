@@ -60,7 +60,7 @@ export default async function StudioPreviewPage() {
     <>
       <DesignStyle config={draft} />
       <Header config={draft.header} />
-      <BreakingNews />
+      <BreakingNews headerBehavior={draft.header?.behavior} />
       <div className="mx-auto max-w-7xl px-4 pt-2 sm:px-6">
         <AdSlot code="home_top_banner" className="" />
       </div>
