@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Trash2 } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
 import { getStaffArticles } from "@/lib/data/admin-content";
 import { deleteArticle, publishArticle } from "@/lib/actions/content";
@@ -51,13 +51,23 @@ export default async function AdminArticlesPage({
               : "Vos articles — un éditeur les valide avant publication."}
           </p>
         </div>
-        <Link
-          href="/admin/articles/new"
-          className="inline-flex items-center gap-2 rounded-xl bg-guinea-red px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-guinea-red/90"
-        >
-          <Plus className="h-4 w-4" />
-          Rédiger un article
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Corbeille (migration 0035) : suppression réversible 30 jours. */}
+          <Link
+            href="/admin/articles/corbeille"
+            className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-bold text-neutral-600 transition-colors hover:text-neutral-900 dark:border-white/10 dark:text-neutral-300"
+          >
+            <Trash2 className="h-4 w-4" />
+            Corbeille
+          </Link>
+          <Link
+            href="/admin/articles/new"
+            className="inline-flex items-center gap-2 rounded-xl bg-guinea-red px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-guinea-red/90"
+          >
+            <Plus className="h-4 w-4" />
+            Rédiger un article
+          </Link>
+        </div>
       </header>
 
       {/* Filtres par statut (pilotés par l'URL) */}
@@ -135,7 +145,8 @@ export default async function AdminArticlesPage({
                   <DeleteActionForm
                     action={deleteArticle}
                     hiddenFields={{ id: article.id }}
-                    confirmLabel={`Supprimer définitivement « ${article.title} » ? Cette action est irréversible.`}
+                    confirmLabel={`Placer « ${article.title} » dans la corbeille ? Il sera invisible du site mais RESTAURABLE pendant 30 jours (Corbeille, en haut à droite).`}
+                    pendingLabel="Corbeille…"
                   />
                 )}
               </div>

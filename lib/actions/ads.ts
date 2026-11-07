@@ -470,6 +470,7 @@ export async function saveCreativeAction(
       .from("articles")
       .select("id")
       .eq("id", parsed.data.article_id)
+      .is("deleted_at", null) // corbeille 0035 : ne pas sponsoriser un article trashed
       .maybeSingle();
     if (!article) return errorState("Article introuvable.");
   }
@@ -709,7 +710,12 @@ export async function publishSimpleAdAction(
     return errorState("Choisissez l'article à sponsoriser.", { article_id: "Article obligatoire" });
   }
   if (format === "sponsor_article" && form.article_id) {
-    const { data: article } = await supabase.from("articles").select("id").eq("id", form.article_id).maybeSingle();
+    const { data: article } = await supabase
+      .from("articles")
+      .select("id")
+      .eq("id", form.article_id)
+      .is("deleted_at", null) // corbeille 0035 : ne pas sponsoriser un article trashed
+      .maybeSingle();
     if (!article) return errorState("Article introuvable : choisissez-le dans la liste.", { article_id: "Introuvable" });
   }
   const built = buildPayload(formData, format);

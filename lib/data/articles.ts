@@ -90,6 +90,7 @@ export async function getPublishedArticles(
     .from("articles")
     .select(PUBLIC_FIELDS, { count: "exact" })
     .eq("status", "published")
+    .is("deleted_at", null) // corbeille 0035 : la RLS exclut déjà ; double garde
     .order("published_at", { ascending: false, nullsFirst: false });
 
   if (params.categorySlug) {
@@ -130,6 +131,7 @@ export async function getPublishedArticleBySlug(
     .select(PUBLIC_FIELDS)
     .eq("slug", slug)
     .eq("status", "published")
+    .is("deleted_at", null) // corbeille 0035 : jamais le détail d'un article trashed
     .maybeSingle();
 
   if (error) {

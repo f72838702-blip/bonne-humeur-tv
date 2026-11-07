@@ -318,6 +318,13 @@ async function syncArticleTags(
   }
 }
 
+/**
+ * « Suppression » d'un article = PLACEMENT EN CORBEILLE (migration 0035,
+ * demande direction 07/11 après 4 articles irrécupérablement purgés) :
+ * deleted_at + deleted_by sont posés, l'article disparaît du public (RLS)
+ * et de la liste staff, reste restaurable 30 jours via
+ * /admin/articles/corbeille (purge dure automatique au-delà).
+ */
 export async function deleteArticle(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
@@ -328,7 +335,11 @@ export async function deleteArticle(formData: FormData): Promise<ActionState> {
   const supabase = await getSupabaseServerClient();
   if (!supabase) return deniedState("unconfigured");
 
-  const { error } = await supabase.from("articles").delete().eq("id", parsed.data.id);
+  const { error } = await supabase
+    .from("articles")
+    .update({ deleted_at: new Date().toISOString(), deleted_by: guard.session.userId })
+    .eq("id", parsed.data.id)
+    .is("deleted_at", null); // garde : ne re-supprime jamais un article déjà en corbeille
   if (error) {
     console.error("[actions/content] deleteArticle :", error.message);
     return errorState("Suppression impossible.");
@@ -337,7 +348,36 @@ export async function deleteArticle(formData: FormData): Promise<ActionState> {
   revalidatePath("/");
   revalidatePath("/actualites");
   revalidatePath("/admin/articles");
-  return successState("Article supprimé.");
+  revalidatePath("/admin/articles/corbeille");
+  return successState("Article placé dans la corbeille (récupérable 30 jours).");
+}
+
+/** Restauration depuis la corbeille (admin/editor, article supprimé requis). */
+export async function restoreArticle(formData: FormData): Promise<ActionState> {
+  const guard = await requireRole(["admin", "editor"]);
+  if ("denied" in guard) return deniedState(guard.denied);
+
+  const parsed = deleteArticleSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) return errorState("Identifiant invalide.");
+
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) return deniedState("unconfigured");
+
+  const { error } = await supabase
+    .from("articles")
+    .update({ deleted_at: null, deleted_by: null })
+    .eq("id", parsed.data.id)
+    .not("deleted_at", "is", null); // garde : ne restaure jamais un article actif
+  if (error) {
+    console.error("[actions/content] restoreArticle :", error.message);
+    return errorState("Restauration impossible.");
+  }
+
+  revalidatePath("/");
+  revalidatePath("/actualites");
+  revalidatePath("/admin/articles");
+  revalidatePath("/admin/articles/corbeille");
+  return successState("Article restauré.");
 }
 
 // ─────────────────────────────────────────────────────────────

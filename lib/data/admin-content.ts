@@ -64,7 +64,7 @@ function withAuthor(row: ArticleRow, names: Map<string, string>): ArticleWithRel
   };
 }
 
-/** Tous les articles visibles par la session (tous statuts confondus). */
+/** Tous les articles ACTIFS visibles par la session (la corbeille est exclue). */
 export async function getStaffArticles(
   status?: ContentStatus
 ): Promise<ArticleWithRelations[]> {
@@ -74,6 +74,7 @@ export async function getStaffArticles(
   let query = supabase
     .from("articles")
     .select(ARTICLE_FIELDS)
+    .is("deleted_at", null) // migration 0035 : la corbeille a sa page dédiée
     .order("updated_at", { ascending: false });
 
   if (status) query = query.eq("status", status);
@@ -173,6 +174,62 @@ export async function getStaffVideoById(id: string): Promise<VideoWithRelations 
     return null;
   }
   return (data as VideoRow | null) ?? null;
+}
+
+/** Ligne de la corbeille articles (migration 0035) — admin/editor seulement
+ *  (la page applique requireRole ; la RLS laisse l'auteur voir les siennes,
+ *  la page reste la barrière d'usage). */
+export interface TrashedArticleRow {
+  id: string;
+  title: string;
+  slug: string;
+  status: ContentStatus;
+  author_name: string | null;
+  published_at: string | null;
+  deleted_at: string;
+  deleted_by: string | null;
+}
+
+/** Contenu de la corbeille : placement le plus récent d'abord. */
+export async function getTrashedArticles(): Promise<TrashedArticleRow[]> {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("articles")
+    .select(`id, title, slug, status, author_id, published_at, deleted_at, deleted_by`)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+
+  if (error) {
+    console.error("[data/admin-content] getTrashedArticles :", error.message);
+    return [];
+  }
+
+  const rows = (data ?? []) as unknown as {
+    id: string;
+    title: string;
+    slug: string;
+    status: ContentStatus;
+    author_id: string | null;
+    published_at: string | null;
+    deleted_at: string;
+    deleted_by: string | null;
+  }[];
+  const names = await resolveAuthorNamesStaff(
+    supabase,
+    rows.flatMap((r) => [r.author_id, r.deleted_by])
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    slug: r.slug,
+    status: r.status,
+    published_at: r.published_at,
+    deleted_at: r.deleted_at,
+    deleted_by: r.deleted_by ? names.get(r.deleted_by) ?? null : null,
+    author_name: r.author_id ? names.get(r.author_id) ?? null : null,
+  }));
 }
 
 /** Tous les flash-infos visibles par la session (actifs ET inactifs). */
