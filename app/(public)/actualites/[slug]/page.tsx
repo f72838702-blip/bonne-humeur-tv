@@ -7,6 +7,7 @@ import ArticleCard from "@/components/shared/ArticleCard";
 import EmptyState from "@/components/shared/EmptyState";
 import JsonLd from "@/components/shared/JsonLd";
 import YouTubeEmbed from "@/components/shared/YouTubeEmbed";
+import ImageSegment from "@/components/article/ImageSegment";
 import ShareButtons from "@/components/video/ShareButtons";
 import AdSlot from "@/components/publicite/AdSlot";
 import { getPublishedArticleBySlug, getRelatedArticles } from "@/lib/data/articles";
@@ -211,15 +212,26 @@ export default async function ArticlePage({ params }: Params) {
               avant parsing — aucun HTML non fiable n'est exécuté), segmenté
               avec les blocs vidéo YouTube validés. */}
           <div className="mt-8 leading-relaxed text-neutral-800 dark:text-neutral-200 [&_a]:font-semibold [&_a]:text-guinea-red [&_a]:underline-offset-2 [&_a]:hover:underline [&_blockquote]:border-l-4 [&_blockquote]:border-guinea-yellow [&_blockquote]:pl-4 [&_blockquote]:italic [&_code]:rounded [&_code]:bg-neutral-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-sm dark:[&_code]:bg-white/10 [&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-extrabold [&_h3]:mt-8 [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-bold [&_hr]:my-8 [&_hr]:border-neutral-200 dark:[&_hr]:border-white/10 [&_img]:my-6 [&_img]:rounded-xl [&_li]:my-1 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-night-900 [&_pre]:p-4 [&_pre]:text-sm [&_pre]:text-neutral-100 [&_table]:my-6 [&_table]:w-full [&_td]:border-t [&_td]:border-neutral-200 [&_td]:px-3 [&_td]:py-2 dark:[&_td]:border-white/10 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6">
-            {segments.map((segment, index) =>
-              segment.type === "youtube" ? (
-                <YouTubeEmbed key={index} id={segment.id} />
-              ) : (
+            {segments.map((segment, index) => {
+              if (segment.type === "youtube") {
+                return <YouTubeEmbed key={index} id={segment.id} />;
+              }
+              if (segment.type === "image") {
+                return (
+                  <ImageSegment
+                    key={`${index}-${segment.path}`}
+                    path={segment.path}
+                    alt={segment.alt}
+                    caption={segment.caption}
+                  />
+                );
+              }
+              return (
                 segment.html.trim() && (
                   <div key={index} dangerouslySetInnerHTML={{ __html: segment.html }} />
                 )
-              )
-            )}
+              );
+            })}
           </div>
 
           {/* Insertion publicitaire en lecture (additif — corps intact) */}

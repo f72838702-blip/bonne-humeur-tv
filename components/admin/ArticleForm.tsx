@@ -3,10 +3,21 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { Youtube } from "lucide-react";
+import { ImagePlus, Youtube } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ArticleWithRelations, Category, UserRole } from "@/lib/types";
 import { saveArticle } from "@/lib/actions/content";
+import { uploadArticleCoverAction } from "@/lib/actions/admin";
+import { compressForPurpose } from "@/lib/media/compress";
+import { SERVER_MAX_BYTES, mediaVariantUrl } from "@/lib/media/variants";
+import {
+  deleteImageOccurrence,
+  findImageOccurrences,
+  insertImageBlock,
+  updateImageOccurrence,
+  type ImageOccurrence,
+} from "@/lib/content/editor-image";
+import { IMAGE_ALT_MAX, IMAGE_CAPTION_MAX, mediaPublicUrl, storagePathFromUrl } from "@/lib/content/image-marker";
 import {
   deleteYouTubeOccurrence,
   findYouTubeOccurrences,
@@ -79,6 +90,12 @@ export default function ArticleForm({
   });
   /** Garde anti-doublon : un double-tap ne peut pas insérer deux blocs. */
   const lastInsertRef = useRef(0);
+  /** Images intégrées : pipelineCompression/téléversement + panneau. */
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [imgBusy, setImgBusy] = useState<null | "compression" | "upload">(null);
+  const [imgError, setImgError] = useState<string | null>(null);
+  const [imgNote, setImgNote] = useState<string | null>(null);
+  const pendingImageRef = useRef<File | null>(null);
   const router = useRouter();
   const isStaff = role === "admin" || role === "editor";
   const options = isStaff ? STATUS_OPTIONS_STAFF : STATUS_OPTIONS_REPORTER;
@@ -156,6 +173,130 @@ export default function ArticleForm({
    * unitairement. Aucun clic ne peut insérer deux blocs (garde temporelle
    * + URL vidée immédiatement après succès).
    */
+  /** Applique le nouveau contenu SANS voler le focus (édition des alt /
+   *  légendes depuis le panneau images — le curseur du textarea reste
+   *  simplement où il est, caretRef est recapturé à la prochaine action). */
+  const applyContentSilent = (value: string) => {
+    setContentValue(value);
+    const ta = contentRef.current;
+    if (ta) ta.value = value;
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // Images intégrées au corps
+  // ─────────────────────────────────────────────────────────────
+
+  /** Chaîne : sélection → compression navigateur → téléversement →
+   *  insertion du marqueur EXACTEMENT au curseur mémorisé (même
+   *  mécanisme que les vidéos : le panneau/fichier peut voler le
+   *  focus, caretRef garde la position). Répétable autant de fois
+   *  que nécessaire. */
+  const uploadAndInsertImage = async (picked: File) => {
+    setImgError(null);
+    setImgNote(null);
+    setImgBusy("compression");
+    try {
+      const compressed = await compressForPurpose(picked, "articles");
+      if (!compressed) {
+        setImgError(
+          "Image illisible par le navigateur (par exemple un HEIC d'iPhone pas converti). Utilisez un JPEG, PNG ou WebP."
+        );
+        setImgBusy(null);
+        return;
+      }
+      const total = compressed.reduce((n, c) => n + c.toBytes, 0);
+      if (total > 2 * 1024 * 1024) {
+        setImgError("Image toujours trop lourde (2 Mo maximum). Choisissez une image plus petite.");
+        setImgBusy(null);
+        return;
+      }
+      // Plafond de la variante pleine (600 Ko) : le même garde que la
+      // couverture — on refuse ici plutôt qu'au serveur, message clair.
+      const main = compressed.find((c) => c.variant === "full") ?? compressed[0];
+      if (main.toBytes > SERVER_MAX_BYTES.full) {
+        setImgError(
+          `Image encore trop lourde après compression (${Math.max(1, Math.round(main.toBytes / 1024))} Ko pour un plafond de 600 Ko). Réduisez-la et réessayez.`
+        );
+        setImgBusy(null);
+        return;
+      }
+
+      setImgBusy("upload");
+      const fd = new FormData();
+      for (const c of compressed) fd.append(`file_${c.variant}`, c.file, c.file.name);
+      const result = await uploadArticleCoverAction(fd);
+
+      if (result.status !== "success" || !result.data?.url) {
+        setImgError(result.message || "Téléversement impossible. Vérifiez votre connexion puis réessayez.");
+        setImgBusy(null);
+        return;
+      }
+      // URL → chemin revalidé (dossier whitelisté, sans « .. ») : le
+      // marqueur ne conserve JAMAIS une URL arbitraire.
+      const path = storagePathFromUrl(result.data.url);
+      if (!path) {
+        setImgError("Réponse du stockage inattendue. Réessayez.");
+        setImgBusy(null);
+        return;
+      }
+
+      const textarea = contentRef.current;
+      if (!textarea) return;
+      const { start, end } = currentCaret();
+      const op = insertImageBlock(textarea.value, start, end, path);
+      applyContent(op.value, op.caret);
+      const anchor = op.anchorExcerpt ? ` après « ${op.anchorExcerpt} »` : "";
+      setImgNote(
+        `Image insérée à l'emplacement du curseur${anchor} — ligne ${caretLine(op.value, op.caret)}. Ajoutez son texte alternatif dans la liste ci-dessous.`
+      );
+      setImgError(null);
+    } catch (e) {
+      console.error("[ArticleForm] image", e);
+      setImgError(
+        e instanceof Error && /memory|allocat/i.test(e.message)
+          ? "Image aux dimensions trop grandes pour cet appareil. Réduisez-la et réessayez."
+          : "Compression ou envoi impossible. Vérifiez votre connexion puis réessayez."
+      );
+    } finally {
+      setImgBusy(null);
+    }
+  };
+
+  const onPickImage = (files: FileList | null) => {
+    const picked = files?.[0];
+    if (!picked) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(picked.type)) {
+      setImgError(
+        "Format non pris en charge (par exemple un HEIC d'iPhone). Formats acceptés : JPEG, PNG, WebP."
+      );
+      return;
+    }
+    setImgError(null);
+    pendingImageRef.current = picked;
+    void uploadAndInsertImage(picked);
+  };
+
+  /** Occurrences d'images valides du corps (une par marqueur, SANS dédoublon). */
+  const imageOccurrences = findImageOccurrences(contentValue);
+
+  const updateImageMeta = (occ: ImageOccurrence, alt: string, caption: string) => {
+    const op = updateImageOccurrence(contentValue, occ, alt, caption);
+    // Application SILENCIEUSE : le focus reste sur le champ alt/légende.
+    applyContentSilent(op.value);
+  };
+
+  const removeImage = (occ: ImageOccurrence) => {
+    // Re-lecture du contenu courant : l'index du panneau peut être périmé
+    // (la liste est recalculée à chaque frappe) — on cible par position.
+    const mapped = findImageOccurrences(contentValue).find(
+      (o) => o.path === occ.path && o.start === occ.start
+    );
+    if (!mapped) return;
+    const op = deleteImageOccurrence(contentValue, mapped);
+    applyContent(op.value, op.caret);
+    setImgNote("Image retirée du corps (le fichier reste dans la médiathèque).");
+  };
+
   const insertYouTube = (mode: VideoInsertMode) => {
     const now = Date.now();
     if (now - lastInsertRef.current < 350) return; // double-tap → ignoré
@@ -295,19 +436,136 @@ export default function ArticleForm({
             <FieldError errors={state.fieldErrors} name="content" />
 
             <div className="mt-3 rounded-xl border border-neutral-200 p-3 dark:border-white/10">
-              <button
-                type="button"
-                onClick={() => {
-                  // Mémorise le curseur AVANT tout changement de focus.
-                  captureCaret();
-                  setYtOpen((v) => !v);
-                  setYtError(null);
-                }}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-guinea-red/40 bg-guinea-red/10 px-4 py-2.5 text-sm font-bold text-guinea-red transition-colors hover:bg-guinea-red/20 sm:w-auto"
-              >
-                <Youtube className="h-4 w-4" />
-                Insérer ou gérer une vidéo YouTube
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Mémorise le curseur AVANT tout changement de focus.
+                    captureCaret();
+                    setYtOpen((v) => !v);
+                    setYtError(null);
+                  }}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-guinea-red/40 bg-guinea-red/10 px-4 py-2.5 text-sm font-bold text-guinea-red transition-colors hover:bg-guinea-red/20 sm:w-auto"
+                >
+                  <Youtube className="h-4 w-4" />
+                  Insérer ou gérer une vidéo YouTube
+                </button>
+                {/* Images intégrées : le SÉLECTEUR de fichiers s'ouvre
+                    directement — curseur mémorisé au préalable. */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    captureCaret();
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                      fileInputRef.current.click();
+                    }
+                  }}
+                  disabled={imgBusy !== null}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-guinea-green/40 bg-guinea-green/10 px-4 py-2.5 text-sm font-bold text-guinea-green transition-colors hover:bg-guinea-green/20 disabled:opacity-60 sm:w-auto"
+                >
+                  <ImagePlus className="h-4 w-4" />
+                  {imgBusy === "compression"
+                    ? "Compression en cours…"
+                    : imgBusy === "upload"
+                      ? "Téléversement en cours…"
+                      : "+ Insérer une image"}
+                </button>
+              </div>
+              {/* Sélecteur de fichiers (JPEG/PNG/WebP — compression
+                  navigateur automatique puis upload contrôlé). */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => onPickImage(e.target.files)}
+                disabled={imgBusy !== null}
+              />
+              {imgNote && !imgError && (
+                <p className="mt-3 rounded-lg border border-guinea-green/40 bg-guinea-green/10 px-3 py-2 text-xs font-medium text-guinea-green">
+                  ✔ {imgNote}
+                </p>
+              )}
+              {imgError && (
+                <p role="alert" className="mt-3 rounded-lg border border-guinea-red/40 bg-guinea-red/10 px-3 py-2 text-xs font-medium text-guinea-red">
+                  {imgError}
+                </p>
+              )}
+
+              {/* ── Images du corps : aperçu, alt, légende, retrait. ── */}
+              {imageOccurrences.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-400">
+                    Image{imageOccurrences.length > 1 ? "s" : ""} dans le corps — texte alternatif, légende, retrait
+                  </p>
+                  <p className="mt-1 text-[11px] text-neutral-400">
+                    L&apos;ordre affiché est l&apos;ordre du site public (#1, #2…). Une image retirée
+                    disparaît de l&apos;article ; son fichier reste dans la médiathèque (jamais
+                    supprimé automatiquement).
+                  </p>
+                  <ul className="mt-2 grid gap-3 sm:grid-cols-2">
+                    {imageOccurrences.map((occurrence, index) => {
+                      const fileName = occurrence.path.split("/").pop() ?? occurrence.path;
+                      return (
+                        <li
+                          key={`${occurrence.start}-${occurrence.path}-${index}`}
+                          className="rounded-xl border border-neutral-300 bg-surface p-3 text-sm dark:border-white/10 dark:bg-night-800"
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={mediaVariantUrl(mediaPublicUrl(occurrence.path), "thumb")}
+                              alt={`Aperçu de l'image insérée #${index + 1}`}
+                              loading="lazy"
+                              className="h-20 w-28 shrink-0 rounded-lg border border-neutral-200 object-cover dark:border-white/10"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-bold text-neutral-600 dark:text-neutral-300">
+                                #{index + 1} · ligne {caretLine(contentValue, occurrence.start)}
+                              </p>
+                              <p className="mt-0.5 truncate text-[11px] text-neutral-400">{fileName}</p>
+                            </div>
+                          </div>
+                          <div className="mt-2 flex flex-col gap-2">
+                            <label className="sr-only" htmlFor={`img_alt_${index}`}>
+                              Texte alternatif de l&apos;image {index + 1}
+                            </label>
+                            <input
+                              id={`img_alt_${index}`}
+                              type="text"
+                              maxLength={IMAGE_ALT_MAX}
+                              value={occurrence.alt}
+                              placeholder="Texte alternatif (décrit l'image pour les malvoyants)"
+                              onChange={(e) => updateImageMeta(occurrence, e.target.value, occurrence.caption)}
+                              className={`${inputClass} py-2 text-xs`}
+                            />
+                            <label className="sr-only" htmlFor={`img_caption_${index}`}>
+                              Légende de l&apos;image {index + 1}
+                            </label>
+                            <input
+                              id={`img_caption_${index}`}
+                              type="text"
+                              maxLength={IMAGE_CAPTION_MAX}
+                              value={occurrence.caption}
+                              placeholder="Légende affichée sous l'image (facultatif)"
+                              onChange={(e) => updateImageMeta(occurrence, occurrence.alt, e.target.value)}
+                              className={`${inputClass} py-2 text-xs`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(occurrence)}
+                              className="rounded-lg border border-guinea-red/40 bg-guinea-red/10 px-2 py-2 text-xs font-bold text-guinea-red transition-colors hover:bg-guinea-red/20"
+                            >
+                              Retirer cette image
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
 
               {ytOpen && (
                 <div className="mt-3 flex flex-col gap-2">

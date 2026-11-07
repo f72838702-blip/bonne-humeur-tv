@@ -2,6 +2,7 @@ import { marked } from "marked";
 import { escapeHtml } from "@/lib/utils";
 import { extractYouTubeId } from "@/lib/youtube/url";
 import { addExternalLinkTargets } from "@/lib/links";
+import { parseImageMarker } from "@/lib/content/image-marker";
 
 /**
  * Rendu Markdown SÛR pour le contenu des articles.
@@ -41,6 +42,7 @@ export function renderMarkdownToHtml(markdown: string): string {
 export function markdownToPlainText(markdown: string): string {
   return markdown
     .replace(YOUTUBE_MARKER_GLOBAL_RE, " ")
+    .replace(IMAGE_MARKER_PLAIN_RE, " ")
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/`[^`]*`/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
@@ -67,10 +69,21 @@ export function markdownToPlainText(markdown: string): string {
 
 const YOUTUBE_MARKER_GLOBAL_RE = /\[\[youtube:[A-Za-z0-9_-]{11}\]\]/g;
 
+// ─────────────────────────────────────────────────────────────
+// Marqueur image intégrée — extension du système de marqueurs.
+// Le chemin est un CHEMIN Storage revalidé (jamais une URL) ; l'URL
+// publique est construite à partir de la configuration serveur.
+// Format : [[image:path]] / [[image:path|alt]] / [[image:path|alt|légende]]
+// (alt et légende encodés — voir lib/content/image-marker.ts).
+// ─────────────────────────────────────────────────────────────
+
+const IMAGE_MARKER_PLAIN_RE = /\[\[image:[^|\]\n]*(?:\|[^|\]\n]*){0,2}\]\]/g;
+
 /** Segment du corps d'article rendu par la page publique. */
 export type ArticleSegment =
   | { type: "html"; html: string }
-  | { type: "youtube"; id: string };
+  | { type: "youtube"; id: string }
+  | { type: "image"; path: string; alt: string; caption: string };
 
 /**
  * Découpe le corps Markdown en segments : blocs Markdown rendus SÛR
@@ -90,12 +103,15 @@ export function renderArticleSegments(markdown: string): ArticleSegment[] {
   };
 
   for (const line of markdown.split(/\r?\n/)) {
-    // Le marqueur est revalidé une deuxième fois ici : l'ID isolé doit
-    // passer extractYouTubeId (charset + longueur 11) — sinon la ligne
-    // reste du Markdown ordinaire échappé.
-    const match = /^\[\[youtube:([A-Za-z0-9_-]{11})\]\]$/.exec(line.trim());
-    const id = match ? extractYouTubeId(match[1]) : null;
-    if (id) {
+    // Les marqueurs sont revalidés ici une 2e fois (barrière de rendu) :
+    // un bloc non reconnu reste du Markdown ordinaire échappé.
+    const ytMatch = /^\[\[youtube:([A-Za-z0-9_-]{11})\]\]$/.exec(line.trim());
+    const id = ytMatch ? extractYouTubeId(ytMatch[1]) : null;
+    const imageMatch = id ? null : parseImageMarker(line.trim());
+    if (imageMatch) {
+      flushBuffer();
+      segments.push({ type: "image", ...imageMatch });
+    } else if (id) {
       flushBuffer();
       segments.push({ type: "youtube", id });
     } else {

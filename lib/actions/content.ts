@@ -34,6 +34,7 @@ import {
   successState,
   zodFieldErrors,
 } from "./helpers";
+import { validateImageMarkers } from "@/lib/content/image-marker";
 
 /**
  * Actions du CMS (articles, vidéos, flash-infos, catégories).
@@ -94,6 +95,16 @@ export async function saveArticle(
     return errorState("Veuillez corriger les champs signalés.", zodFieldErrors(parsed.error));
   }
   const input = parsed.data;
+
+  // Marqueurs images intégrées [[image:chemin]] : chacun doit être valide —
+  // un marqueur malformé serait rendu comme texte inerte (jamais comme
+  // image) ; on refuse plutôt l'enregistrement avec la ligne fautive.
+  const markerProblems = validateImageMarkers(input.content);
+  if (markerProblems.length > 0) {
+    return errorState(
+      `Un marqueur d'image n'est pas valide (ligne ${markerProblems[0].line}) : « ${markerProblems[0].reason} ». Utilisez le bouton « Insérer une image » ou corrigez cette ligne avant d'enregistrer.`
+    );
+  }
 
   /**
    * Intention explicite du formulaire (« Publier maintenant », « Enregistrer
