@@ -4,6 +4,11 @@ import ServicesGrid from "@/components/partenariats/ServicesGrid";
 import PartnershipForm from "@/components/partenariats/PartnershipForm";
 import Reveal from "@/components/shared/Reveal";
 
+/** Flash Infos (layout) : fenêtre ISR du site (120 s) — le HTML n'est
+ *  plus figé au build, le bandeau suit l'activité éditoriale comme
+ *  sur les actualités ; expiration exacte côté navigateur. */
+export const revalidate = 120;
+
 export const metadata: Metadata = {
   title: "Offres & Partenariats",
   description:

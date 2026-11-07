@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import BreakingNews from "@/components/home/BreakingNews";
 import LiveSection from "@/components/home/LiveSection";
 import AdSlot from "@/components/publicite/AdSlot";
 import HomeSections from "@/components/home/HomeSections";
@@ -49,7 +48,8 @@ export default async function HomePage() {
 
   return (
     <>
-      <BreakingNews />
+      {/* BreakingNews vit DANS le layout public (toutes les pages) —
+          l'accueil ne le redéfinit pas (une seule fois par page). */}
 
       {/* ─── Bannière publicitaire haute (position FIXE — règle §8) ─── */}
       <div className="mx-auto max-w-7xl px-4 pt-2 sm:px-6">

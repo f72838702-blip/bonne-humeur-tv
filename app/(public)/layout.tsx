@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import BreakingNews from "@/components/home/BreakingNews";
 import WhatsAppFloat from "@/components/layout/WhatsAppFloat";
 import AiChatWidget from "@/components/home/AiChatWidget";
 import TrackerStats from "@/components/analytics/TrackerStats";
@@ -47,6 +48,15 @@ export default async function PublicLayout({
       {/* En-tête + pied de page pilotés par la config publiée
           (défauts = comportement historique exact). */}
       <Header config={design.config?.header} />
+      {/* Flash Infos : bandeau du layout — visible sur TOUTES les pages
+          publiques (accueil, actualités, articles, vidéos, recherche,
+          contact, partenariats…) sans duplication par page. Un seul
+          rendu serveur, mêmes données et règles que l'accueil (RLS
+          période + re-filtrage classifyFlash). Les flashs expirés
+          disparaissent comme avant : côté client (FlashTicker) à
+          l'heure exacte, et côté serveur à la prochaine requête. Le
+          back-office (/admin/*) ne passe JAMAIS par ce layout. */}
+      <BreakingNews />
       <main className="flex-1">{children}</main>
       <Footer config={design.config?.footer} />
       <WhatsAppFloat />

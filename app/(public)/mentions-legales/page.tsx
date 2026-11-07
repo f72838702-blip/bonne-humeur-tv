@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import PageTitle from "@/components/shared/PageTitle";
 
+/** Flash Infos (layout) : fenêtre ISR du site (120 s) — le HTML n'est
+ *  plus figé au build, le bandeau suit l'activité éditoriale. */
+export const revalidate = 120;
+
 export const metadata: Metadata = {
   title: "Mentions légales",
   description: "Mentions légales du site Bonne Humeur TV — éditeur, hébergement et propriété intellectuelle.",

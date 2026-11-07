@@ -7,11 +7,20 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured } from "./config"
  * Client lecture publique (clé anon, SANS cookies) : permet le rendu
  * statique/ISR des pages publiques. La RLS ne renvoie que les contenus
  * publiés. Null si le backend n'est pas configuré.
+ *
+ * noStore (facultatif) : force la lecture RESEAU à chaque rendu/re-rendu
+ * ISR — destiné aux données temps réel (flash-infos) dont la valeur
+ * prérendue au build précédent ne doit JAMAIS resservir. Aucun effet
+ * sur les autres lectures publiques (cache du site inchangé).
  */
-export function getSupabasePublicClient() {
+export function getSupabasePublicClient(options?: { noStore?: boolean }) {
   if (!isSupabaseConfigured()) return null;
+  const globalFetch = options?.noStore
+    ? { fetch: (url: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => fetch(url, { ...init, cache: "no-store" }) }
+    : undefined;
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: globalFetch,
   });
 }
 
