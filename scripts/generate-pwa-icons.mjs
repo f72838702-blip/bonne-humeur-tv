@@ -1,24 +1,23 @@
 // Génération RÉGÉNÉRABLE des icônes PWA « Bonne Humeur TV Admin ».
 //
-// Source UNIQUE : public/logo-bonne-humeur-tv.png (2406×388, fond
-// transparent) — le logo officiel du média, jamais redessiné, jamais
-// déformé, jamais rogné. Composition carrée : le wordmark est mis à
-// l'échelle à largeur fixée et centré sur un fond uni opaque.
+// Source par DÉFAUT : public/logo-bonne-humeur-tv.png (wordmark 2406×388).
+// Source artiste (07/11, demande direction : « utilise celui ci comme
+// icone c'est plus mieux ») : carré 1254×1254 fourni par le PDG —
+// sauvegardé comme public/icons/source-icone-artiste.png pour que la
+// génération reste reproductible à partir du dépôt.
 //
-//  • variante « any »     : logo à 88 % de la largeur du carré
-//  • variante « maskable »: 78 % — zone sûre centrale (cercle 80 %)
-//  • apple-touch          : 180 px, fond opaque (iOS aplati la couche alpha)
-//
-// Usage : node scripts/generate-pwa-icons.mjs [fond]
-//   fond : "black" (DÉFAUT — demande direction 07/11 : « fond en noir » ;
-//          le slogan blanc du PNG d'origine réapparaît : il fait partie
-//          du logo officiel, il est affiché, jamais redessiné)
-//          | "white" (variante historique, slogan invisible)
-// Sortie : public/icons/*.png  (+ aperçus variante opposée dans .temp si
-//          un second fond est demandé).
-// Aucune dépendance nouvelle : sharp est déjà résolu dans node_modules.
+// Usage :
+//   node scripts/generate-pwa-icons.mjs [fond] [source] [any%] [maskable%]
+//   • fond      : "black" | "white" (utile si la source a des transparences)
+//   • source    : chemin du PNG source (défaut = image artiste du 07/11)
+//   • any%      : part de la largeur occupée par l'art (défaut variante carrée : 100)
+//   • maskable% : part réservée au mask (défaut : 88 — zone sûre du cercle)
+// Les cinq sorties produites sont TOUJOURS les PNG de production :
+//   bhtv-admin-{192,512}.png, bhtv-admin-maskable-{192,512}.png,
+//   bhtv-admin-apple-180.png (nommages inchangés → manifest stable).
+// Aucune dépendance nouvelle : sharp déjà résolu dans node_modules.
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 
@@ -26,48 +25,58 @@ const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
 const ROOT = new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
-const SRC = join(ROOT, "public", "logo-bonne-humeur-tv.png");
-const OUT = join(ROOT, "public", "icons");
-if (!existsSync(SRC)) {
-  console.error(`Logo introuvable : ${SRC}`);
+const ART_SRC = join(ROOT, "public", "icons", "source-icone-artiste.png");
+const LOGO_SRC = join(ROOT, "public", "logo-bonne-humeur-tv.png");
+
+const [, , bgArg, srcArg, anyArg, maskArg] = process.argv;
+const bgName = bgArg ?? "black";
+const SRC = srcArg ? join(srcArg) : ART_SRC;
+const anyPct = Number(anyArg ?? 100);
+const maskPct = Number(maskArg ?? 88);
+
+const existsArt = existsSync(ART_SRC);
+const src = existsSync(SRC) ? SRC : existsArt ? ART_SRC : LOGO_SRC;
+if (!existsSync(src)) {
+  console.error(`Source introuvable : ${src}`);
   process.exit(1);
 }
-mkdirSync(OUT, { recursive: true });
+console.log(`Source : ${src}`);
 
-const bgName = process.argv[2] ?? "black";
 const BACKGROUNDS = {
   black: { r: 0, g: 0, b: 0, alpha: 1 },
   white: { r: 255, g: 255, b: 255, alpha: 1 },
 };
 const bg = BACKGROUNDS[bgName] ?? BACKGROUNDS.black;
-// Les fonds de référence écrasent les noms PRODUCTION (sans suffixe) ;
-// un fonds d'essai (autre nom) suffixe ses sorties.
-const SUFFIX = (bgName === "black" || bgName === "white") ? "" : `-${bgName}`;
 
-// Ratio du logo officiel (inchangé au fil des générations).
-const { width: SRC_W, height: SRC_H } = await sharp(SRC).metadata();
+const OUT = join(ROOT, "public", "icons");
+mkdirSync(OUT, { recursive: true });
 
-/** Carré S×S, fond opaque, logo à fW % de largeur, centré sans déformation. */
-async function square(size, { widthPercent, name }) {
-  const logoW = Math.round((size * widthPercent) / 100);
-  const logoH = Math.round((logoW * SRC_H) / SRC_W);
-  const logo = await sharp(SRC)
-    .resize(logoW, logoH) // ratio source préservé — fit "inside" par défaut
+const { width: SRC_W, height: SRC_H } = await sharp(src).metadata();
+
+/** Carré S×S : art mis à l'échelle (ratio préservé), centré, fond opaque.
+ *  maskable : fond BLANC toujours — la source artiste a un liseré blanc ;
+ *  un fond noir ferait apparaître un anneau sombre sous le masque Android. */
+async function square(size, { widthPercent, name, maskable = false }) {
+  const layerBg = maskable ? BACKGROUNDS.white : bg;
+  const w = Math.round((size * widthPercent) / 100);
+  const h = Math.round((w * SRC_H) / SRC_W);
+  const art = await sharp(src)
+    .resize(w, h) // fit "inside" par défaut — aucune déformation
     .png()
     .toBuffer();
   await sharp({
-    create: { width: size, height: size, channels: 4, background: bg },
+    create: { width: size, height: size, channels: 4, background: layerBg },
   })
-    .composite([{ input: logo, left: Math.round((size - logoW) / 2), top: Math.round((size - logoH) / 2) }])
+    .composite([{ input: art, left: Math.round((size - w) / 2), top: Math.round((size - h) / 2) }])
     .png()
     .toFile(join(OUT, name));
-  console.log(`OK ${name} (${size}×${size}, logo ${logoW}×${logoH}, fond ${bgName})`);
+  console.log(`OK ${name} (${size}×${size}, art ${w}×${h}, fond ${maskable ? "white" : bgName})`);
 }
 
-// Variantes finales (PWA installable + iOS) :
-await square(192, { widthPercent: 88, name: `bhtv-admin-192${SUFFIX}.png` });
-await square(512, { widthPercent: 88, name: `bhtv-admin-512${SUFFIX}.png` });
-await square(192, { widthPercent: 78, name: `bhtv-admin-maskable-192${SUFFIX}.png` });
-await square(512, { widthPercent: 78, name: `bhtv-admin-maskable-512${SUFFIX}.png` });
-await square(180, { widthPercent: 88, name: `bhtv-admin-apple-180${SUFFIX}.png` });
+// Variantes de production (noms STABLES consommés par le manifest) :
+await square(192, { widthPercent: anyPct, name: "bhtv-admin-192.png" });
+await square(512, { widthPercent: anyPct, name: "bhtv-admin-512.png" });
+await square(192, { widthPercent: maskPct, name: "bhtv-admin-maskable-192.png", maskable: true });
+await square(512, { widthPercent: maskPct, name: "bhtv-admin-maskable-512.png", maskable: true });
+await square(180, { widthPercent: anyPct, name: "bhtv-admin-apple-180.png" });
 console.log("Fin — public/icons/");
