@@ -12,8 +12,9 @@
     { "pattern": "bonnehumeur.info", "custom_domain": true },
     { "pattern": "www.bonnehumeur.info", "custom_domain": true },
   ],
-  // workers.dev reste actif comme URL de secours (continuité des signets).
-  "workers_dev": true,
+  // workers.dev FERMÉ (demande direction 07/11 — « ferme le workers.dev ») :
+  // une seule adresse officielle = bonnehumeur.info (+ www), zéro doublon.
+  "workers_dev": false,
   // Date de compatibilité : généraux, nodejs_compat requis par OpenNext (Server Actions, Supabase ssr…)
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
