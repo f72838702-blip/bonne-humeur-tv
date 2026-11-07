@@ -10,8 +10,10 @@
 //  • apple-touch          : 180 px, fond opaque (iOS aplati la couche alpha)
 //
 // Usage : node scripts/generate-pwa-icons.mjs [fond]
-//   fond : "white" (défaut, recommandé = fond de l'en-tête du site)
-//          | "night" (prévisualisation alternativo : neutral-950)
+//   fond : "black" (DÉFAUT — demande direction 07/11 : « fond en noir » ;
+//          le slogan blanc du PNG d'origine réapparaît : il fait partie
+//          du logo officiel, il est affiché, jamais redessiné)
+//          | "white" (variante historique, slogan invisible)
 // Sortie : public/icons/*.png  (+ aperçus variante opposée dans .temp si
 //          un second fond est demandé).
 // Aucune dépendance nouvelle : sharp est déjà résolu dans node_modules.
@@ -32,13 +34,15 @@ if (!existsSync(SRC)) {
 }
 mkdirSync(OUT, { recursive: true });
 
-const bgName = process.argv[2] ?? "white";
+const bgName = process.argv[2] ?? "black";
 const BACKGROUNDS = {
+  black: { r: 0, g: 0, b: 0, alpha: 1 },
   white: { r: 255, g: 255, b: 255, alpha: 1 },
-  night: { r: 10, g: 10, b: 15, alpha: 1 },
 };
-const bg = BACKGROUNDS[bgName] ?? BACKGROUNDS.white;
-const SUFFIX = bgName === "white" ? "" : `-${bgName}`;
+const bg = BACKGROUNDS[bgName] ?? BACKGROUNDS.black;
+// Les fonds de référence écrasent les noms PRODUCTION (sans suffixe) ;
+// un fonds d'essai (autre nom) suffixe ses sorties.
+const SUFFIX = (bgName === "black" || bgName === "white") ? "" : `-${bgName}`;
 
 // Ratio du logo officiel (inchangé au fil des générations).
 const { width: SRC_W, height: SRC_H } = await sharp(SRC).metadata();
