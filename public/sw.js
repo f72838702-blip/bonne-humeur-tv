@@ -19,7 +19,7 @@
  *    no-store de /admin/* et /api/*).
  */
 
-const VERSION = "bhtv-admin-v1";
+const VERSION = "bhtv-admin-v2-installer";
 
 self.addEventListener("install", () => {
   // Rien à précacher (aucune ressource ne doit survivre au réseau).
@@ -44,6 +44,16 @@ self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
-// Pas de listener "fetch" : le trafic passe inchangé au réseau.
+// Gestionnaire fetch PRÉSENT mais SILENCIEUX (compatibilité installer) :
+// Chrome — et plusieurs navigateurs Android — exigent « un fetch
+// handler » pour juger l'app INSTALLABLE. Un listener sans respondWith
+// laisse chaque requête suivre le réseau NORMALEMENT : ce worker ne
+// répond toujours JAMAIS depuis un cache, ne met rien en cache, et
+// l'indicatrice hors ligne reste dans PwaAdmin. Comportement réseau :
+// identique à sans-listener — critère installer : rempli.
+self.addEventListener("fetch", () => {
+  /* passthrough volontaire : réseau seul, aucune réponse substituée */
+});
+
 // L'indicateur hors ligne est affiché par PwaAdmin (documenté).
-console.info(`[BHTV Admin SW] ${VERSION} actif — réseau seul, aucun cache.`);
+console.info(`[BHTV Admin SW] ${VERSION} actif — réseau seul, aucun cache, installer OK.`);

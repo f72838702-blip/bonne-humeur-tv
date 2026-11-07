@@ -11,6 +11,10 @@ import { WifiOff } from "lucide-react";
  *     (il ne sert JAMAIS une réponse depuis un cache : aucune donnée
  *     privée ne peut être réaffichée hors ligne). Une mise à jour du
  *     worker est activée immédiatement, sans jamais recharger la page.
+ *     Avec `offlineOnly` (page sans session : /admin/login), le SW
+ *     N'EST PAS enregistré : l'installation exige une connexion
+ *     (les artefacts du manifest sont rendus côté serveur uniquement
+ *     dans la branche avec session du layout).
  *
  *  2. Indicateur « Hors ligne » : bandeau fixe et discret tant que la
  *     connexion manque (navigator.onLine + événements online/offline).
@@ -21,13 +25,14 @@ import { WifiOff } from "lucide-react";
  * Le composant ne stocke RIEN (aucun localStorage, aucune donnée privée)
  * et ne touche à aucune fonctionnalité existante.
  */
-export default function PwaAdmin() {
+export default function PwaAdmin({ offlineOnly = false }: { offlineOnly?: boolean }) {
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
-    // 1. Enregistrement du SW (échec silencieux : navigateur sans SW /
-    //    environnement de test — la page reste parfaitement utilisable).
-    if ("serviceWorker" in navigator) {
+    // 1. Enregistrement du SW — UNIQUEMENT côté session connectée
+    //    (échec silencieux : navigateur sans SW / environnement de test
+    //    — la page reste parfaitement utilisable).
+    if (!offlineOnly && "serviceWorker" in navigator) {
       const register = () => {
         navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => {
           /* aucune conséquence fonctionnelle */
@@ -47,7 +52,7 @@ export default function PwaAdmin() {
       window.removeEventListener("online", sync);
       window.removeEventListener("offline", sync);
     };
-  }, []);
+  }, [offlineOnly]);
 
   if (!offline) return null;
   return (
