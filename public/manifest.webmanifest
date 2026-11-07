@@ -1,0 +1,40 @@
+{
+  "name": "Bonne Humeur TV Admin",
+  "short_name": "BHTV Admin",
+  "description": "Administration de Bonne Humeur TV — La Télé de la nouvelle génération (Conakry, Guinée).",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/admin",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#CE1126",
+  "background_color": "#FFFFFF",
+  "categories": ["productivity"],
+  "icons": [
+    {
+      "src": "/icons/bhtv-admin-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/bhtv-admin-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/bhtv-admin-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/bhtv-admin-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

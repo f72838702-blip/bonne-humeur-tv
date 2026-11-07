@@ -69,7 +69,21 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // PWA (Phase 5/6) : AUCUN cache — ni navigateur, ni réseau — pour
+      // le back-office (pages privées, brouillons, assistant IA) et les
+      // API (réponses sensibles/Supabase). Le service worker, lui, ne
+      // met déjà RIEN en cache (public/sw.js — réseau seul).
+      {
+        source: "/admin/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      },
+      {
+        source: "/api/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      },
+    ];
   },
 };
 
