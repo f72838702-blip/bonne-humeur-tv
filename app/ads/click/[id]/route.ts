@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "node:crypto";
-import { AD_PLACEMENT_CODES, fingerprintOf } from "@/lib/ads/ads-core";
+import { AD_PLACEMENT_CODES, fingerprintOf, isSafeAdUrl } from "@/lib/ads/ads-core";
 import { getPublicAdLink } from "@/lib/data/ads-public";
 import { getSupabasePublicClient } from "@/lib/supabase/server";
 
@@ -10,7 +10,9 @@ import { getSupabasePublicClient } from "@/lib/supabase/server";
  *     open-redirect) : elle est relue EN BASE par get_public_ad_link,
  *     qui ne la rend que pour une créative effectivement diffusée
  *     (approuvée + campagne active en période) ;
- *   - la ré-lecture revalide le schéma http/https côté SQL (0025) ;
+ *   - revalidation RÉELLE du schéma côté route (audit M6) : isSafeAdUrl
+ *     impose http/https — une écriture hors application de link_url ne
+ *     peut pas servir de redirect (fail-closed → accueil) ;
  *   - le clic ne compte qu'uniquement si l'empreinte est neuve
  *     (1 clic max par navigateur/jour/créative, aucune IP brute).
  * Non diffusable → renvoi neutre vers la page d'accueil (302).
@@ -33,7 +35,8 @@ export async function GET(
       : null;
 
   const link = await getPublicAdLink(id);
-  if (!link) {
+  // Revalidation de la destination (fail-closed) : schéma http/https UNIQUEMENT.
+  if (!link || !isSafeAdUrl(link)) {
     return NextResponse.redirect(new URL("/", request.url), 302);
   }
 

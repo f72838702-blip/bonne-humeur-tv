@@ -4,11 +4,17 @@ import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { loginSchema } from "@/lib/validation/schemas";
 import {
+  ActionState,
+  checkRateLimit,
+  errorState,
+  getRequestIdentifier,
+  zodFieldErrors,
+} from "./helpers";
+import {
   identifiantToEmail,
   looksLikeEmail,
   validateIdentifiant,
 } from "@/lib/auth/manager-account";
-import { ActionState, errorState, zodFieldErrors } from "./helpers";
 
 /**
  * Authentification de l'équipe — Supabase Auth (session httpOnly).
@@ -42,6 +48,15 @@ export async function signIn(_prev: ActionState, formData: FormData): Promise<Ac
   });
   if (!parsed.success) {
     return errorState("Veuillez corriger les champs signalés.", zodFieldErrors(parsed.error));
+  }
+
+  // Anti brute force (audit M1) : 8 tentatives / 10 min / IP, état EN BASE
+  // (compteur distinct 'admin_login' — migration 0037). Avant application
+  // de 0037 la RPC renvoie une erreur → « degraded » : aucune limite
+  // (comportement documenté, non bloquant — aucun régresse pour le login).
+  const limit = await checkRateLimit("admin_login", await getRequestIdentifier(), 8, 600);
+  if (limit === "limited") {
+    return errorState("Trop de tentatives de connexion. Réessayez dans quelques minutes.");
   }
 
   const supabase = await getSupabaseServerClient();

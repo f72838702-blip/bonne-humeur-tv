@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured } from "./config";
+import { hardenedCookieOptions, isLocalhostHost } from "./cookies";
 
 /**
  * Client lecture publique (clé anon, SANS cookies) : permet le rendu
@@ -33,6 +34,7 @@ export async function getSupabaseServerClient() {
   if (!isSupabaseConfigured()) return null;
 
   const cookieStore = await cookies();
+  const headerList = await headers();
 
   return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
@@ -41,8 +43,12 @@ export async function getSupabaseServerClient() {
       },
       setAll(cookiesToSet) {
         try {
+          // Durcissement sécurité E1 : httpOnly/secure/sameSite forcés.
+          // Le Host détecté sert à ne PAS exiger Secure sur le développement
+          // local HTTP : en production (Cloudflare) le site est HTTPS seul.
+          const isLocal = isLocalhostHost(headerList.get("host"));
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
+            cookieStore.set(name, value, hardenedCookieOptions(options, isLocal))
           );
         } catch {
           // Appel depuis un Server Component : le middleware rafraîchit les sessions.

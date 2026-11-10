@@ -1,7 +1,7 @@
 /**
- * Noyau PUR de la régie publicitaire (aucune dépendance, aucun accès
- * base/réseau) — partagé par les Server Actions, les pages admin, le
- * moteur de diffusion public et les tests (horloges simulées).
+ * Noyau PUR de la régie publicitaire (aucun accès base/réseau) — partagé
+ * par les Server Actions, les pages admin, le moteur de diffusion public
+ * et les tests (horloges simulées).
  *
  * Décisions structurantes (cahier §2) :
  *  • le statut « Programmée » n'est jamais stocké : état EFFECTIF d'une
@@ -13,6 +13,8 @@
  *    /ads/click/[id] — le serveur lit la destination en base et la
  *    revalide exclusivement http/https (aucun open redirect).
  */
+
+import { neutralizeCsvFormulaPrefix } from "@/lib/utils";
 
 // ─── Formats (§6 des cahiers) ───────────────────────────────────────
 export const AD_FORMATS = [
@@ -311,9 +313,10 @@ export const PAYMENT_METHODS = [
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 // ─── Export CSV (§9) ────────────────────────────────────────────────
-/** Échappement CSV (guillemets, séparateur =, retour ligne réels). */
+/** Échappement CSV (guillemets, séparateur =, retour ligne réels)
+ *  + neutralisation des préfixes de formule (audit M4 : = + @ tab). */
 export function csvEscape(value: unknown): string {
-  const raw = value === null || value === undefined ? "" : String(value);
+  const raw = neutralizeCsvFormulaPrefix(value === null || value === undefined ? "" : String(value));
   if (/[",;\r\n]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
   return raw;
 }

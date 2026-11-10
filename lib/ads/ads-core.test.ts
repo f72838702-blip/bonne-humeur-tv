@@ -337,4 +337,19 @@ describe("régie — noyau pur", () => {
     const row = toCampaignRow({ contract_signed_at: "2026-11-01", contract_terms: "régie manuelle" });
     expect(row).toEqual({ contract_signed_at: "2026-11-01", contract_terms: "régie manuelle" });
   });
+
+  it("csvEscape neutralise les préfixes de FORMULE (audit M4 : = + @ tab)", () => {
+    expect(csvEscape("=HYPERLINK(...)")).toBe(" =HYPERLINK(...)");
+    // contient « , » → guillemets d'échappement, espace de neutralisation conservé
+    expect(csvEscape("=HYPERLINK('http://x','cliquez')")).toBe('" =HYPERLINK(\'http://x\',\'cliquez\')"');
+    expect(csvEscape("+1+cmd")).toBe(" +1+cmd");
+    expect(csvEscape("@SUM(1)")).toBe(" @SUM(1)");
+    expect(csvEscape("\t=cmd")).toBe(" \t=cmd");
+  });
+
+  it("csvEscape préserve les montants négatifs et les valeurs normales", () => {
+    expect(csvEscape("-12 000 GNF")).toBe("-12 000 GNF");
+    expect(csvEscape("Mariama Sy")).toBe("Mariama Sy");
+    expect(csvEscape("150")).toBe("150");
+  });
 });

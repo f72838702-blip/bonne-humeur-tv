@@ -47,6 +47,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Durcissement (audit F5) : le header x-powered-by « Next.js » divulguait
+  // la techno serveur dans TOUTES les réponses — retiré.
+  poweredByHeader: false,
   /**
    * Server Actions : le défaut Next.js (1 Mo) est TROP PETIT pour le lot
    * d'une couverture complète (full ≤ 600 Ko + card ≤ 300 Ko + thumb

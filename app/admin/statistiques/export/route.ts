@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
+import { neutralizeCsvFormulaPrefix } from "@/lib/utils";
 import {
   computeCountries,
   computeDailySeries,
@@ -70,9 +71,11 @@ export async function GET(request: Request): Promise<Response> {
   const browsers = computeByField(rows, (r) => r.browser, Object.keys(BROWSER_LABELS) as Browser[]);
   const grid = computeGrid(rows).cells;
 
+  // Échappement CSV + neutralisation des préfixes de formule (audit M4) :
+  // = + @ tab en tête de cellule → espace initial (jamais une formule).
   const escape = (v: string | number | null) => {
-    const s = String(v ?? "");
-    return /[",;\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
+    const s = neutralizeCsvFormulaPrefix(String(v ?? ""));
+    return /[",;\n\r]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
   };
   const lines: string[] = [];
   lines.push(`Statistiques Bonne Humeur Média — du ${range.from.toISOString()} au ${range.to.toISOString()}`);

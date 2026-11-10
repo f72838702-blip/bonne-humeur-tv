@@ -16,8 +16,11 @@
   // une seule adresse officielle = bonnehumeur.info (+ www), zéro doublon.
   "workers_dev": false,
   // Date de compatibilité : généraux, nodejs_compat requis par OpenNext (Server Actions, Supabase ssr…)
+  // global_fetch_strictly_public (recommandation OpenNext, audit F8) : le
+  // fetch global sortant ne peut JAMAIS reboucler sur ce Worker lui-même
+  // (anti SSRF interne) ; les appels ne visent que Supabase/YT/Cloudflare.
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   // Workers AI — plan Free (10 000 Neurons/jour), AUCUN moyen de paiement.
   // Le binding est l'ACCÈS UNIQUE aux modèles (aucune clé API, aucun secret).
   "ai": { "binding": "AI" },

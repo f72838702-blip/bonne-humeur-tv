@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isAllowedDuration } from "@/lib/flash/flash-core";
+import { isSafeAdUrl } from "@/lib/ads/ads-core";
 
 /**
  * Schémas de validation — Zod 4 (>= 4.6.6, corrige GHSA-mrhx-c7xc-m3w5).
@@ -24,6 +25,18 @@ const optionalText = (max: number) =>
     .transform((v) => (v ? v : undefined));
 
 const uuid = z.string().uuid("Identifiant invalide");
+
+/**
+ * URL de MÉDIA ou de LIEN (audit M5) : http/https exclusivement —
+ * javascript:/data:/vbscript:/fichiers locaux sont refusés AVANT tout
+ * rendu (href src d'un flash, src d'une image de couverture/miniature).
+ * Le rédacteur peut toujours laisser le champ vide (undefined).
+ */
+const safeHttpUrl = (max: number, label: string) =>
+  optionalText(max).refine(
+    (v) => v === undefined || isSafeAdUrl(v),
+    `${label} : URL http/https requise`
+  );
 const isoDate = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, "Date invalide (format attendu : AAAA-MM-JJ)")
@@ -94,7 +107,7 @@ export const articleSchema = z.object({
   slug: optionalText(96),
   excerpt: optionalText(400),
   content: trimmed(1, 100_000, "Contenu"),
-  featured_image: optionalText(500),
+  featured_image: safeHttpUrl(500, "Image"),
   featured_image_alt: optionalText(300),
   category_id: uuid.optional().or(z.literal("").transform(() => undefined)),
   status: z.enum(ARTICLE_STATUSES, { message: "Statut invalide" }),
@@ -129,7 +142,7 @@ export const videoSchema = z.object({
     "ID YouTube invalide (11 caractères attendus)"
   ),
   youtube_url: optionalText(300),
-  thumbnail_url: optionalText(500),
+  thumbnail_url: safeHttpUrl(500, "Miniature"),
   category_id: uuid.optional().or(z.literal("").transform(() => undefined)),
   duration: optionalText(10),
   published_at: isoDate,
@@ -149,7 +162,7 @@ export const deleteVideoSchema = z.object({ id: uuid });
 export const breakingNewsSchema = z.object({
   id: uuid.optional(),
   content: trimmed(5, 200, "Texte"),
-  link: optionalText(300),
+  link: safeHttpUrl(300, "Lien"),
   is_active: z.boolean().default(true),
   start_at: isoDate,
   end_at: isoDate,

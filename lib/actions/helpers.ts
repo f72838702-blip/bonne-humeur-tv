@@ -61,7 +61,7 @@ export async function checkRateLimit(
   // les 2 formulaires publics existants + les 2 assistants IA. Avant
   // application de 0032, la RPC renvoie une erreur → état « degraded »,
   // géré par l'appelant (filet mémoire pour les assistants).
-  formType: "contact" | "partnership" | "assistant_public" | "assistant_admin",
+  formType: "contact" | "partnership" | "assistant_public" | "assistant_admin" | "admin_login",
   identifier: string,
   maxRequests: number,
   windowSeconds: number

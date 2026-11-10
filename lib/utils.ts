@@ -65,3 +65,17 @@ export function escapeHtml(input: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+/**
+ * Neutralisation des préfixes de FORMULE CSV (audit M4) : Excel/LibreOffice
+ * interprètent en formule toute cellule commençant par =, +, @ ou une
+ * tabulation (=HYPERLINK, +cmd). Les cellules d'export contiennent des
+ * champs saisis par des humains (noms, notes, références) : un espace
+ * initial neutre les bloque sans altérer le contenu visible.
+ * Les nombres négatifs (« -5 000 ») ne sont PAS des formules : aucun espace.
+ * Utilisé par les 2 exports (publicités + statistiques) et leurs tests.
+ */
+export function neutralizeCsvFormulaPrefix(value: string): string {
+  const SAFE = /^[=+@\t]/;
+  return SAFE.test(value) ? ` ${value}` : value;
+}

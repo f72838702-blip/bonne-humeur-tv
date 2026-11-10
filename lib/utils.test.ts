@@ -3,6 +3,7 @@ import {
   cn,
   escapeHtml,
   formatDate,
+  neutralizeCsvFormulaPrefix,
   readingTimeMinutes,
   slugify,
   truncateWords,
@@ -72,5 +73,20 @@ describe("readingTimeMinutes", () => {
 describe("cn", () => {
   it("fusionne les classes conditionnelles", () => {
     expect(cn("a", false && "b", "c")).toBe("a c");
+  });
+});
+
+describe("neutralizeCsvFormulaPrefix (audit M4)", () => {
+  it("neutralise les préfixes de formule = + @ et tabulation par un espace", () => {
+    expect(neutralizeCsvFormulaPrefix("=HYPERLINK(...)")).toBe(" =HYPERLINK(...)");
+    expect(neutralizeCsvFormulaPrefix("+cmd|'/c'")).toBe(" +cmd|'/c'");
+    expect(neutralizeCsvFormulaPrefix("@x")).toBe(" @x");
+    expect(neutralizeCsvFormulaPrefix("\t=1")).toBe(" \t=1");
+  });
+
+  it("ne touche PAS aux valeurs saines (montants négatifs, texte)", () => {
+    expect(neutralizeCsvFormulaPrefix("-5 000 GNF")).toBe("-5 000 GNF");
+    expect(neutralizeCsvFormulaPrefix("Mariama Sy")).toBe("Mariama Sy");
+    expect(neutralizeCsvFormulaPrefix("")).toBe("");
   });
 });

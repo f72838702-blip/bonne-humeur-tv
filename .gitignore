@@ -5,10 +5,13 @@ dist/
 *.tsbuildinfo
 next-env.d.ts
 
-# env
+# env (audit F6 : les variantes nommées sont ignorées aussi — .env.example reste suivi)
 .env
 .env.local
 .env*.local
+.env.development
+.env.production
+.env.test
 
 # misc
 .DS_Store

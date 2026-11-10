@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   articleSchema,
+  breakingNewsSchema,
   contactSchema,
   loginSchema,
   partnershipSchema,
@@ -135,5 +136,47 @@ describe("videoSchema", () => {
       status: "draft" as const,
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("URL de média/lien — schéma http(s) exigé (audit M5)", () => {
+  it("refuse un javascript: dans le lien d'un flash", () => {
+    const result = breakingNewsSchema.safeParse({
+      content: "Flash de test",
+      link: "javascript:alert(1)",
+      is_active: true,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("refuse un data: en image de couverture d'article", () => {
+    const result = articleSchema.safeParse({
+      title: "Article de test",
+      content: "Un contenu suffisant.",
+      featured_image: "data:text/html,<script>",
+      status: "draft" as const,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("refuse un vbscript: en miniature de vidéo", () => {
+    const bad = videoSchema.safeParse({
+      title: "Émission",
+      thumbnail_url: "vbscript:x",
+      status: "draft" as const,
+    });
+    expect(bad.success).toBe(false);
+  });
+
+  it("accepte http/https et garde le champ vide optionnel", () => {
+    expect(
+      breakingNewsSchema.safeParse({ content: "Flash de test", link: "http://bonnehumeur.info/a", is_active: true }).success
+    ).toBe(true);
+    expect(
+      articleSchema.safeParse({ title: "Article de test", content: "Un contenu suffisant.", featured_image: "https://beinalmwqkxbqitvuobr.supabase.co/storage/v1/object/public/articles/x.webp", status: "draft" as const }).success
+    ).toBe(true);
+    expect(
+      videoSchema.safeParse({ title: "Émission", thumbnail_url: undefined, status: "draft" as const }).success
+    ).toBe(true);
   });
 });
