@@ -89,10 +89,18 @@ end;
 $$;
 
 -- ─────────────────────────────────────────────────────────────
--- 2) purge_analytics : plus exécutable par un simple utilisateur connecté
+-- 2) Fonctions de purge : plus exécutables par un simple utilisateur
 --    (pg_cron reste planifié ; postgres/SQL Editor reste souverain).
+--    • purge_analytics : le grant superflu à authenticated est retiré
+--      (la purge reste pg_cron + postgres uniquement) ;
+--    • purge_articles_corbeille : 0035 ne posait AUCUN grant → défaut
+--      Postgres = EXECUTE à PUBLIC (anon inclus). Le cron n'a jamais
+--      besoin de l'accès public : même schéma que purge_analytics
+--      (0030, révoquée en production depuis le 02/11 — son cron tourne).
+--      Un visiteur anonyme ne peut plus forcer la purge de la corbeille.
 -- ─────────────────────────────────────────────────────────────
 revoke execute on function public.purge_analytics(int) from public, anon, authenticated;
+revoke execute on function public.purge_articles_corbeille() from public, anon, authenticated;
 
 -- ─────────────────────────────────────────────────────────────
 -- 3) Contrainte de schéma sur la destination publicitaire (dernière
