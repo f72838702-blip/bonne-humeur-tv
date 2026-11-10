@@ -39,11 +39,20 @@ export function zodFieldErrors(error: { issues: { path: PropertyKey[]; message: 
   return out;
 }
 
-/** IP cliente (Vercel) hachée : aucune donnée personnelle en clair en base. */
+/** IP cliente hachée : aucune donnée personnelle en clair en base. */
 export async function getRequestIdentifier(): Promise<string> {
   const headerList = await headers();
+  // CF-Connecting-IP d'abord : posé par l'edge Cloudflare, NON forgeable par
+  // le client — le premier élément de X-Forwarded-For est fourni par le
+  // client lui-même (bypass du compteur par rotation d'entêtes). Même
+  // priorité que lib/ai/identity.ts (correctif C5 de l'audit).
+  const cf = headerList.get("cf-connecting-ip")?.trim();
   const forwarded = headerList.get("x-forwarded-for") ?? "";
-  const ip = forwarded.split(",")[0]?.trim() || headerList.get("x-real-ip") || "inconnu";
+  const ip =
+    cf ||
+    forwarded.split(",")[0]?.trim() ||
+    headerList.get("x-real-ip") ||
+    "inconnu";
   return createHash("sha256").update(`bhtv::${ip}`).digest("hex").slice(0, 40);
 }
 
