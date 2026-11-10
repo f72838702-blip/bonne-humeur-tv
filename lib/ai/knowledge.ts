@@ -1,4 +1,4 @@
-import { searchPublishedContent } from "@/lib/data/search";
+﻿import { searchPublishedContent } from "@/lib/data/search";
 import { getLiveConfig } from "@/lib/direct/config";
 import { CHANNEL_URL } from "@/lib/direct/core";
 
@@ -27,7 +27,7 @@ const SITE_ORIGIN =
   (process.env.NEXT_PUBLIC_SITE_URL ??
     // Phase J : défaut = production Workers (l'ancien domaine Vercel est
     // mort — jamais citer une URL 404 au visiteur).
-    "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev")
+    "https://bonnehumeur.info")
     .trim()
     .replace(/\/+$/, "");
 

@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import {
   Inter,
   Archivo,
@@ -28,7 +28,7 @@ const lora = Lora({ subsets: ["latin"], variable: "--font-lora" });
 const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-newsreader" });
 const oswald = Oswald({ subsets: ["latin"], variable: "--font-oswald" });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonnehumeur.info";
 
 /**
  * Correctif FOUC (A3-2) : applique le thème persisté AVANT le premier

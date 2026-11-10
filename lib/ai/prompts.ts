@@ -1,4 +1,4 @@
-import type { AiMessage } from "@/lib/ai/client";
+﻿import type { AiMessage } from "@/lib/ai/client";
 
 /**
  * Prompts et cadrage des deux assistants (demande direction §3 et §4).
@@ -13,7 +13,7 @@ import type { AiMessage } from "@/lib/ai/client";
  */
 const SITE_URL_AI = (
   process.env.NEXT_PUBLIC_SITE_URL ??
-  "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev"
+  "https://bonnehumeur.info"
 )
   .trim()
   .replace(/\/+$/, "");

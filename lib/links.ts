@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Règle de navigation uniforme BONNE HUMEUR TV :
  *   tout lien HTTP/HTTPS vers un domaine EXTERNE s'ouvre dans un NOUVEL
  *   onglet (target="_blank" + rel="noopener noreferrer") ; les liens
@@ -13,7 +13,7 @@
 /** Hôtes appartenant à Bonne Humeur TV (jamais considérés comme externes). */
 export const SITE_HOSTS: readonly string[] = (() => {
   const hosts = new Set<string>();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonnehumeur.info";
   try {
     hosts.add(new URL(siteUrl).hostname.replace(/^www\./i, ""));
   } catch {

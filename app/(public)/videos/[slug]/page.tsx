@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays } from "lucide-react";
@@ -9,7 +9,7 @@ import JsonLd from "@/components/shared/JsonLd";
 import { getPublishedVideoBySlug, getRelatedVideos } from "@/lib/data/videos";
 import { formatDate } from "@/lib/utils";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonnehumeur.info";
 
 /** Page vidéo — données réelles uniquement ; JSON-LD si et seulement si les champs requis existent. */
 export const revalidate = 120;

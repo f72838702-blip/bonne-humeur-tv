@@ -1,4 +1,4 @@
-import Header from "@/components/layout/Header";
+﻿import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import BreakingNews from "@/components/home/BreakingNews";
 import WhatsAppFloat from "@/components/layout/WhatsAppFloat";
@@ -8,7 +8,7 @@ import JsonLd from "@/components/shared/JsonLd";
 import DesignStyle from "@/components/design/DesignStyle";
 import { getPublishedDesignCached } from "@/lib/design/data";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonnehumeur.info";
 
 /**
  * Layout du SITE PUBLIC uniquement (route group — n'affecte pas les URL).

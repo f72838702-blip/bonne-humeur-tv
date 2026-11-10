@@ -1,8 +1,8 @@
-import type { MetadataRoute } from "next";
+﻿import type { MetadataRoute } from "next";
 import { getPublishedArticles } from "@/lib/data/articles";
 import { getPublishedVideos } from "@/lib/data/videos";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonne-humeur-tv.bonne-humeur-tv.workers.dev";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bonnehumeur.info";
 
 /**
  * Sitemap dynamique : uniquement les pages réelles et les contenus
