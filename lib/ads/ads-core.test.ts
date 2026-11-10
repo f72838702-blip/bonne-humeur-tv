@@ -24,7 +24,7 @@ import { parseConakryInput } from "@/lib/flash/flash-core";
 const NOW = "2026-11-05T10:00:00.000Z";
 
 describe("régie — noyau pur", () => {
-  it("les 8 emplacements du cahier des charges existent", () => {
+  it("les 9 emplacements du cahier des charges existent (8 seedés 0025 + footer 0038)", () => {
     expect([...AD_PLACEMENT_CODES]).toEqual([
       "home_top_banner",
       "home_inline",
@@ -34,6 +34,7 @@ describe("régie — noyau pur", () => {
       "videos_inline",
       "home_promo_strip",
       "home_partners",
+      "footer",
     ]);
   });
 

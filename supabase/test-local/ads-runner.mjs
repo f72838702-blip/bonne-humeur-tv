@@ -267,6 +267,62 @@ async function main() {
     return Number(n) >= 1;
   });
 
+  console.log("\n=== MIGRATIONS 0037 (audit) puis 0038 (footer) ===");
+  // Stubs : 0037 révoque purge_analytics/purge_articles_corbeille, absentes
+  // de cette base raccourcie (0001..0026). Les revokes exigent leur existence.
+  await c.query(`
+    create or replace function public.purge_analytics(int) returns void language sql as 'select null';
+    create or replace function public.purge_articles_corbeille() returns void language sql as 'select null';`);
+  for (const f of ["0037_durcissement_audit_securite.sql", "0038_emplacement_footer.sql"]) {
+    try { await c.query(read(f)); }
+    catch (e) { no(`MIG ${f}`, "exécution", e.message); migOk = false; }
+  }
+  if (migOk) ok("MIG 0037+0038", "audit + emplacement footer appliqués sans erreur");
+
+  console.log("\n=== TESTS FOOTER 0038 (assertions ADS23 -> ADS27) ===\n");
+
+  // ADS23 — 0038 : 9 emplacements (8 seedés + footer), seed idempotent
+  await expect("ADS23", "emplacement « footer » existant (9 au total)", async () =>
+    Number(SCALAR(await c.query("select count(*) n from public.ad_placements"), "n")) === 9
+    && Boolean(SCALAR(await c.query("select exists(select 1 from public.ad_placements where code='footer' and array_length(allowed_formats,1)=3 and max_items=1) e"), "e")));
+
+  // ADS24 — la borne de code reste hermétique : un code inconnu est REFUSÉ
+  await expect("ADS24", "contrainte code : le 9e passe, tout autre code refusé", async () => {
+    try {
+      await c.query("insert into public.ad_placements (code, label, description, allowed_formats) values ('footer_2','X','x',array['banner'])");
+      return false; // insertion réussie : FAIL
+    } catch { return true; }
+  });
+
+  // ADS25 — liaison campagne↔footer : la créative diffuse dans le pied de page
+  await expect("ADS25", "get_public_ad_zone('footer') renvoie la créative", async () => {
+    await c.query(`insert into public.ad_campaign_placements (campaign_id, placement_code)
+      values ('11111111-1111-1111-1111-111111111202','footer')`);
+    const rows = await as("anon", null, "select public.get_public_ad_zone('footer') zone");
+    const zone = rows.rows[0].zone;
+    return zone.creatives.length === 1 && zone.creatives[0].format === "banner";
+  });
+
+  // ADS26 — comptage « footer » : impression acceptée puis dédupliquée
+  await expect("ADS26", "record_ad_event('footer') compté, dédupliqué par empreinte", async () => {
+    const first = SCALAR(await as("anon", null,
+      "select public.record_ad_event('11111111-1111-1111-1111-111111111203','impression','footer','fp-footer-1') n"), "n");
+    const again = SCALAR(await as("anon", null,
+      "select public.record_ad_event('11111111-1111-1111-1111-111111111203','impression','footer','fp-footer-1') n"), "n");
+    const click = SCALAR(await as("anon", null,
+      "select public.record_ad_event('11111111-1111-1111-1111-111111111203','clic','footer','fp-footer-2') n"), "n");
+    const agg = await c.query("select impressions, clicks from public.ad_daily_stats where placement_code='footer' and creative_id='11111111-1111-1111-1111-111111111203'");
+    return first === true && again === false && click === true
+      && agg.rows[0].impressions === 1 && agg.rows[0].clicks === 1;
+  });
+
+  // ADS27 — 0037 préservée : placement inconnu (hors 9) toujours REFUSÉ
+  await expect("ADS27", "placement inconnu : refusé, aucune ligne écrite", async () => {
+    await as("anon", null, "select public.record_ad_event('11111111-1111-1111-1111-111111111203','impression','header','fp-x')");
+    const n = SCALAR(await c.query("select count(*) n from public.ad_daily_stats where placement_code='header'"), "n");
+    return Number(n) === 0;
+  });
+
   console.log(`\nAD-TESTS : ${pass} PASS / ${fail} FAIL`);
   if (fail > 0) { console.log("ÉCHECS :", failures.join(", ")); process.exitCode = 1; }
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MapPin, Mail, Phone } from "lucide-react";
 import Logo from "@/components/shared/Logo";
+import AdSlot from "@/components/publicite/AdSlot";
 import type { FooterConfig } from "@/lib/design/schema";
 
 /**
@@ -45,6 +46,12 @@ export default function Footer({
   return (
     <footer className="border-t border-neutral-200 bg-surface dark:border-white/10 dark:bg-night-900">
       <div className="tricolor-line h-1 w-full opacity-70" />
+      {/* ─── Bannière publicitaire du pied de page (footer — 0038),
+          DATA-GATED : AdSlot rend null tant qu'aucune créative de
+          l'emplacement « footer » n'est en diffusion. ─── */}
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
+        <AdSlot code="footer" className="" />
+      </div>
       <div className={`mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 ${gridLayout}`}>
         <div className={layout === "centered" ? "text-center" : ""}>
           <Logo className="h-9 w-auto select-none object-contain" />

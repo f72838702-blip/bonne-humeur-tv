@@ -31,6 +31,7 @@ const SEQUENCE = [
       "0033_memoire_admin.sql", "0034_studio_design.sql",
       "0035_corbeille_articles.sql",
       "0036_multi_admin_permissions.sql", "0037_durcissement_audit_securite.sql",
+      "0038_emplacement_footer.sql",
     ],
   },
 ];
@@ -92,7 +93,7 @@ try {
       }
     }
   }
-  console.log("Migrations 0001→0037 appliquées sans erreur.\n");
+  console.log("Migrations 0001→0038 appliquées sans erreur.\n");
 
   // ── 1) record_ad_event : placement borné ──
   // Données : un admin (auth.users → profiles), une campagne ACTIVE et une

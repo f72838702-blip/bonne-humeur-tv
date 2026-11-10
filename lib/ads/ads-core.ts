@@ -29,7 +29,7 @@ export type AdFormat = (typeof AD_FORMATS)[number];
 /** 6e format : logos partenaires — table dédiée ad_partners (cahier §2). */
 export const PARTNER_PLACEMENT = "home_partners";
 
-// ─── Emplacements (§7) — codes stables, seedés en 0025 ──────────────
+// ─── Emplacements (§7) — codes stables, seedés en 0025 (+ footer 0038) ─
 export const AD_PLACEMENT_CODES = [
   "home_top_banner",
   "home_inline",
@@ -39,6 +39,7 @@ export const AD_PLACEMENT_CODES = [
   "videos_inline",
   "home_promo_strip",
   "home_partners",
+  "footer",
 ] as const;
 export type AdPlacementCode = (typeof AD_PLACEMENT_CODES)[number];
 
@@ -52,6 +53,7 @@ export const AD_PLACEMENT_LABELS: Record<AdPlacementCode, string> = {
   videos_inline: "Vidéos — insertion",
   home_promo_strip: "Accueil — bandeau promotionnel",
   home_partners: "Accueil — partenaires officiels",
+  footer: "Pied de page — bannière (toutes les pages)",
 };
 
 export const AD_DEVICES = ["desktop", "mobile"] as const;
