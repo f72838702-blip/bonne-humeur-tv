@@ -92,7 +92,7 @@ $$;
 -- 2) purge_analytics : plus exécutable par un simple utilisateur connecté
 --    (pg_cron reste planifié ; postgres/SQL Editor reste souverain).
 -- ─────────────────────────────────────────────────────────────
-revoke execute on function public.purge_analytics(int) from public, authenticated;
+revoke execute on function public.purge_analytics(int) from public, anon, authenticated;
 
 -- ─────────────────────────────────────────────────────────────
 -- 3) Contrainte de schéma sur la destination publicitaire (dernière
