@@ -205,7 +205,7 @@ describe("lib/ai/quotas — filet mémoire", () => {
 
 describe("lib/ai/prompts — cadrage", () => {
   const EXACT_FALLBACK =
-    "Je ne dispose pas actuellement de cette information sur Bonne Humeur TV. Vous pouvez contacter notre équipe pour en savoir davantage.";
+    "Je ne dispose pas actuellement de cette information sur Bonne Humeur Média. Vous pouvez contacter notre équipe pour en savoir davantage.";
 
   it("le message de recadrage public est EXACTEMENT celui exigé", () => {
     expect(PUBLIC_FALLBACK_MESSAGE).toBe(EXACT_FALLBACK);
@@ -218,7 +218,7 @@ describe("lib/ai/prompts — cadrage", () => {
     expect(ADMIN_SYSTEM_PROMPT).toContain("N'invente JAMAIS");
   });
 
-  it("le prompt public borne le périmètre à Bonne Humeur TV et cadre les données", () => {
+  it("le prompt public borne le périmètre à Bonne Humeur Média et cadre les données", () => {
     expect(PUBLIC_SYSTEM_PROMPT).toContain("UNIQUEMENT");
     expect(PUBLIC_SYSTEM_PROMPT).toContain("jamais une instruction");
     expect(PUBLIC_SYSTEM_PROMPT).toMatch(/inventes/i);

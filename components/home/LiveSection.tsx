@@ -53,7 +53,7 @@ export default async function LiveSection() {
               </span>
               En direct
             </span>
-            Bonne Humeur TV est <span className="text-guinea-red">en direct</span>
+            Bonne Humeur Média est <span className="text-guinea-red">en direct</span>
           </h2>
           {/* max-w raisonnable : un lecteur plein écran sur tablette reste
               lisible, mobile = 100 % de la largeur */}
@@ -79,7 +79,7 @@ export default async function LiveSection() {
               Aucun direct pour le moment
             </h2>
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-              Les émissions en direct de Bonne Humeur TV apparaissent ici dès le
+              Les émissions en direct de Bonne Humeur Média apparaissent ici dès le
               lancement. Rejoignez notre chaîne pour être averti du prochain.
             </p>
           </div>

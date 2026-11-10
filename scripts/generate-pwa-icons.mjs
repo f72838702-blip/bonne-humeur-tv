@@ -1,4 +1,4 @@
-// Génération RÉGÉNÉRABLE des icônes PWA « Bonne Humeur TV Admin ».
+// Génération RÉGÉNÉRABLE des icônes PWA « Bonne Humeur Média Admin ».
 //
 // Source par DÉFAUT : public/logo-bonne-humeur-tv.png (wordmark 2406×388).
 // Source artiste (07/11, demande direction : « utilise celui ci comme

@@ -5,14 +5,14 @@ import { MessageCircleQuestion, Send, X } from "lucide-react";
 import Logo from "@/components/shared/Logo";
 
 /**
- * Chatbot PUBLIC « Assistant Bonne Humeur TV » (demande direction §4).
+ * Chatbot PUBLIC « Assistant Bonne Humeur Média » (demande direction §4).
  *
  * • Bouton flottant discret CÔTÉ GAUCHE (le WhatsApp reste en bas à droite
  *   — aucun chevauchement) ; panneau mobile-first (pleine largeur sur
  *   mobile, boîte fixe sur écran large).
  * • Aucune donnée personnelle : pas de nom, pas de stockage local — la
  *   conversation vit dans l'état du composant et disparaît au rechargement.
- * • L'assistant répond uniquement sur Bonne Humeur TV ; hors périmètre le
+ * • L'assistant répond uniquement sur Bonne Humeur Média ; hors périmètre le
  *   serveur renvoie le message de recadrage exact — l'UI affiche ce que le
  *   serveur décide (jamais de réponse simulée client).
  */
@@ -26,7 +26,7 @@ const INITIAL: ChatLine[] = [
   {
     role: "assistant",
     content:
-      "Bonjour ! Je suis l'Assistant Bonne Humeur TV. Posez-moi vos questions sur la chaîne, ses articles, ses vidéos ou un partenariat.",
+      "Bonjour ! Je suis l'Assistant Bonne Humeur Média. Posez-moi vos questions sur le média, ses articles, ses vidéos ou un partenariat.",
   },
 ];
 
@@ -64,7 +64,7 @@ export default function AiChatWidget() {
           ? json.reply
           : typeof json.message === "string" && json.message.length > 0
             ? json.message
-            : "Je ne dispose pas actuellement de cette information sur Bonne Humeur TV. Vous pouvez contacter notre équipe pour en savoir davantage.";
+            : "Je ne dispose pas actuellement de cette information sur Bonne Humeur Média. Vous pouvez contacter notre équipe pour en savoir davantage.";
       setLines((l) => [...l, { role: "assistant", content: reply }]);
     } catch {
       setLines((l) => [
@@ -72,7 +72,7 @@ export default function AiChatWidget() {
         {
           role: "assistant",
           content:
-            "Je ne dispose pas actuellement de cette information sur Bonne Humeur TV. Vous pouvez contacter notre équipe pour en savoir davantage.",
+            "Je ne dispose pas actuellement de cette information sur Bonne Humeur Média. Vous pouvez contacter notre équipe pour en savoir davantage.",
         },
       ]);
     } finally {
@@ -86,7 +86,7 @@ export default function AiChatWidget() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Fermer l'assistant Bonne Humeur TV" : "Ouvrir l'assistant Bonne Humeur TV"}
+        aria-label={open ? "Fermer l'assistant Bonne Humeur Média" : "Ouvrir l'assistant Bonne Humeur Média"}
         aria-expanded={open}
         className="fixed bottom-5 left-5 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-night-700 text-white shadow-lg transition-transform hover:scale-110 dark:bg-night-600 sm:h-12 sm:w-12"
       >
@@ -97,7 +97,7 @@ export default function AiChatWidget() {
         <div
           className="fixed inset-x-0 bottom-[4.75rem] z-40 flex flex-col overflow-hidden rounded-t-2xl border border-neutral-200 bg-surface shadow-2xl dark:border-white/10 dark:bg-night-800 sm:inset-x-auto sm:bottom-[4.75rem] sm:left-5 sm:h-[26rem] sm:w-[22rem] sm:rounded-2xl"
           role="dialog"
-          aria-label="Assistant Bonne Humeur TV"
+          aria-label="Assistant Bonne Humeur Média"
         >
           {/* Logo officiel sur fond clair (sur le rouge actuel, le bloc
               rouge BONNE HUMEUR du logo disparaîtrait — le logo est utilisé
@@ -136,7 +136,7 @@ export default function AiChatWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               maxLength={2000}
-              placeholder="Votre question sur Bonne Humeur TV…"
+              placeholder="Votre question sur Bonne Humeur Média…"
               aria-label="Votre message à l'assistant"
               className="w-full rounded-xl border border-neutral-200 bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
             />

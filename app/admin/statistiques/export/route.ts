@@ -68,7 +68,7 @@ export async function GET(request: Request): Promise<Response> {
     return /[",;\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
   };
   const lines: string[] = [];
-  lines.push(`Statistiques Bonne Humeur TV — du ${range.from.toISOString()} au ${range.to.toISOString()}`);
+  lines.push(`Statistiques Bonne Humeur Média — du ${range.from.toISOString()} au ${range.to.toISOString()}`);
   lines.push("");
   lines.push("ÉVOLUTION JOURNALIÈRE");
   lines.push("Date;Sessions estimées;Pages vues;Engagement visible total");

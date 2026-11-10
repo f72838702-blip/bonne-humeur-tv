@@ -11,7 +11,7 @@ import { getDemandesNotificationCount } from "@/lib/data/requests";
  * chaque page admin applique elle-même requireRole() (le middleware
  * n'est qu'une garde UX).
  *
- * PWA « Bonne Humeur TV Admin » : les artefacts d'installation sont
+ * PWA « Bonne Humeur Média Admin » : les artefacts d'installation sont
  * volontairement émis ICI et nulle part ailleurs — et SEULEMENT avec une
  * session connectée (l'installation n'est jamais proposée ni depuis la
  * façade publique, ni depuis /admin/login — demande direction 07/11).
@@ -22,7 +22,7 @@ import { getDemandesNotificationCount } from "@/lib/data/requests";
  */
 
 export const metadata: Metadata = {
-  title: { default: "Back-office", template: "%s | Bonne Humeur TV" },
+  title: { default: "Administration — Bonne Humeur Média", template: "%s | Bonne Humeur Média" },
   robots: { index: false, follow: false },
   // Sécurité : AUCUN artefact d'installation (« manifest », méta Apple,
   // icône Apple) n'est émis ici — ils sont rendus UNIQUEMENT dans la
@@ -69,7 +69,7 @@ export default async function AdminLayout({
           part : « Installer l'application » ne peut pas être proposé. */}
       <link rel="manifest" href="/manifest.webmanifest" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-title" content="BHTV Admin" />
+      <meta name="apple-mobile-web-app-title" content="Bonne Humeur Média Admin" />
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       <link rel="apple-touch-icon" href="/icons/bhtv-admin-apple-180.png" />
       <Sidebar

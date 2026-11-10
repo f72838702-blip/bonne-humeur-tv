@@ -22,7 +22,7 @@ export default function DirectLivePlayer({
   isLive: boolean;
 }) {
   const [playing, setPlaying] = useState(false);
-  const label = title ?? (isLive ? "Bonne Humeur TV — émission en direct" : "Émission de la chaîne");
+  const label = title ?? (isLive ? "Bonne Humeur Média — émission en direct" : "Émission de la chaîne");
 
   return (
     <div className="overflow-hidden rounded-2xl border border-guinea-red/40 bg-night-900 shadow-glow dark:border-guinea-red/30">

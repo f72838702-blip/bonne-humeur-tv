@@ -91,7 +91,7 @@ export default async function StudioPreviewPage() {
         }}
       />
       <div className="flex flex-col items-center justify-between gap-3 px-4 pb-14 text-center text-xs text-neutral-400">
-        <p>© 2026 Bonne Humeur TV — prévisualisation (non publiée).</p>
+        <p>© 2026 Bonne Humeur Média — prévisualisation (non publiée).</p>
         <p>
           <Link href="/admin/studio" className="underline underline-offset-4">
             ← Revenir au Studio

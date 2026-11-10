@@ -64,7 +64,7 @@ export default async function ArticlePage({ params }: Params) {
   // validés (l'iframe n'est construite qu'à partir d'un ID revalidé).
   const segments = renderArticleSegments(article.content);
   const readingTime = readingTimeMinutes(article.content);
-  const author = article.author_name ?? "Rédaction Bonne Humeur TV";
+  const author = article.author_name ?? "Rédaction Bonne Humeur Média";
   const url = `${siteUrl}/actualites/${article.slug}`;
   // SEO vidéo : les données structurées VideoObject ne sont produites QUE
   // si au moins un bloc vidéo valide existe réellement dans le corps.
@@ -93,7 +93,7 @@ export default async function ArticlePage({ params }: Params) {
           author: { "@type": "Person", name: author },
           publisher: {
             "@type": "Organization",
-            name: "Bonne Humeur TV",
+            name: "Bonne Humeur Média",
             url: siteUrl,
           },
           mainEntityOfPage: url,
@@ -134,7 +134,7 @@ export default async function ArticlePage({ params }: Params) {
             uploadDate: article.published_at ?? article.created_at,
             publisher: {
               "@type": "Organization",
-              name: "Bonne Humeur TV",
+              name: "Bonne Humeur Média",
               url: siteUrl,
             },
           }}

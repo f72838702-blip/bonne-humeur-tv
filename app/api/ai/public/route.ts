@@ -15,9 +15,9 @@ import {
 } from "@/lib/ai/quotas";
 
 /**
- * Endpoint du chatbot PUBLIC « Assistant Bonne Humeur TV » (direction §4/§7).
+ * Endpoint du chatbot PUBLIC « Assistant Bonne Humeur Média » (direction §4/§7).
  *
- * • Périmètre strict : ne répond que sur Bonne Humeur TV à partir des
+ * • Périmètre strict : ne répond que sur Bonne Humeur Média à partir des
  *   contenus PUBLIÉS (RAG textuel search_published + base statique de la
  *   chaîne). Les contenus récupérés sont injectés comme DONNÉES — le prompt
  *   système les désigne ainsi (jamais des instructions).

@@ -35,7 +35,7 @@ function reply(p: Partial<RequestReply> & { requestId: string; type: "partnershi
 describe("sujet de réponse dérivé — jamais demandé à l'éditeur", () => {
   it("partenariat : sujet fixe au nom de la chaîne", () => {
     expect(buildReplySubject("partnership", null)).toBe(
-      "Re: Votre demande de partenariat — Bonne Humeur TV"
+      "Re: Votre demande de partenariat — Bonne Humeur Média"
     );
   });
 
@@ -46,8 +46,8 @@ describe("sujet de réponse dérivé — jamais demandé à l'éditeur", () => {
   });
 
   it("contact sans sujet : repli propre", () => {
-    expect(buildReplySubject("contact", null)).toBe("Re: Votre message — Bonne Humeur TV");
-    expect(buildReplySubject("contact", "  ")).toBe("Re: Votre message — Bonne Humeur TV");
+    expect(buildReplySubject("contact", null)).toBe("Re: Votre message — Bonne Humeur Média");
+    expect(buildReplySubject("contact", "  ")).toBe("Re: Votre message — Bonne Humeur Média");
   });
 });
 
@@ -55,15 +55,15 @@ describe("payload Brevo — texte brut, destinataire verrouillé", () => {
   it("scénario 2 : le destinataire passe TEL QUELU en base, jamais une adresse du formulaire", () => {
     const payload = buildBrevoEmailPayload({
       senderEmail: "contact@bonnehumeurs.gn",
-      senderName: "Bonne Humeur TV",
+      senderName: "Bonne Humeur Média",
       replyToEmail: "direction@bonnehumeurs.gn",
       recipientEmail: "visiteur@exemple.gn",
-      subject: "Re: Votre message — Bonne Humeur TV",
+      subject: "Re: Votre message — Bonne Humeur Média",
       body: "Bonjour, merci…",
     });
     expect(payload.to).toEqual([{ email: "visiteur@exemple.gn" }]);
     expect(payload.sender).toEqual({
-      name: "Bonne Humeur TV",
+      name: "Bonne Humeur Média",
       email: "contact@bonnehumeurs.gn",
     });
     expect(payload.replyTo).toEqual({ email: "direction@bonnehumeurs.gn" });

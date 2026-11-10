@@ -32,7 +32,7 @@ export async function sendEmailViaBrevo(params: {
 }): Promise<SendEmailResult> {
   const apiKey = process.env.BREVO_API_KEY ?? "";
   const senderEmail = process.env.BREVO_SENDER_EMAIL ?? "";
-  const senderName = process.env.BREVO_SENDER_NAME || "Bonne Humeur TV";
+  const senderName = process.env.BREVO_SENDER_NAME || "Bonne Humeur Média";
   // Par défaut, les réponses des visiteurs arrivent sur la boîte de
   // l'expéditeur (la demande a été envoyée à partir d'elle).
   const replyToEmail = process.env.BREVO_REPLY_TO_EMAIL || senderEmail;

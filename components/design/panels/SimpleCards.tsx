@@ -110,7 +110,7 @@ export function RichMiniature({
           className="font-extrabold"
           style={{ color: c.inkStrong, fontFamily: fontTitle }}
         >
-          Bonne Humeur TV
+          Bonne Humeur Média
         </span>
         <span className="ml-auto flex gap-1">
           {[1, 2, 3].map((n) => (

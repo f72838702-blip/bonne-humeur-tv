@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════
-   DESIGN TOKENS — BONNE HUMEUR TV (socle du Studio de design)
+   DESIGN TOKENS — BONNE HUMEUR MÉDIA (socle du Studio de design)
 
    Toute la palette du site est exprimée en variables CSS. Tailwind ne
    fait que les consommer (tailwind.config.ts → rgb(triplet / <alpha>)).

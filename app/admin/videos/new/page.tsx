@@ -24,7 +24,7 @@ export default async function NewVideoPage() {
         <div>
           <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Ajouter une vidéo</h1>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Collez l’ID d’une vraie vidéo YouTube de la chaîne Bonne Humeur TV.
+            Collez l’ID d’une vraie vidéo YouTube de la chaîne Bonne Humeur Média.
           </p>
         </div>
         <Link

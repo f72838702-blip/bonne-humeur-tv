@@ -92,7 +92,7 @@ export default function Header({
             choisie au Studio, jamais de déformation (w-auto + contain). */}
         <Link
           href="/"
-          aria-label="Bonne Humeur TV — Accueil"
+          aria-label="Bonne Humeur Média — Accueil"
           className="group flex min-w-0 items-center"
         >
           <Logo

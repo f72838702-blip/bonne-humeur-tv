@@ -52,7 +52,7 @@ async function resolveAuthorNamesStaff(
     return map;
   }
   for (const row of data ?? []) {
-    map.set(row.id, row.full_name ?? "Rédaction Bonne Humeur TV");
+    map.set(row.id, row.full_name ?? "Rédaction Bonne Humeur Média");
   }
   return map;
 }

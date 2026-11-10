@@ -23,7 +23,7 @@ export default async function AdminLoginPage() {
           <Logo className="h-10 w-auto select-none object-contain" />
           <h1 className="mt-4 font-display text-2xl font-extrabold">Espace rédaction</h1>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Bonne Humeur TV — gestion des contenus
+            Administration — Bonne Humeur Média
           </p>
         </div>
 

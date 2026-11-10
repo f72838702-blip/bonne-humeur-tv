@@ -32,9 +32,9 @@ export default async function PublicLayout({
         data={{
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "Bonne Humeur TV",
+          name: "Bonne Humeur Média",
           url: siteUrl,
-          slogan: "La Télé de la nouvelle génération",
+          slogan: "L'information juste, en temps réel",
           areaServed: "GN",
           address: {
             "@type": "PostalAddress",

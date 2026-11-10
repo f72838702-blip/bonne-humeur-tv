@@ -16,7 +16,7 @@ export default function B2BCta() {
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-neutral-300 sm:text-base">
           Couverture médiatique, interviews, production audiovisuelle et
-          communication digitale : Bonne Humeur TV met sa rédaction et sa
+          communication digitale : Bonne Humeur Média met sa rédaction et sa
           diffusion au service de vos projets.
         </p>
 

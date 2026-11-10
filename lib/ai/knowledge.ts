@@ -38,7 +38,7 @@ const SITE_ORIGIN =
  *  /direct n'existe, ne jamais en citer. */
 function staticKnowledge(): string {
   return [
-    `- Chaîne YouTube : Bonne Humeur TV — ${CHANNEL_URL}`,
+    `- Chaîne YouTube : Bonne Humeur Média — ${CHANNEL_URL}`,
     `- Le direct de la chaîne, lorsqu'il est activé, s'affiche dans la section « EN DIRECT » de la page d'accueil du site.`,
     `- Pour contacter la rédaction : page ${SITE_ORIGIN}/contact.`,
     `- Pour un partenariat ou une proposition commerciale : page ${SITE_ORIGIN}/partenariats.`,
@@ -101,7 +101,7 @@ export function tokenizeQuestion(question: string): string[] {
 /** Construit le contexte public à partir d'une question visiteur. */
 export async function buildKnowledgeContext(question: string): Promise<KnowledgeContext> {
   const query = question.trim().slice(0, 300);
-  let context = `[BONNE HUMEUR TV — INFORMATIONS GÉNÉRALES]\n${staticKnowledge()}`;
+  let context = `[BONNE HUMEUR MÉDIA — INFORMATIONS GÉNÉRALES]\n${staticKnowledge()}`;
   let degraded = false;
 
   if (query.length >= 2) {

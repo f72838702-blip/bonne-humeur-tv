@@ -25,7 +25,7 @@ describe("isExternalHttpUrl — propriété du domaine", () => {
     expect(isExternalHttpUrl("")).toBe(false);
   });
 
-  it("INTERNE : domaines de Bonne Humeur TV (Vercel, Cloudflare, www, env)", () => {
+  it("INTERNE : domaines de Bonne Humeur Média (Vercel, Cloudflare, www, env)", () => {
     expect(isExternalHttpUrl("https://bonne-humeur-tv.vercel.app/actualites")).toBe(false);
     expect(
       isExternalHttpUrl("https://bonne-humeur-tv-preview.bonne-humeur-tv.workers.dev/videos")

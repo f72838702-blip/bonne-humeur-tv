@@ -1,7 +1,7 @@
 {
-  "name": "Bonne Humeur TV Admin",
-  "short_name": "BHTV Admin",
-  "description": "Administration de Bonne Humeur TV — La Télé de la nouvelle génération (Conakry, Guinée).",
+  "name": "Bonne Humeur Média Admin",
+  "short_name": "BHM Admin",
+  "description": "Administration de Bonne Humeur Média (Conakry, Guinée).",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "/admin",

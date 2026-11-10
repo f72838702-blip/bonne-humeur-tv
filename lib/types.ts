@@ -1,5 +1,5 @@
 /**
- * Types de domaine de la plateforme Bonne Humeur TV.
+ * Types de domaine de la plateforme Bonne Humeur Média.
  * Ces types reflètent le schéma SQL (supabase/migrations/) —
  * toute évolution du schéma doit être répercutée ici.
  */

@@ -1,4 +1,4 @@
-/* Service worker — Bonne Humeur TV Admin (v1).
+/* Service worker — Bonne Humeur Média Admin (v1).
  *
  * DÉLIBÉRÉMENT « RÉSEAU SEUL » : ce worker N'INTERCEPTE rien et ne sert
  * JAMAIS une réponse depuis un cache. Rôle = rendre l'application
@@ -56,4 +56,4 @@ self.addEventListener("fetch", () => {
 });
 
 // L'indicateur hors ligne est affiché par PwaAdmin (documenté).
-console.info(`[BHTV Admin SW] ${VERSION} actif — réseau seul, aucun cache, installer OK.`);
+console.info(`[BHM Admin SW] ${VERSION} actif — réseau seul, aucun cache, installer OK.`);

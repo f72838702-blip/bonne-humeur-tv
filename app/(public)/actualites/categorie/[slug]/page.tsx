@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: category.name,
     description:
       category.description ??
-      `Toute l'actualité « ${category.name} » de la rédaction de Bonne Humeur TV.`,
+      `Toute l'actualité « ${category.name} » de la rédaction de Bonne Humeur Média.`,
     alternates: { canonical: `/actualites/categorie/${category.slug}` },
   };
 }

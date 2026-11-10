@@ -19,7 +19,7 @@ function MiniAperture({ config }: { config: DesignConfig }) {
       <div className="flex items-center gap-2">
         <span className="h-2.5 w-2.5 rounded-full" style={{ background: brand }} />
         <span className="text-[10px] font-bold" style={{ color: ink }}>
-          Bonne Humeur TV
+          Bonne Humeur Média
         </span>
       </div>
       <div className="mt-2 flex gap-2">

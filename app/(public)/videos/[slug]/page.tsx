@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const video = await getPublishedVideoBySlug(slug);
   if (!video) return { title: "Vidéo introuvable" };
 
-  const description = video.description ?? "Émission de Bonne Humeur TV, la Télé de la nouvelle génération.";
+  const description = video.description ?? "Émission de Bonne Humeur Média — retrouvez nos programmes vidéo.";
   const thumbnail =
     video.thumbnail_url ?? `https://i.ytimg.com/vi/${video.youtube_id}/hqdefault.jpg`;
 
@@ -70,7 +70,7 @@ export default async function VideoDetailPage({ params }: Params) {
             embedUrl: `https://www.youtube-nocookie.com/embed/${video.youtube_id}`,
             publisher: {
               "@type": "Organization",
-              name: "Bonne Humeur TV",
+              name: "Bonne Humeur Média",
               url: siteUrl,
             },
           }}

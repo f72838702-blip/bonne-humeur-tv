@@ -49,7 +49,7 @@ export default function Footer({
         <div className={layout === "centered" ? "text-center" : ""}>
           <Logo className="h-9 w-auto select-none object-contain" />
           <p className={`mt-5 max-w-sm text-sm leading-relaxed text-neutral-500 dark:text-neutral-400 ${layout === "centered" ? "mx-auto" : ""}`}>
-            La Télé de la nouvelle génération. Information, culture, éducation et
+            L’information juste, en temps réel. Actualités, culture, éducation et
             divertissement — en direct de Conakry, pour la Guinée et sa diaspora.
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function Footer({
       </div>
       <div className="border-t border-neutral-200 py-5 dark:border-white/10">
         <div className="flex flex-col items-center justify-between gap-3 px-4 text-xs text-neutral-500 sm:flex-row dark:text-neutral-500">
-          <p>© 2026 Bonne Humeur TV — Tous droits réservés.</p>
+          <p>© 2026 Bonne Humeur Média — Tous droits réservés.</p>
           <div className="flex items-center gap-4">
             <Link
               href="/mentions-legales"

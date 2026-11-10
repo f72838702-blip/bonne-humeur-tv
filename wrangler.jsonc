@@ -1,4 +1,4 @@
-// Configuration Cloudflare Workers — Bonne Humeur TV
+// Configuration Cloudflare Workers — Bonne Humeur Média
 // Branche deploy/cloudflare-staging.
 // AUCUN déploiement distant : preview LOCALE uniquement à ce stade
 // (wrangler dev) ; toute mise en ligne exige l'autorisation de la direction.

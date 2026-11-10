@@ -57,7 +57,7 @@ export default function LoginForm() {
 
       <p className="flex items-center justify-center gap-2 text-[11px] text-neutral-400">
         <Play className="h-3 w-3 fill-guinea-red text-guinea-red" />
-        Espace réservé à l’équipe de Bonne Humeur TV
+        Espace réservé à l’équipe de Bonne Humeur Média
       </p>
     </form>
   );

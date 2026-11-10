@@ -15,7 +15,7 @@ import { mediaVariantUrl } from "@/lib/media/variants";
  */
 export const metadata: Metadata = {
   title: "Recherche",
-  description: "Rechercher dans les actualités et vidéos de Bonne Humeur TV.",
+  description: "Rechercher dans les actualités et vidéos de Bonne Humeur Média.",
   robots: { index: false, follow: true },
   alternates: { canonical: "/recherche" },
 };

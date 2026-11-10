@@ -19,7 +19,7 @@ export const revalidate = 120;
 export const metadata: Metadata = {
   title: "Actualités",
   description:
-    "Toute l'actualité de Bonne Humeur TV : société, politique, économie, culture, sport et éducation — l'information vérifiée en direct de Conakry, Guinée.",
+    "Toute l'actualité de Bonne Humeur Média : société, politique, économie, culture, sport et éducation — l'information vérifiée en direct de Conakry, Guinée.",
   alternates: { canonical: "/actualites" },
 };
 
@@ -52,7 +52,7 @@ export default async function ActualitesPage({
         kicker="Rédaction"
         title="Toutes les"
         highlight="actualités"
-        subtitle="L'information vérifiée de la rédaction de Bonne Humeur TV."
+        subtitle="L'information vérifiée de la rédaction de Bonne Humeur Média."
       />
 
       {categories.length > 0 && (
@@ -73,7 +73,7 @@ export default async function ActualitesPage({
             description={
               categorie
                 ? "Les prochains articles de cette rubrique apparaîtront ici dès leur publication par la rédaction."
-                : "Les articles de la rédaction de Bonne Humeur TV apparaîtront ici dès leur mise en ligne officielle."
+                : "Les articles de la rédaction de Bonne Humeur Média apparaîtront ici dès leur mise en ligne officielle."
             }
           />
         ) : (

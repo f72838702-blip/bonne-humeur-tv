@@ -36,7 +36,7 @@ describe("escapeHtml", () => {
   });
 
   it("n'altère pas le texte ordinaire", () => {
-    expect(escapeHtml("Bonne Humeur TV")).toBe("Bonne Humeur TV");
+    expect(escapeHtml("Bonne Humeur Média")).toBe("Bonne Humeur Média");
   });
 });
 

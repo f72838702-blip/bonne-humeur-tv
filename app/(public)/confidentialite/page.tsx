@@ -8,7 +8,7 @@ export const revalidate = 120;
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
   description:
-    "Politique de confidentialité de Bonne Humeur TV : données collectées via les formulaires contact et partenariat, finalités, durées de conservation et vos droits.",
+    "Politique de confidentialité de Bonne Humeur Média : données collectées via les formulaires contact et partenariat, finalités, durées de conservation et vos droits.",
   alternates: { canonical: "/confidentialite" },
 };
 
@@ -33,7 +33,7 @@ export default function ConfidentialitePage() {
           <h2 className="font-display text-lg font-bold">1. Responsable du traitement</h2>
           <p className="mt-2">
             Le responsable du traitement des données collectées sur ce site est
-            <strong> Bonne Humeur TV</strong>, Kaloum, Sans-Fil, Immeuble Mbemba Diaby —
+            <strong> Bonne Humeur Média</strong>, Kaloum, Sans-Fil, Immeuble Mbemba Diaby —
             Conakry, République de Guinée. Contact pour toute question relative
             aux données : **[À VALIDER PAR LA DIRECTION — email officiel de
             référence pour les demandes de données]**
@@ -113,7 +113,7 @@ export default function ConfidentialitePage() {
             (base de données et stockage) et le site est hébergé par{" "}
             <strong>Vercel</strong>. Aucune donnée n&apos;est vendue ni transmise à des
             tiers à des fins commerciales. La rédaction et le pôle commercial de
-            Bonne Humeur TV y accèdent dans le cadre strict de leurs fonctions.
+            Bonne Humeur Média y accèdent dans le cadre strict de leurs fonctions.
           </p>
         </div>
 

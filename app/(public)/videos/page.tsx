@@ -17,7 +17,7 @@ export const revalidate = 120;
 export const metadata: Metadata = {
   title: "Vidéos & Émissions",
   description:
-    "Toutes les émissions de Bonne Humeur TV : société, culture, économie, éducation et institutionnel — filtrables par thématique.",
+    "Toutes les émissions de Bonne Humeur Média : société, culture, économie, éducation et institutionnel — filtrables par thématique.",
   alternates: { canonical: "/videos" },
 };
 
@@ -60,7 +60,7 @@ export default async function VideosPage({
             description={
               categorie
                 ? "Les prochaines émissions de cette thématique apparaîtront ici dès leur publication."
-                : "Les émissions de Bonne Humeur TV apparaîtront ici dès leur mise en ligne par la rédaction."
+                : "Les émissions de Bonne Humeur Média apparaîtront ici dès leur mise en ligne par la rédaction."
             }
           />
         ) : (

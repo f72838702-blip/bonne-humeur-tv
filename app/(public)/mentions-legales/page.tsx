@@ -7,7 +7,7 @@ export const revalidate = 120;
 
 export const metadata: Metadata = {
   title: "Mentions légales",
-  description: "Mentions légales du site Bonne Humeur TV — éditeur, hébergement et propriété intellectuelle.",
+  description: "Mentions légales du site Bonne Humeur Média — éditeur, hébergement et propriété intellectuelle.",
   alternates: { canonical: "/mentions-legales" },
 };
 
@@ -30,7 +30,7 @@ export default function MentionsLegalesPage() {
         <div>
           <h2 className="font-display text-lg font-bold">1. Éditeur du site</h2>
           <p className="mt-2">
-            Le site Bonne Humeur TV est édité par <strong>Bonne Humeur TV</strong>,
+            Le site Bonne Humeur Média est édité par <strong>Bonne Humeur Média</strong>,
             média audiovisuel basé à Conakry, République de Guinée.
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-6">
@@ -69,7 +69,7 @@ export default function MentionsLegalesPage() {
           <h2 className="font-display text-lg font-bold">3. Propriété intellectuelle</h2>
           <p className="mt-2">
             L&apos;ensemble des contenus du site (textes, vidéos, images, logo,
-            charte graphique) est la propriété exclusive de Bonne Humeur TV, sauf
+            charte graphique) est la propriété exclusive de Bonne Humeur Média, sauf
             mention contraire. Toute reproduction, diffusion ou exploitation,
             totale ou partielle, sans autorisation écrite préalable est
             interdite. Les vidéos hébergées sur YouTube restent soumises aux
@@ -80,7 +80,7 @@ export default function MentionsLegalesPage() {
         <div>
           <h2 className="font-display text-lg font-bold">4. Responsabilité</h2>
           <p className="mt-2">
-            Bonne Humeur TV s&apos;efforce de publier une information exacte et
+            Bonne Humeur Média s&apos;efforce de publier une information exacte et
             vérifiée. Des erreurs ou omissions peuvent néanmoins survenir : toute
             signalement est bienvenu via la page Contact. L&apos;éditeur ne saurait
             être tenu responsable des contenus de sites tiers vers lesquels le

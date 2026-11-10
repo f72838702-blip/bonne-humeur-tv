@@ -1,4 +1,4 @@
-// Configuration Cloudflare Workers — Bonne Humeur TV — PRODUCTION (Phase J)
+// Configuration Cloudflare Workers — Bonne Humeur Média — PRODUCTION (Phase J)
 // URL publique : https://bonne-humeur-tv.bonne-humeur-tv.workers.dev
 // Déploiement : npx wrangler deploy -c wrangler.prod.jsonc
 // Miroir exact de la recette preview validée (Version 48ac8fd0) sur main f0e3800.

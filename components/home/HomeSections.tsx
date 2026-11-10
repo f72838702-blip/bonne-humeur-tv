@@ -81,7 +81,7 @@ export default function HomeSections({
 
     switch (s.id) {
       case "hero": {
-        const h = title ? splitTitle(title) : { head: "En ce moment sur", tail: "Bonne Humeur TV" };
+        const h = title ? splitTitle(title) : { head: "En ce moment sur", tail: "Bonne Humeur Média" };
         return (
           <section key={s.id} className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
             <Reveal>
@@ -103,7 +103,7 @@ export default function HomeSections({
                   <EmptyState
                     icon={Tv}
                     title="La Web TV est en cours de préparation"
-                    description="Les premières émissions officielles de Bonne Humeur TV arrivent bientôt. Revenez très vite !"
+                    description="Les premières émissions officielles de Bonne Humeur Média arrivent bientôt. Revenez très vite !"
                   />
                 )}
               </Reveal>
@@ -223,7 +223,7 @@ export default function HomeSections({
                 kicker="Vidéos"
                 title={t.head}
                 highlight={t.tail}
-                subtitle={subtitle ?? "Toute l'actualité en vidéo, produite par la rédaction de Bonne Humeur TV."}
+                subtitle={subtitle ?? "Toute l'actualité en vidéo, produite par la rédaction de Bonne Humeur Média."}
               />
             </div>
             <VideosGrid videos={data.videos.slice(0, 6)} gridClassName={`grid gap-5 ${cols}`} />

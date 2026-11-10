@@ -92,7 +92,7 @@ export function buildMemoryUpdateMessages(
     {
       role: "system",
       content:
-        "Tu maintiens la mémoire de travail de l'assistant IA de la rédaction de Bonne Humeur TV. " +
+        "Tu maintiens la mémoire de travail de l'assistant IA de la rédaction de Bonne Humeur Média. " +
         "On te donne la mémoire actuelle et les derniers échanges RÉELS avec l'utilisateur. " +
         "Rédige la mémoire ACTUALISÉE pour les échanges futurs : décisions prises, corrections effectuées, " +
         "préférences de travail, travaux en cours, prochains pas à faire. " +

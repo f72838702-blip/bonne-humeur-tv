@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 /**
- * Logo OFFICIEL de Bonne Humeur TV (PNG transparent 2406×388, 36 Ko,
+ * Logo OFFICIEL de Bonne Humeur Média (PNG transparent 2406×388, 36 Ko,
  * copie unique dans public/) — NE JAMAIS redessiner, retoucher ou
  * recadrer : l'image originale est utilisée TELLE QUELLE.
  *
@@ -20,7 +20,7 @@ export default function Logo({
   return (
     <Image
       src="/logo-bonne-humeur-tv.png"
-      alt="Bonne Humeur TV"
+      alt="Bonne Humeur Média"
       width={2406}
       height={388}
       priority

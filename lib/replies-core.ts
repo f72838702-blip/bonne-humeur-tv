@@ -15,9 +15,9 @@ export function buildReplySubject(
 ): string {
   if (type === "contact") {
     const s = (originalSubject ?? "").trim();
-    return s.length >= 2 ? `Re: ${s}` : "Re: Votre message — Bonne Humeur TV";
+    return s.length >= 2 ? `Re: ${s}` : "Re: Votre message — Bonne Humeur Média";
   }
-  return "Re: Votre demande de partenariat — Bonne Humeur TV";
+  return "Re: Votre demande de partenariat — Bonne Humeur Média";
 }
 
 /** Adresse e-mail bien formée (la base ne stocke que des e-mails validés à l'INSERT, défense en profondeur). */

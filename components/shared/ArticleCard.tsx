@@ -28,7 +28,7 @@ function ArticleThumb({ article }: { article: ArticleWithRelations }) {
   }
   return (
     <div className="flex h-44 w-full items-center justify-center rounded-xl bg-gradient-to-br from-night-800 to-night-900 text-sm font-semibold uppercase tracking-widest text-neutral-500 dark:from-night-800 dark:to-night-950">
-      Bonne Humeur TV
+      Bonne Humeur Média
     </div>
   );
 }
@@ -65,7 +65,7 @@ export default function ArticleCard({
           />
         ) : (
           <span className="text-sm font-semibold uppercase tracking-widest text-neutral-500">
-            Bonne Humeur TV
+            Bonne Humeur Média
           </span>
         )}
       </div>

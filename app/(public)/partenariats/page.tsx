@@ -12,7 +12,7 @@ export const revalidate = 120;
 export const metadata: Metadata = {
   title: "Offres & Partenariats",
   description:
-    "Couverture médiatique, interviews, production audiovisuelle et communication digitale : découvrez les offres B2B de Bonne Humeur TV pour entreprises et institutions en Guinée.",
+    "Couverture médiatique, interviews, production audiovisuelle et communication digitale : découvrez les offres B2B de Bonne Humeur Média pour entreprises et institutions en Guinée.",
 };
 
 export default function PartenariatsPage() {
@@ -30,7 +30,7 @@ export default function PartenariatsPage() {
             Votre partenaire média de la nouvelle génération
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-neutral-300 sm:text-base">
-            Bonne Humeur TV accompagne les entreprises, institutions et ONG dans
+            Bonne Humeur Média accompagne les entreprises, institutions et ONG dans
             leur stratégie de visibilité : de la couverture d&apos;événement à la
             campagne digitale complète.
           </p>
@@ -69,7 +69,7 @@ export default function PartenariatsPage() {
             <span>
               <span className="block font-bold">Ibrahima Sory Touré</span>
               <span className="block text-sm text-neutral-500 dark:text-neutral-400">
-                Président-Directeur Général, Bonne Humeur TV
+                Président-Directeur Général, Bonne Humeur Média
               </span>
             </span>
           </figcaption>

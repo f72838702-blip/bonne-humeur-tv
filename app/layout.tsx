@@ -66,23 +66,23 @@ function buildThemeInitScript(defaultMode: "light" | "dark" | null): string {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Bonne Humeur TV — La Télé de la nouvelle génération",
-    template: "%s | Bonne Humeur TV",
+    default: "Bonne Humeur Média — L'information juste, en temps réel",
+    template: "%s | Bonne Humeur Média",
   },
   description:
-    "Bonne Humeur TV, la Télé de la nouvelle génération basée à Conakry, Guinée. Information, culture, économie, éducation et offres de partenariat pour entreprises et institutions.",
+    "Bonne Humeur Média, le média guinéen de l'information juste et en temps réel, basé à Conakry. Actualités, vidéos, émissions, culture, économie et offres de partenariat pour entreprises et institutions.",
   openGraph: {
     type: "website",
     locale: "fr_GN",
-    siteName: "Bonne Humeur TV",
-    title: "Bonne Humeur TV — La Télé de la nouvelle génération",
+    siteName: "Bonne Humeur Média",
+    title: "Bonne Humeur Média — L'information juste, en temps réel",
     description:
       "Information, culture et divertissement en direct de Conakry. Offres B2B pour entreprises et institutions.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bonne Humeur TV",
-    description: "La Télé de la nouvelle génération — Conakry, Guinée.",
+    title: "Bonne Humeur Média",
+    description: "L'information juste, en temps réel — Conakry, Guinée.",
   },
 };
 

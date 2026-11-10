@@ -1,7 +1,7 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 
 /**
- * Configuration Cloudflare Workers — Bonne Humeur TV.
+ * Configuration Cloudflare Workers — Bonne Humeur Média.
  * Branche : deploy/cloudflare-staging — fusion UNIQUEMENT après validation.
  *
  * Config minimale (sans cache R2 — l'offre Free n'expose pas de bucket persistant

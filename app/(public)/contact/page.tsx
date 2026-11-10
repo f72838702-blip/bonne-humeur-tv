@@ -10,7 +10,7 @@ export const revalidate = 120;
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Contactez Bonne Humeur TV : Kaloum, Sans-Fil, Immeuble Mbemba Diaby — Conakry, Guinée.",
+    "Contactez Bonne Humeur Média : Kaloum, Sans-Fil, Immeuble Mbemba Diaby — Conakry, Guinée.",
 };
 
 export default function ContactPage() {

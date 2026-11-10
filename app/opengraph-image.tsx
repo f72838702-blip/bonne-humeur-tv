@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "Bonne Humeur TV — La Télé de la nouvelle génération";
+export const alt = "Bonne Humeur Média — L'information juste, en temps réel";
 
 export default function OpenGraphImage() {
   return new ImageResponse(
@@ -77,7 +77,7 @@ export default function OpenGraphImage() {
             textTransform: "uppercase",
           }}
         >
-          La Télé de la nouvelle génération
+          L’information juste, en temps réel
         </div>
         <div style={{ marginTop: 28, fontSize: 22, color: "#9ca3af" }}>
           Conakry — République de Guinée 🇬🇳

@@ -65,7 +65,7 @@ export default function ReplyForm({
             required
             minLength={2}
             maxLength={10000}
-            placeholder="Rédigez la réponse du staff Bonne Humeur TV…"
+            placeholder="Rédigez la réponse du staff Bonne Humeur Média…"
             className="w-full rounded-xl border border-neutral-200 bg-surface px-3 py-2 text-sm outline-none focus:border-guinea-red/60 dark:border-white/10 dark:bg-night-900"
           />
           <span className="text-[11px] text-neutral-400">{body.length}/10 000 caractères</span>
