@@ -240,7 +240,7 @@ export default function AiAssistant(props: Props) {
           <button
             type="button"
             onClick={() => void startNewConversation()}
-            className="flex items-center gap-1 rounded-full bg-guinea-red px-2.5 py-1 text-xs font-bold text-white transition-opacity hover:opacity-90"
+            className="flex items-center gap-1 rounded-full bg-guinea-red px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
           >
             <Plus className="h-3 w-3" /> Nouvelle
           </button>
@@ -250,11 +250,11 @@ export default function AiAssistant(props: Props) {
             Aucune conversation — vos échanges seront conservés ici.
           </p>
         ) : (
-          <ul className="flex max-h-64 gap-2 overflow-x-auto lg:max-h-[60vh] lg:flex-col lg:overflow-x-visible lg:overflow-y-auto">
+          <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto lg:max-h-[60vh]">
             {conversations.map((c) => {
               const active = c.id === conversationId;
               return (
-                <li key={c.id} className="min-w-[11rem] shrink-0 lg:min-w-0">
+                <li key={c.id} className="min-w-0">
                   {renamingId === c.id ? (
                     <div className="flex items-center gap-1">
                       <input
@@ -266,28 +266,30 @@ export default function AiAssistant(props: Props) {
                           if (e.key === "Escape") setRenamingId(null);
                         }}
                         maxLength={200}
-                        className="w-full flex-1 rounded-lg border border-neutral-300 px-2 py-1 text-xs dark:border-white/20 dark:bg-night-900"
+                        // text-base (16px) : l'iPhone zoome sur le focus d'un champ < 16px
+                        className="w-full min-w-0 flex-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-base dark:border-white/20 dark:bg-night-900"
                       />
                       <button
                         type="button"
                         onClick={() => void confirmRename(c.id)}
-                        className="text-emerald-600"
+                        className="shrink-0 rounded p-1.5 text-emerald-600"
                         aria-label="Confirmer le renommage"
                       >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         type="button"
                         onClick={() => setRenamingId(null)}
+                        className="shrink-0 rounded p-1.5"
                         aria-label="Annuler"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ) : (
                     <div
                       className={
-                        "group flex items-center justify-between gap-1 rounded-xl px-2 py-1.5 text-xs " +
+                        "group flex items-center justify-between gap-1 rounded-xl px-2 py-2 text-xs " +
                         (active
                           ? "font-semibold text-guinea-red dark:text-guinea-red"
                           : "text-neutral-600 dark:text-neutral-300")
@@ -295,7 +297,7 @@ export default function AiAssistant(props: Props) {
                     >
                       <button
                         type="button"
-                        className="line-clamp-2 flex-1 truncate rounded-lg text-left hover:underline"
+                        className="line-clamp-2 min-w-0 flex-1 truncate rounded-lg text-left hover:underline"
                         onClick={() => void loadConversation(c.id)}
                         title={c.title}
                       >
@@ -310,26 +312,26 @@ export default function AiAssistant(props: Props) {
                             setRenameValue(c.title);
                           }}
                           aria-label={`Renommer « ${c.title} »`}
-                          className="rounded p-0.5 text-neutral-400 hover:text-guinea-red lg:opacity-0 lg:group-hover:opacity-100"
+                          className="rounded p-1.5 text-neutral-400 hover:text-guinea-red lg:opacity-0 lg:group-hover:opacity-100"
                         >
-                          <Pencil className="h-3 w-3" />
+                          <Pencil className="h-3.5 w-3.5" />
                         </button>
                         {deletingId === c.id ? (
                           <span className="flex items-center">
                             <button
                               type="button"
                               onClick={() => void confirmDelete(c.id)}
-                              className="text-xs font-bold text-guinea-red"
+                              className="px-1 py-2 text-xs font-bold text-guinea-red"
                             >
                               Oui
                             </button>
                             <button
                               type="button"
                               onClick={() => setDeletingId(null)}
-                              className="ml-1 text-neutral-500"
+                              className="rounded p-1.5 text-neutral-500"
                               aria-label="Annuler la suppression"
                             >
-                              <X className="h-3 w-3" />
+                              <X className="h-3.5 w-3.5" />
                             </button>
                           </span>
                         ) : (
@@ -337,9 +339,9 @@ export default function AiAssistant(props: Props) {
                             type="button"
                             onClick={() => setDeletingId(c.id)}
                             aria-label={`Supprimer « ${c.title} »`}
-                            className="rounded p-0.5 text-neutral-400 hover:text-guinea-red lg:opacity-0 lg:group-hover:opacity-100"
+                            className="rounded p-1.5 text-neutral-400 hover:text-guinea-red lg:opacity-0 lg:group-hover:opacity-100"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         )}
                       </span>
@@ -361,7 +363,7 @@ export default function AiAssistant(props: Props) {
               type="button"
               disabled={busy}
               onClick={() => setInput(task.template)}
-              className="rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red disabled:opacity-50 dark:border-white/10 dark:text-neutral-300 dark:hover:border-guinea-red/60 dark:hover:text-guinea-red"
+              className="rounded-full border border-neutral-200 px-3.5 py-2 text-xs font-semibold text-neutral-600 transition-colors hover:border-guinea-red/50 hover:text-guinea-red disabled:opacity-50 dark:border-white/10 dark:text-neutral-300 dark:hover:border-guinea-red/60 dark:hover:text-guinea-red"
             >
               {task.label}
             </button>
@@ -370,7 +372,7 @@ export default function AiAssistant(props: Props) {
 
         {/* Conversation */}
         <section className="rounded-2xl border border-neutral-200 bg-surface p-4 dark:border-white/10 dark:bg-night-800">
-          <h2 className="mb-3 flex items-center gap-2 font-display text-sm font-bold">
+          <h2 className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-display text-sm font-bold">
             <Sparkles className="h-4 w-4 text-guinea-red" /> Conversation
             <span className="ml-auto text-xs font-normal text-neutral-500 dark:text-neutral-400">
               {conversationId
@@ -399,8 +401,8 @@ export default function AiAssistant(props: Props) {
                 key={i}
                 className={
                   m.role === "user"
-                    ? "self-end max-w-2xl rounded-2xl rounded-br-sm bg-guinea-red px-4 py-2.5 text-sm text-white"
-                    : "max-w-3xl self-start rounded-2xl rounded-bl-sm bg-neutral-100 px-4 py-2.5 text-sm whitespace-pre-wrap dark:bg-night-900"
+                    ? "self-end max-w-2xl rounded-2xl rounded-br-sm bg-guinea-red px-4 py-2.5 text-sm text-white break-words"
+                    : "max-w-3xl self-start rounded-2xl rounded-bl-sm bg-neutral-100 px-4 py-2.5 text-sm whitespace-pre-wrap break-words dark:bg-night-900"
                 }
               >
                 {m.role === "assistant" && (
@@ -449,7 +451,7 @@ export default function AiAssistant(props: Props) {
               rows={3}
               maxLength={6000}
               placeholder="Votre demande (article, correction, idées…)"
-              className="w-full rounded-xl border border-neutral-200 bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
+              className="w-full rounded-xl border border-neutral-200 bg-surface px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
             />
             <button
               type="submit"
@@ -481,7 +483,7 @@ export default function AiAssistant(props: Props) {
                   onChange={(e) => setDraft({ ...draft, title: e.target.value })}
                   maxLength={200}
                   required
-                  className="rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
+                  className="rounded-lg border border-neutral-200 px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
                 />
               </label>
               <label className="grid gap-1 text-xs font-semibold">
@@ -492,7 +494,7 @@ export default function AiAssistant(props: Props) {
                   onChange={(e) => setDraft({ ...draft, excerpt: e.target.value })}
                   rows={2}
                   maxLength={400}
-                  className="rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
+                  className="rounded-lg border border-neutral-200 px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
                 />
               </label>
               <label className="grid gap-1 text-xs font-semibold">
@@ -503,7 +505,7 @@ export default function AiAssistant(props: Props) {
                   onChange={(e) => setDraft({ ...draft, content: e.target.value })}
                   rows={12}
                   required
-                  className="rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
+                  className="rounded-lg border border-neutral-200 px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
                 />
               </label>
               <label className="grid gap-1 text-xs font-semibold">
@@ -513,7 +515,7 @@ export default function AiAssistant(props: Props) {
                   value={draft.tags}
                   onChange={(e) => setDraft({ ...draft, tags: e.target.value })}
                   maxLength={600}
-                  className="rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
+                  className="rounded-lg border border-neutral-200 px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-guinea-red/40 dark:border-white/10 dark:bg-night-900"
                 />
               </label>
               {/* Champs requis par l'action existante — statique verrouillé */}
