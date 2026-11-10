@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Radio } from "lucide-react";
 import BreakingNews from "@/components/home/BreakingNews";
 import LiveSection from "@/components/home/LiveSection";
@@ -7,7 +8,7 @@ import AdSlot from "@/components/publicite/AdSlot";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import DesignStyle from "@/components/design/DesignStyle";
-import { requireRole } from "@/lib/auth/session";
+import { isSuperAdmin, getSessionInfo } from "@/lib/auth/session";
 import { getDraftForUser } from "@/lib/design/data";
 import { DEFAULT_DESIGN } from "@/lib/design/default";
 import { getLiveVideo, getFeaturedVideo, getPublishedVideos } from "@/lib/data/videos";
@@ -30,18 +31,20 @@ import { getSponsoredArticleIds } from "@/lib/data/ads-public";
 export const revalidate = 0; // toujours frais (brouillon à chaud)
 
 export default async function StudioPreviewPage() {
-  const guard = await requireRole(["admin", "editor"]);
-  if ("denied" in guard) {
+  const ok = await isSuperAdmin();
+  if (!ok) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-neutral-100 p-6 text-center dark:bg-night-950">
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Prévisualisation réservée à la rédaction — connectez-vous.
+          Prévisualisation réservée au Super Administrateur — connectez-vous.
         </p>
       </div>
     );
   }
 
-  const draft = (await getDraftForUser(guard.session.userId)).config ?? DEFAULT_DESIGN;
+  const session = await getSessionInfo();
+  if (!session) redirect("/admin/login");
+  const draft = (await getDraftForUser(session.userId)).config ?? DEFAULT_DESIGN;
 
   // Données réelles (même requêtes que la page publique — aperçu fidèle).
   const [liveVideo, featuredVideo, videos, featuredArticles, latestArticles, sponsoredIds, categories] =

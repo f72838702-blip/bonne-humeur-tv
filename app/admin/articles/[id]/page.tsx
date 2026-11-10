@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasAnyPermission } from "@/lib/auth/permissions";
 import { getCategories } from "@/lib/data/categories";
 import { getStaffArticleById } from "@/lib/data/admin-content";
 import ArticleForm from "@/components/admin/ArticleForm";
@@ -21,6 +22,13 @@ export default async function EditArticlePage({
     return <ForbiddenScreen />;
   }
 
+  if (
+    guard.session.profile?.role === "editor" &&
+    !hasAnyPermission(guard.session.profile, ["articles", "articles_tous", "articles_publier"])
+  ) {
+    return <ForbiddenScreen />;
+  }
+
   const { id } = await params;
   // UUID invalide → refus neutre immédiat (aucune requête base inutile).
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
@@ -37,7 +45,8 @@ export default async function EditArticlePage({
   if (!article) return <NotFoundScreen what="Article" />;
 
   const role = guard.session.profile?.role ?? "reporter";
-  const isStaff = role === "admin" || role === "editor";
+  const isStaff =
+    role === "admin" || role === "super_admin" || role === "editor";
   const isPublished = article.status === "published" && article.published_at;
 
   return (

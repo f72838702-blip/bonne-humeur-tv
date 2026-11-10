@@ -6,6 +6,7 @@ import {
   BarChart3,
   ExternalLink,
   FolderTree,
+  History,
   ImagesIcon,
   Inbox,
   LayoutDashboard,
@@ -25,30 +26,50 @@ import { signOut } from "@/lib/actions/auth";
 import Logo from "@/components/shared/Logo";
 
 /**
- * Navigation du back-office. Les entrées sont masquées selon le rôle
- * (UX uniquement) : chaque page ET chaque Server Action revérifient
- * requireRole() côté serveur — l'UI n'est jamais le contrôle d'accès.
+ * Navigation du back-office. Les entrées sont masquées selon le rôle ET
+ * les permissions effectives (mission 0036, calculées côté serveur via
+ * effectivePermissions — la liste `permissions` est DONNÉE, jamais une
+ * décision : chaque page ET chaque Server Action revérifient
+ * requireRole()/requirePermission() côté serveur — l'UI n'est jamais le
+ * contrôle d'accès, elle n'explique que la règle).
  */
 
-const ALL_ITEMS = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  /** Rôles admis (super_admin hérite de tout ce qui exige « admin »). */
+  roles?: readonly string[];
+  /** Éditeur : au moins une de ces clés (0036). Ignorée pour les autres. */
+  any?: readonly string[];
+  superOnly?: boolean;
+}
+
+const ALL_ITEMS: NavItem[] = [
   { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard, roles: ["admin", "editor", "reporter"] },
-  { href: "/admin/articles", label: "Articles", icon: FileText, roles: ["admin", "editor", "reporter"] },
-  // Assistant IA de rédaction — le rapporteur n'y a pas accès (rédaction staff).
-  { href: "/admin/assistant", label: "Assistant IA", icon: Sparkles, roles: ["admin", "editor"] },
-  { href: "/admin/videos", label: "Vidéos", icon: Video, roles: ["admin", "editor"] },
-  { href: "/admin/direct", label: "Direct", icon: Radio, roles: ["admin"] },
-  { href: "/admin/flash-infos", label: "Flash-infos", icon: Zap, roles: ["admin", "editor"] },
-  { href: "/admin/demandes", label: "Demandes", icon: Inbox, roles: ["admin", "editor"] },
-  { href: "/admin/statistiques", label: "Statistiques", icon: BarChart3, roles: ["admin"] },
-  { href: "/admin/categories", label: "Catégories", icon: FolderTree, roles: ["admin", "editor"] },
-  { href: "/admin/medias", label: "Médiathèque", icon: ImagesIcon, roles: ["admin", "editor"] },
-  { href: "/admin/publicites", label: "Publicités", icon: Megaphone, roles: ["admin", "editor"] },
-  // Studio de design — personnalisation de l'apparence sans code.
-  { href: "/admin/studio", label: "Studio de design", icon: Palette, roles: ["admin", "editor"] },
-  { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, roles: ["admin"] },
-] as const;
+  // Articles : reporter inclus (SES propres brouillons) ; un éditeur doit
+  // posséder au moins une permission « articles » (0036).
+  { href: "/admin/articles", label: "Articles", icon: FileText, roles: ["admin", "editor", "reporter"], any: ["articles", "articles_tous", "articles_publier"] },
+  // Assistant IA de rédaction — l'éditeur doit posséder une permission article.
+  { href: "/admin/assistant", label: "Assistant IA", icon: Sparkles, roles: ["admin", "editor"], any: ["articles", "articles_tous", "articles_publier"] },
+  { href: "/admin/videos", label: "Vidéos", icon: Video, roles: ["admin", "editor"], any: ["videos"] },
+  { href: "/admin/direct", label: "Direct", icon: Radio, roles: ["admin", "editor"], any: ["directs"] },
+  { href: "/admin/flash-infos", label: "Flash-infos", icon: Zap, roles: ["admin", "editor"], any: ["flash"] },
+  // Demandes B2B : traitement réservé admin/super_admin (0036).
+  { href: "/admin/demandes", label: "Demandes", icon: Inbox, roles: ["admin"] },
+  { href: "/admin/statistiques", label: "Statistiques", icon: BarChart3, roles: ["admin", "editor"], any: ["consultation"] },
+  { href: "/admin/categories", label: "Catégories", icon: FolderTree, roles: ["admin", "editor"], any: ["articles"] },
+  { href: "/admin/medias", label: "Médiathèque", icon: ImagesIcon, roles: ["admin", "editor"], any: ["articles", "videos", "flash", "publicite", "directs"] },
+  { href: "/admin/publicites", label: "Publicités", icon: Megaphone, roles: ["admin", "editor"], any: ["publicite"] },
+  // Super Administrateur UNIQUEMENT (mission 0036) :
+  { href: "/admin/journal", label: "Journal d'activité", icon: History, superOnly: true },
+  // Studio de design — personnalisation de l'apparence (super admin seul).
+  { href: "/admin/studio", label: "Studio de design", icon: Palette, superOnly: true },
+  { href: "/admin/utilisateurs", label: "Gestion des administrateurs", icon: Users, superOnly: true },
+];
 
 const ROLE_LABELS: Record<UserRole, string> = {
+  super_admin: "Super Administrateur",
   admin: "Administrateur",
   editor: "Éditeur",
   reporter: "Reporter",
@@ -56,19 +77,41 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 export default function Sidebar({
   role,
+  permissions,
   userName,
   demandsCount = 0,
 }: {
   role: UserRole;
+  /** Permissions EFFECTIVES de la session (server-computed —
+   *  lib/auth/permissions.effectivePermissions). */
+  permissions: string[];
   userName: string;
   /** Demandes jamais vues + messages jamais lus (notifications utiles
    *  SEULEMENT — les éléments déjà consultés ne comptent jamais). */
   demandsCount?: number;
 }) {
   const pathname = usePathname();
-  const items = ALL_ITEMS.filter((item) =>
-    (item.roles as readonly UserRole[]).includes(role)
-  );
+  const items = ALL_ITEMS.filter((item) => {
+    // Entrées strictement super admin (Studio, Journal, Gestion des
+    // administrateurs) : personne d'autre ne les voit, page ET action
+    // revérifient isSuperAdmin() côté serveur.
+    if (item.superOnly) {
+      return role === "super_admin";
+    }
+    const roles = item.roles ?? [];
+    if (!roles.includes(role)) {
+      // 0036 : le super admin couvre partout où « admin » est requis.
+      if (!(role === "super_admin" && roles.includes("admin"))) {
+        return false;
+      }
+    }
+    // Permissions de l'ÉDITEUR uniquement (le reporter n'a aucune clé ;
+    // admin/super_admin reçoivent déjà toutes les clés du serveur).
+    if (role === "editor" && item.any) {
+      return item.any.some((key) => permissions.includes(key));
+    }
+    return true;
+  });
 
   function isActive(href: string): boolean {
     if (href === "/admin") return pathname === "/admin";

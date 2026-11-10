@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BarChart3 } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { ForbiddenScreen, UnconfiguredScreen } from "@/components/admin/AccessDenied";
 import RefreshButton from "@/components/admin/RefreshButton";
 import {
@@ -59,10 +60,14 @@ export default async function AdminStatisticsPage({
 }: {
   searchParams: Promise<{ periode?: string; du?: string; au?: string }>;
 }) {
-  const guard = await requireRole(["admin"]);
+  const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
+    return <ForbiddenScreen />;
+  }
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "consultation")) {
     return <ForbiddenScreen />;
   }
 

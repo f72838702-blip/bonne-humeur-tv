@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getCategories } from "@/lib/data/categories";
 import VideoForm from "@/components/admin/VideoForm";
 import { ForbiddenScreen, UnconfiguredScreen } from "@/components/admin/AccessDenied";
@@ -13,6 +14,10 @@ export default async function NewVideoPage() {
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
+    return <ForbiddenScreen />;
+  }
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "videos")) {
     return <ForbiddenScreen />;
   }
 

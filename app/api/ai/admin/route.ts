@@ -30,13 +30,15 @@ import {
 } from "@/lib/ai/memory-core";
 import { buildAdminMessages } from "@/lib/ai/prompts";
 import { requireRole } from "@/lib/auth/session";
+import { hasAnyPermission } from "@/lib/auth/permissions";
 
 /**
  * Endpoint de l'assistant IA PRIVÉ — rédaction (direction §3/§7 + mémoire
  * conversationnelle 06/11).
  *
  * • Accès : rôles admin/editor UNIQUEMENT (garde serveur requireRole) —
- *   un visiteur anonyme reçoit 401/403.
+ *   un visiteur anonyme reçoit 401/403 ; mission 0036 : un éditeur doit
+ *   posséder une permission article (assistant de rédaction).
  * • PERSISTANCE (migration 0033) : la conversation est créée/lue CÔTÉ
  *   SERVEUR à partir de la session (jamais un user_id du navigateur) ;
  *   message utilisateur + réponse enregistrés ; derniers échanges + mémoire
@@ -69,6 +71,17 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(
       { ok: false, reason: guard.denied, message: "Accès réservé à la rédaction connectée." },
       { status: guard.denied === "unconfigured" ? 503 : 403 }
+    );
+  }
+  // 1 bis) Permission 0036 : l'assistant est un outil de RÉDACTION.
+  const profile = guard.session.profile;
+  if (
+    profile?.role === "editor" &&
+    !hasAnyPermission(profile, ["articles", "articles_tous", "articles_publier"])
+  ) {
+    return Response.json(
+      { ok: false, reason: "forbidden", message: "Accès réservé à la rédaction avec permission « Articles »." },
+      { status: 403 }
     );
   }
 

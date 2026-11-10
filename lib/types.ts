@@ -6,7 +6,7 @@
 
 export type ContentStatus = "draft" | "review" | "scheduled" | "published" | "archived";
 export type VideoStatus = "draft" | "published" | "archived";
-export type UserRole = "admin" | "editor" | "reporter";
+export type UserRole = "super_admin" | "admin" | "editor" | "reporter";
 export type RequestStatus = "new" | "processing" | "treated";
 
 export interface Category {
@@ -21,6 +21,10 @@ export interface Profile {
   id: string;
   full_name: string | null;
   role: UserRole;
+  /** Permissions granulaires (0036) — vide pour admin/super_admin : tout. */
+  permissions: string[] | null;
+  /** Suspension réelle (0036) : false = perte immédiate des accès RLS. */
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

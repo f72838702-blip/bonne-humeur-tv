@@ -1,5 +1,6 @@
 import StudioEditor from "@/components/design/StudioEditor";
-import { requireRole } from "@/lib/auth/session";
+import { isSuperAdmin, getSessionInfo } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import {
   getPublishedDesignCached,
   getDraftForUser,
@@ -11,9 +12,8 @@ import type { DesignConfig } from "@/lib/design/schema";
 
 /**
  * STUDIO DE DESIGN (onglet administration) — la direction personnalise
- * l'apparence SANS code. Session admin/éditeur exigée (garde serveur) :
- *  • éditeur : éditer le brouillon, prévisualiser ;
- *  • admin (seul) : PUBLIER et RESTAURER une version.
+ * l'apparence SANS code. Réservé au SUPER ADMINISTRATEUR (garde serveur) :
+ *  • édition du brouillon, prévisualisation, publication, restauration.
  * Aucun design en brouillon ne touche le site public : le brouillon vit
  * dans sa table (un par rédacteur), la publication est validée par le
  * schéma fermé puis revalidatePath("/", "layout").
@@ -23,28 +23,29 @@ export const revalidate = 0;
 export const metadata = { title: "Studio de design — Administration" };
 
 export default async function StudioPage() {
-  const guard = await requireRole(["admin", "editor"]);
-  if ("denied" in guard) {
+  const ok = await isSuperAdmin();
+  if (!ok) {
     return (
       <div className="rounded-2xl border border-neutral-200 bg-surface p-8 text-center dark:border-white/10 dark:bg-night-800">
         <h1 className="font-display text-xl font-extrabold text-neutral-900 dark:text-neutral-50">
           Studio de design
         </h1>
         <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-          {guard.denied === "unconfigured"
-            ? "Base de données non configurée — le Studio sera disponible après connexion à Supabase."
-            : guard.denied === "unauthenticated"
-              ? "Connectez-vous à l'administration pour accéder au Studio de design."
-              : "Le Studio est réservé aux administrateurs et éditeurs."}
+          Le Studio est réservé au Super Administrateur — connectez-vous à
+          l&apos;administration (la base de données doit être configurée).
         </p>
       </div>
     );
   }
 
-  const canPublish = guard.session.profile?.role === "admin";
+  const session = await getSessionInfo();
+  if (!session) redirect("/admin/login");
+
+  const canPublish =
+    session.profile?.role === "admin" || session.profile?.role === "super_admin";
   const [published, draft, history, categories] = await Promise.all([
     getPublishedDesignCached(),
-    getDraftForUser(guard.session.userId),
+    getDraftForUser(session.userId),
     canPublish ? getDesignHistory() : Promise.resolve([]),
     getCategories(),
   ]);

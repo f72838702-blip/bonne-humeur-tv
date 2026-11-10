@@ -114,7 +114,7 @@ export default async function AdminRequestsPage({
 }: {
   searchParams: Promise<{ onglet?: string }>;
 }) {
-  const guard = await requireRole(["admin", "editor"]);
+  const guard = await requireRole(["admin"]);
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
@@ -122,7 +122,9 @@ export default async function AdminRequestsPage({
   }
   // Suppression : ADMIN UNIQUEMENT dans l'interface (la RLS 0027
   // réapplique la même règle en dernier ressort, éditeur inclus).
-  const isAdmin = guard.session.profile?.role === "admin";
+  const isAdmin =
+    guard.session.profile?.role === "admin" ||
+    guard.session.profile?.role === "super_admin";
 
   const { onglet } = await searchParams;
   const tab = onglet === "contact" ? "contact" : "partenariats";

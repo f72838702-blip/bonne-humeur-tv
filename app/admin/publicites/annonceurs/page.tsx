@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { listAdvertisers } from "@/lib/data/ads";
 import { deleteAdvertiserAction } from "@/lib/actions/ads";
 import { AdvertiserForm } from "@/components/admin/AdsForms";
@@ -17,6 +18,10 @@ export default async function AdminAdvertisersPage({
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
+    return <ForbiddenScreen />;
+  }
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "publicite")) {
     return <ForbiddenScreen />;
   }
   const role = guard.session.profile?.role ?? "reporter";
@@ -83,7 +88,7 @@ export default async function AdminAdvertisersPage({
                 >
                   Fiche
                 </Link>
-                {role === "admin" && (
+                {(role === "admin" || role === "super_admin") && (
                   <DeleteActionForm
                     action={deleteAdvertiserAction}
                     hiddenFields={{ id: a.id }}

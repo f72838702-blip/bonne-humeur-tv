@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { listPubliciteAds } from "@/lib/data/ads";
 import { adStateOf, type AdStoredStatus } from "@/lib/ads/ads-core";
 import {
@@ -40,7 +41,15 @@ export default async function AdminPublicitesPage() {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     return <ForbiddenScreen />;
   }
-  const role = (guard.session.profile?.role ?? "reporter") as "admin" | "editor";
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "publicite")) {
+    return <ForbiddenScreen />;
+  }
+
+  const role = (guard.session.profile?.role ?? "reporter") as
+    | "admin"
+    | "editor"
+    | "super_admin";
 
   const ads = await listPubliciteAds();
   const nowIso = new Date().toISOString();
@@ -106,7 +115,7 @@ export default async function AdminPublicitesPage() {
       )}
 
       {/* ─── Gestion avancée : réservée aux ADMINISTRATEURS, repliée ─── */}
-      {role === "admin" && (
+      {(role === "admin" || role === "super_admin") && (
         <details className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
           <summary className="cursor-pointer font-display text-base font-bold">Gestion avancée</summary>
           <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
@@ -144,7 +153,7 @@ function AdRow({
 }: {
   ad: Awaited<ReturnType<typeof listPubliciteAds>>[number];
   state: ReturnType<typeof adStateOf>;
-  role: "admin" | "editor";
+  role: "admin" | "editor" | "super_admin";
 }) {
   const payload = (ad.creative?.payload ?? {}) as Record<string, string | undefined>;
   const imageUrl = payload.image_url || payload.logo_url || null;
@@ -195,7 +204,7 @@ function AdRow({
             <SimpleStatusButton adId={ad.id} to={state === "suspended" ? "active" : "suspended"} label={state === "suspended" ? "Réactiver" : "Suspendre"} />
           )}
           {!ended && !paused && <ExtendControl adId={ad.id} />}
-          {role === "admin" && (
+          {(role === "admin" || role === "super_admin") && (
             <DeleteActionForm
               action={deleteCampaignAction}
               hiddenFields={{ id: ad.id }}

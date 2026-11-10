@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getTrashedArticles } from "@/lib/data/admin-content";
 import { restoreArticle } from "@/lib/actions/content";
 import { formatDateTime } from "@/lib/utils";
@@ -22,6 +23,13 @@ export default async function AdminArticlesCorbeillePage() {
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
+    return <ForbiddenScreen />;
+  }
+
+  if (
+    guard.session.profile?.role === "editor" &&
+    !hasPermission(guard.session.profile, "articles_publier")
+  ) {
     return <ForbiddenScreen />;
   }
 

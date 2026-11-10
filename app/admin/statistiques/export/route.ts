@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import {
   computeCountries,
   computeDailySeries,
@@ -28,8 +29,14 @@ import { fetchArticleMeta, fetchPeriodRows } from "@/lib/analytics/queries";
  */
 
 export async function GET(request: Request): Promise<Response> {
-  const guard = await requireRole(["admin"]);
+  const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) {
+    return new Response("Accès réservé aux administrateurs.", { status: 403 });
+  }
+  if (
+    guard.session.profile?.role === "editor" &&
+    !hasPermission(guard.session.profile, "consultation")
+  ) {
     return new Response("Accès réservé aux administrateurs.", { status: 403 });
   }
 

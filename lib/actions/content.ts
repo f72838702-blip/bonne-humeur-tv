@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/session";
+import { hasAnyPermission, hasPermission } from "@/lib/auth/permissions";
 import {
   isAllowedDuration,
   classifyFlash,
@@ -40,8 +41,18 @@ import { validateImageMarkers } from "@/lib/content/image-marker";
  * Actions du CMS (articles, vidéos, flash-infos, catégories).
  * Garde serveur requireRole() AVANT toute écriture ; la RLS applique
  * en dernier ressort la même règle côté base (défense en profondeur).
+ * Mission multi-administrateurs (0036) : un éditeur n'agit que selon les
+ * permissions cochées sur son profil (0036 — has_permission SQL applique
+ * la même règle côté base). Super admin / admin passent partout.
  * Aucune écriture en service_role ici : toujours le client de session.
  */
+
+/** L'éditeur possède-t-il une des clés article (rubrique accessible) ? */
+function editorHasArticles(
+  profile: Parameters<typeof hasAnyPermission>[0]
+): boolean {
+  return hasAnyPermission(profile, ["articles", "articles_tous", "articles_publier"]);
+}
 
 const DENIED_MESSAGES: Record<string, string> = {
   unauthenticated: "Connectez-vous pour effectuer cette action.",
@@ -73,7 +84,12 @@ export async function saveArticle(
   if ("denied" in guard) return deniedState(guard.denied);
   const { profile } = guard.session;
   const role = profile?.role ?? "reporter";
-  const isStaff = role === "admin" || role === "editor";
+  // staff = admin | super_admin | editor (0036 : super_admin couvert partout).
+  const isStaff = role === "admin" || role === "super_admin" || role === "editor";
+  // Un éditeur doit posséder au moins une permission article.
+  if (role === "editor" && !editorHasArticles(profile)) {
+    return deniedState("forbidden");
+  }
 
   const parsed = articleSchema.safeParse({
     id: formData.get("id") || undefined,
@@ -130,6 +146,11 @@ export async function saveArticle(
   // réapplique, mais on refuse ici avec un message clair).
   if (!isStaff && !["draft", "review"].includes(status)) {
     return errorState("En tant que reporter, vous ne pouvez enregistrer qu'un brouillon ou le soumettre à validation.");
+  }
+  // Un éditeur ne publie/programme/archive QUE s'il possède « articles_publier »
+  // (la policy RLS articles_update réapplique la même règle côté base).
+  if (role === "editor" && ["published", "scheduled", "archived"].includes(status) && !hasPermission(profile, "articles_publier")) {
+    return errorState("Publier, programmer ou archiver exige la permission « Publier / dépublier / corbeille des articles ».");
   }
   // Publication programmée : la date est obligatoire.
   if (status === "scheduled" && !input.scheduled_at) {
@@ -248,6 +269,10 @@ export async function saveArticle(
 export async function publishArticle(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Permission « articles_publier » exigée d'un éditeur (RLS 0036).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "articles_publier")) {
+    return deniedState("forbidden");
+  }
 
   const parsed = deleteArticleSchema.safeParse({ id: formData.get("id") });
   if (!parsed.success) return errorState("Identifiant d'article invalide.");
@@ -328,6 +353,10 @@ async function syncArticleTags(
 export async function deleteArticle(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Corbeille = dépublication : permission « articles_publier » exigée d'un éditeur.
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "articles_publier")) {
+    return deniedState("forbidden");
+  }
 
   const parsed = deleteArticleSchema.safeParse({ id: formData.get("id") });
   if (!parsed.success) return errorState("Identifiant invalide.");
@@ -356,6 +385,10 @@ export async function deleteArticle(formData: FormData): Promise<ActionState> {
 export async function restoreArticle(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Restauration depuis la corbeille : même permission que la suppression.
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "articles_publier")) {
+    return deniedState("forbidden");
+  }
 
   const parsed = deleteArticleSchema.safeParse({ id: formData.get("id") });
   if (!parsed.success) return errorState("Identifiant invalide.");
@@ -390,6 +423,10 @@ export async function saveVideo(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Permission « videos » exigée d'un éditeur (RLS 0036 : videos_manage).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "videos")) {
+    return deniedState("forbidden");
+  }
 
   const parsed = videoSchema.safeParse({
     id: formData.get("id") || undefined,
@@ -473,6 +510,10 @@ export async function saveVideo(
 export async function deleteVideo(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Permission « videos » exigée d'un éditeur (RLS 0036 : videos_manage).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "videos")) {
+    return deniedState("forbidden");
+  }
 
   const parsed = deleteVideoSchema.safeParse({ id: formData.get("id") });
   if (!parsed.success) return errorState("Identifiant invalide.");
@@ -516,6 +557,10 @@ export async function saveBreakingNews(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Permission « flash » exigée d'un éditeur (RLS 0036 : breaking_news_manage).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "flash")) {
+    return deniedState("forbidden");
+  }
 
   // Intention explicite portée par le BOUTON soumis (valeur garantie dans
   // la FormData, aucun état client — même mécanisme que les articles).
@@ -693,6 +738,10 @@ export async function renewBreakingNews(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Permission « flash » exigée d'un éditeur (RLS 0036).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "flash")) {
+    return deniedState("forbidden");
+  }
 
   const parsed = flashRenewSchema.safeParse({
     id: formData.get("id"),
@@ -775,6 +824,10 @@ export async function renewBreakingNews(
 export async function deleteBreakingNews(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Permission « flash » exigée d'un éditeur (RLS 0036).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "flash")) {
+    return deniedState("forbidden");
+  }
 
   const parsed = deleteBreakingNewsSchema.safeParse({ id: formData.get("id") });
   if (!parsed.success) return errorState("Identifiant invalide.");
@@ -803,6 +856,11 @@ export async function saveCategory(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Structure éditoriale : permission « articles » exigée d'un éditeur
+  // (RLS 0036 : categories/tags rattachés à la clé articles).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "articles")) {
+    return deniedState("forbidden");
+  }
 
   const parsed = categorySchema.safeParse({
     id: formData.get("id") || undefined,
@@ -849,6 +907,10 @@ export async function saveCategory(
 export async function deleteCategory(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Structure éditoriale : permission « articles » exigée d'un éditeur (RLS 0036).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "articles")) {
+    return deniedState("forbidden");
+  }
 
   const parsed = deleteCategorySchema.safeParse({ id: formData.get("id") });
   if (!parsed.success) return errorState("Identifiant invalide.");

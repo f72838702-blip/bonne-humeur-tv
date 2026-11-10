@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import { ImagesIcon } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasAnyPermission } from "@/lib/auth/permissions";
 import { listMedia } from "@/lib/data/media";
 import { deleteMediaAction } from "@/lib/actions/admin";
 import MediaUploader from "@/components/admin/MediaUploader";
@@ -16,6 +17,13 @@ export default async function AdminMediaPage() {
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
+    return <ForbiddenScreen />;
+  }
+
+  if (
+    guard.session.profile?.role === "editor" &&
+    !hasAnyPermission(guard.session.profile, ["articles", "videos", "flash", "publicite", "directs"])
+  ) {
     return <ForbiddenScreen />;
   }
 

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Zap } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getStaffBreakingNews } from "@/lib/data/admin-content";
 import { deleteBreakingNews } from "@/lib/actions/content";
 import FlashNewsForm from "@/components/admin/FlashNewsForm";
@@ -15,6 +16,10 @@ export default async function AdminFlashInfosPage() {
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
+    return <ForbiddenScreen />;
+  }
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "flash")) {
     return <ForbiddenScreen />;
   }
 

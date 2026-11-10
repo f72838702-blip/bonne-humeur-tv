@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Download } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import {
   getCampaign,
   getCampaignCreatives,
@@ -35,7 +36,14 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     return <ForbiddenScreen />;
   }
-  const role = (guard.session.profile?.role ?? "reporter") as "admin" | "editor";
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "publicite")) {
+    return <ForbiddenScreen />;
+  }
+  const role = (guard.session.profile?.role ?? "reporter") as
+    | "admin"
+    | "editor"
+    | "super_admin";
 
   const { id } = await params;
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) notFound();
@@ -103,7 +111,11 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
           {state === "programmed" && "Diffusion effective quand la période de diffusion commence (horloge serveur)."}
           {state === "expired" && "Période passée : plus jamais diffusée ; prolonger = modifier les dates puis réactiver."}
         </p>
-        <StatusActions campaignId={id} status={campaign.status as AdStoredStatus} role={role} />
+        <StatusActions
+          campaignId={id}
+          status={campaign.status as AdStoredStatus}
+          role={role === "super_admin" ? "admin" : role}
+        />
       </section>
 
       {/* ─── Édition de la campagne ─── */}
@@ -178,7 +190,7 @@ export default async function AdminCampaignPage({ params }: { params: Promise<{ 
       </section>
 
       {/* ─── Règlements (admin — l'éditeur n'en voit aucune : RLS) ─── */}
-      {role === "admin" && (
+      {(role === "admin" || role === "super_admin") && (
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-lg font-bold">Règlements ({payments?.length ?? 0})</h2>
           {(payments ?? []).map((p) => (

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { listPartners } from "@/lib/data/ads";
 import { savePartnerAction, deletePartnerAction } from "@/lib/actions/ads";
 import { PartnerForm } from "@/components/admin/AdsForms";
@@ -12,6 +13,10 @@ export default async function AdminPartnersPage() {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
+    return <ForbiddenScreen />;
+  }
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "publicite")) {
     return <ForbiddenScreen />;
   }
   const role = guard.session.profile?.role ?? "reporter";
@@ -49,7 +54,7 @@ export default async function AdminPartnersPage() {
                 <span className="text-xs text-neutral-400">
                   ordre {p.sort_order}{p.visible_from ? ` · dès ${p.visible_from}` : ""}{p.visible_to ? ` · jusqu'au ${p.visible_to}` : ""}
                 </span>
-                {role === "admin" && (
+                {(role === "admin" || role === "super_admin") && (
                   <span className="ml-auto">
                     <DeleteActionForm action={deletePartnerAction} hiddenFields={{ id: p.id }} confirmLabel={`Supprimer « ${p.name} » de la vitrine ?`} />
                   </span>

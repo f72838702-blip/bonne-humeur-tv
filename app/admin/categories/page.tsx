@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { FolderTree } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getCategories } from "@/lib/data/categories";
 import { deleteCategory } from "@/lib/actions/content";
 import CategoryForm from "@/components/admin/CategoryForm";
@@ -14,6 +15,10 @@ export default async function AdminCategoriesPage() {
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
+    return <ForbiddenScreen />;
+  }
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "articles")) {
     return <ForbiddenScreen />;
   }
 

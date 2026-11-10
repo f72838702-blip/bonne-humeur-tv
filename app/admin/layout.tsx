@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getSessionInfo } from "@/lib/auth/session";
+import { effectivePermissions, isFullyPrivileged } from "@/lib/auth/permissions";
 import Sidebar from "@/components/admin/Sidebar";
 import PwaAdmin from "@/components/admin/PwaAdmin";
 import { getDemandesNotificationCount } from "@/lib/data/requests";
@@ -52,12 +53,16 @@ export default async function AdminLayout({
   const fullName =
     session.profile?.full_name?.trim() || session.email || "Membre de la rédaction";
   const role = session.profile?.role ?? "reporter";
+  // Permissions effectives (mission 0036) : passées à la Sidebar pour le
+  // masquage des entrées — chaque page reste le contrôle d'accès réel.
+  const permissions = session.profile ? effectivePermissions(session.profile) : [];
+  const isPrivileged = isFullyPrivileged(role);
 
   // Badge de notification « Demandes » : nouveau partenariat OU message
-  // non lu, UNIQUEMENT pour les rôles qui voient cet onglet (reporter :
-  // aucune requête — RLS et quotas préservés).
-  const count =
-    role === "admin" || role === "editor" ? await getDemandesNotificationCount() : null;
+  // non lu, UNIQUEMENT pour les rôles qui voient cet onglet (traitement
+  // des demandes = admin/super_admin depuis 0036 ; reporter : aucune
+  // requête — RLS et quotas préservés).
+  const count = isPrivileged ? await getDemandesNotificationCount() : null;
   const demandsTotal = count ? count.unseenPartnerships + count.unreadContacts : 0;
 
   return (
@@ -74,8 +79,9 @@ export default async function AdminLayout({
       <link rel="apple-touch-icon" href="/icons/bhtv-admin-apple-180.png" />
       <Sidebar
         role={role}
+        permissions={permissions}
         userName={fullName}
-        demandsCount={role === "admin" || role === "editor" ? demandsTotal : undefined}
+        demandsCount={isPrivileged ? demandsTotal : undefined}
       />
       <div className="min-w-0 flex-1">{children}</div>
       {/* PWA Admin : SW « réseau seul » enregistré ici (session connectée)

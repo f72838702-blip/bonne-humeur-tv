@@ -3,6 +3,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { Plus, Video } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getStaffVideos } from "@/lib/data/admin-content";
 import { deleteVideo } from "@/lib/actions/content";
 import { formatDateTime } from "@/lib/utils";
@@ -17,6 +18,10 @@ export default async function AdminVideosPage() {
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
+    return <ForbiddenScreen />;
+  }
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "videos")) {
     return <ForbiddenScreen />;
   }
 

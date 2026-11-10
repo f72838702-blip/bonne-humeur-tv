@@ -5,6 +5,7 @@ import { PURPOSE_VARIANTS, type MediaVariant } from "@/lib/media/variants";
 import { uploadMediaVariants } from "@/lib/data/media";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission, isFullyPrivileged } from "@/lib/auth/permissions";
 import {
   AD_FORMATS,
   AD_PLACEMENT_CODES,
@@ -47,14 +48,30 @@ import {
 
 /**
  * Server Actions de la RÉGIE PUBLICITAIRE.
- * Garde serveur requireRole() AVANT toute écriture ; la RLS (0026) est
- * la dernière barrière. Aucune écriture en service_role ici.
+ * Garde serveur requireRole() AVANT toute écriture ; la RLS (0036, ex-0026)
+ * est la dernière barrière. Aucune écriture en service_role ici.
  *
- * Rôles — annonceurs/campagnes/créations/emplacements/partenaires :
- *   admin + editor  ;  paiements : ADMIN exclusivement (0026 en base) ;
- *   validation « approved » d'une créative : ADMIN (RLS + action).
- * Reporter : AUCUN accès à la régie.
+ * Permissions (mission multi-administrateurs 0036) :
+ *   éditeur « publicite »         → annonces/campagnes/créations/partenaires ;
+ *   éditeur « publicite_approuver» → décisions + suppressions + règlements…*
+ *   admin / super_admin           → tout (placements, règlements…).
+ *   Reporter : AUCUN accès à la régie.
+ *  (*l'écriture en base des règlements reste has_role('admin') — la base
+ *   refuse un éditeur même avec la clé : défense en profondeur inchangée.)
  */
+
+/** Rôle vu par les noyaux pub (canTransition…) : super_admin ≡ admin. */
+function adRole(role: string): "admin" | "editor" {
+  return isFullyPrivileged(role) ? "admin" : "editor";
+}
+
+/** Un éditeur doit posséder la clé exacte (admin/super_admin passent toujours). */
+function editorForbidden(
+  profile: Parameters<typeof hasPermission>[0],
+  key: Parameters<typeof hasPermission>[1]
+): boolean {
+  return profile?.role === "editor" && !hasPermission(profile, key);
+}
 
 const DENIED_MESSAGES: Record<string, string> = {
   unauthenticated: "Connectez-vous pour effectuer cette action.",
@@ -104,6 +121,7 @@ export async function saveAdvertiserAction(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  if (editorForbidden(guard.session.profile, "publicite")) return deniedState("forbidden");
 
   const parsed = advertiserSchema.safeParse({
     id: stringOrNull(formData, "id"),
@@ -152,8 +170,11 @@ function stripId<T extends { id?: string }>(obj: T): Omit<T, "id"> {
 }
 
 export async function deleteAdvertiserAction(formData: FormData): Promise<ActionState> {
-  const guard = await requireRole(["admin"]);
+  const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Suppression = décision destructive : « publicite_approuver » exigée
+  // d'un éditeur (RLS 0036 identique).
+  if (editorForbidden(guard.session.profile, "publicite_approuver")) return deniedState("forbidden");
 
   const id = String(formData.get("id") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(id)) return errorState("Annonceur introuvable.");
@@ -214,6 +235,7 @@ export async function saveCampaignAction(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  if (editorForbidden(guard.session.profile, "publicite")) return deniedState("forbidden");
 
   const placements = formData
     .getAll("placements")
@@ -331,7 +353,8 @@ export async function saveCampaignAction(
 export async function changeCampaignStatusAction(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
-  const role = guard.session.profile?.role ?? "reporter";
+  if (editorForbidden(guard.session.profile, "publicite")) return deniedState("forbidden");
+  const role = adRole(guard.session.profile?.role ?? "reporter");
 
   const id = String(formData.get("id") ?? "");
   const to = String(formData.get("to") ?? "") as AdStoredStatus;
@@ -347,7 +370,7 @@ export async function changeCampaignStatusAction(formData: FormData): Promise<Ac
     .maybeSingle();
   if (!campaign) return errorState("Campagne introuvable.");
 
-  if (!canTransition(campaign.status as AdStoredStatus, to, role as "admin" | "editor")) {
+  if (!canTransition(campaign.status as AdStoredStatus, to, role)) {
     return errorState(`Transition impossible : « ${(campaign.status as string)} » vers « ${to} ».`);
   }
 
@@ -390,8 +413,10 @@ export async function changeCampaignStatusAction(formData: FormData): Promise<Ac
 }
 
 export async function deleteCampaignAction(formData: FormData): Promise<ActionState> {
-  const guard = await requireRole(["admin"]);
+  const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Suppression = décision destructive : « publicite_approuver » (RLS 0036).
+  if (editorForbidden(guard.session.profile, "publicite_approuver")) return deniedState("forbidden");
 
   const id = String(formData.get("id") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(id)) return errorState("Campagne introuvable.");
@@ -448,6 +473,7 @@ export async function saveCreativeAction(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  if (editorForbidden(guard.session.profile, "publicite")) return deniedState("forbidden");
 
   const parsed = adCreativeSchema.safeParse({
     id: stringOrNull(formData, "id"),
@@ -493,13 +519,13 @@ export async function saveCreativeAction(
     // identique) ; l'admin peut corriger n'importe quelle créative.
     const updateRow = { ...row, updated_at: new Date().toISOString() };
     let query = supabase!.from("ad_creatives").update(updateRow).eq("id", parsed.data.id);
-    if (role !== "admin") query = query.eq("status", "draft");
+    if (!isFullyPrivileged(role)) query = query.eq("status", "draft");
     const { error: updateError, data } = await query.select("id").maybeSingle();
     error = updateError;
     updated = Boolean(data);
     if (!error && !updated) {
       return errorState(
-        role === "admin"
+        isFullyPrivileged(role)
           ? "Création introuvable."
           : "Création déjà approuvée : seul un administrateur peut la modifier. Proposez une nouvelle création."
       );
@@ -520,8 +546,10 @@ export async function saveCreativeAction(
 
 /** Validation administrative : approved (admin) / refused / retour brouillon. */
 export async function decideCreativeAction(formData: FormData): Promise<ActionState> {
-  const guard = await requireRole(["admin"]);
+  const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Approuver/refuser/remettre en brouillon : « publicite_approuver » (RLS 0036).
+  if (editorForbidden(guard.session.profile, "publicite_approuver")) return deniedState("forbidden");
 
   const parsed = adCreativeDecisionSchema.safeParse({
     id: formData.get("id"),
@@ -568,7 +596,8 @@ export async function publishSimpleAdAction(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
-  const role = guard.session.profile?.role ?? "reporter";
+  if (editorForbidden(guard.session.profile, "publicite")) return deniedState("forbidden");
+  const role = adRole(guard.session.profile?.role ?? "reporter");
   const supabase = await getSupabaseServerClient();
   if (!supabase) return deniedState("unconfigured");
 
@@ -840,6 +869,7 @@ export async function publishSimpleAdAction(
 export async function extendCampaignAction(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  if (editorForbidden(guard.session.profile, "publicite")) return deniedState("forbidden");
 
   const id = String(formData.get("id") ?? "");
   const days = Number(formData.get("days"));
@@ -882,7 +912,9 @@ export async function updatePlacementAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const guard = await requireRole(["admin", "editor"]);
+  // Configuration du site (emplacements) : admin/super SEUL (RLS 0036
+  // identical : ad_placements_staff_update = has_role('admin')).
+  const guard = await requireRole(["admin"]);
   if ("denied" in guard) return deniedState(guard.denied);
 
   const parsed = adPlacementUpdateSchema.safeParse({
@@ -919,6 +951,7 @@ export async function savePartnerAction(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  if (editorForbidden(guard.session.profile, "publicite")) return deniedState("forbidden");
 
   const parsed = adPartnerSchema.safeParse({
     id: stringOrNull(formData, "id"),
@@ -961,8 +994,10 @@ export async function savePartnerAction(
 }
 
 export async function deletePartnerAction(formData: FormData): Promise<ActionState> {
-  const guard = await requireRole(["admin"]);
+  const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Suppression = décision destructive : « publicite_approuver » (RLS 0036).
+  if (editorForbidden(guard.session.profile, "publicite_approuver")) return deniedState("forbidden");
 
   const id = String(formData.get("id") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(id)) return errorState("Partenaire introuvable.");
@@ -983,6 +1018,8 @@ export async function recordPaymentAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  // Règlements : admin/super SEUL (RLS 0036 : écriture = has_role('admin'),
+  // 0026 intacte — un éditeur ne touche jamais l'argent).
   const guard = await requireRole(["admin"]);
   if ("denied" in guard) return deniedState(guard.denied);
 
@@ -1009,6 +1046,7 @@ export async function recordPaymentAction(
 }
 
 export async function deletePaymentAction(formData: FormData): Promise<ActionState> {
+  // Règlements : admin/super SEUL (RLS 0036 — 0026 intacte).
   const guard = await requireRole(["admin"]);
   if ("denied" in guard) return deniedState(guard.denied);
 
@@ -1031,6 +1069,7 @@ export async function deletePaymentAction(formData: FormData): Promise<ActionSta
 export async function uploadAdImageAction(formData: FormData): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  if (editorForbidden(guard.session.profile, "publicite")) return deniedState("forbidden");
 
   const variants: { variant: MediaVariant; file: File }[] = [];
   for (const v of PURPOSE_VARIANTS.advertising) {

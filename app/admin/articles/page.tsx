@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FileText, Plus, Trash2 } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasAnyPermission } from "@/lib/auth/permissions";
 import { getStaffArticles } from "@/lib/data/admin-content";
 import { deleteArticle, publishArticle } from "@/lib/actions/content";
 import { formatDateTime } from "@/lib/utils";
@@ -33,12 +34,20 @@ export default async function AdminArticlesPage({
     return <ForbiddenScreen />;
   }
 
+  if (
+    guard.session.profile?.role === "editor" &&
+    !hasAnyPermission(guard.session.profile, ["articles", "articles_tous", "articles_publier"])
+  ) {
+    return <ForbiddenScreen />;
+  }
+
   const { statut } = await searchParams;
   const status = (statut as ContentStatus | undefined) ?? undefined;
   const articles = await getStaffArticles(status);
 
   const role = guard.session.profile?.role ?? "reporter";
-  const isStaff = role === "admin" || role === "editor";
+  const isStaff =
+    role === "admin" || role === "super_admin" || role === "editor";
 
   return (
     <div className="flex flex-col gap-6">

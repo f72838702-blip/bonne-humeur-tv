@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth/session";
+import { requireRole, requirePermission, requireAnyPermission, isSuperAdmin } from "@/lib/auth/session";
+import { sanitizePermissions, hasAnyPermission } from "@/lib/auth/permissions";
 import {
   inviteUserSchema,
   requestDeleteSchema,
@@ -15,7 +16,15 @@ import {
   successState,
   zodFieldErrors,
 } from "./helpers";
-import { disableTeamMember, enableTeamMember, inviteTeamMember, updateProfileRole } from "@/lib/data/users";
+import {
+  deleteTeamMember,
+  inviteTeamMember,
+  logTeamAction,
+  reactiveTeamMember,
+  suspendTeamMember,
+  updateProfilePermissions,
+  updateProfileRole,
+} from "@/lib/data/users";
 import { deleteRequest, updateRequestStatus } from "@/lib/data/requests";
 import { getRequestRecipient, insertFailedReply, insertSentReply } from "@/lib/data/replies";
 import { isBrevoConfigured, sendEmailViaBrevo } from "@/lib/email/brevo";
@@ -29,24 +38,24 @@ import { MEDIA_PURPOSES, MEDIA_VARIANTS, MediaPurpose, MediaVariant } from "@/li
  * la base (RLS) réapplique la même règle en dernier ressort.
  */
 
-function deniedState(denied: string): ActionState {
+function deniedState(denied: string, forbiddenMessage?: string): ActionState {
   const messages: Record<string, string> = {
     unauthenticated: "Connectez-vous pour effectuer cette action.",
-    forbidden: "Votre rôle ne permet pas cette action.",
+    forbidden: forbiddenMessage ?? "Votre rôle ne permet pas cette action.",
     unconfigured: "Le back-office n'est pas configuré (voir supabase/README-CONFIGURATION.md).",
   };
   return errorState(messages[denied] ?? "Action refusée.");
 }
 
 // ─────────────────────────────────────────────────────────────
-// DEMANDES (partenariats + contact) — admin/editor
+// DEMANDES (partenariats + contact) — traitement : admin | super_admin
 // ─────────────────────────────────────────────────────────────
 
 export async function setRequestStatus(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const guard = await requireRole(["admin", "editor"]);
+  const guard = await requireRole(["admin"]);
   if ("denied" in guard) return deniedState(guard.denied);
 
   const parsed = requestStatusSchema.safeParse({
@@ -190,13 +199,18 @@ export async function sendReplyAction(
 }
 
 // ─────────────────────────────────────────────────────────────
-// UTILISATEURS — admin UNIQUEMENT
+// GESTION DES ADMINISTRATEURS — SUPER ADMINISTRATEUR UNIQUEMENT
+// (règle mission : personne d'autre ne crée, modifie, suspend ou
+// supprime un compte ; le sien est protégé par triggers SQL.)
 // ─────────────────────────────────────────────────────────────
 
 export async function changeRole(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  const superAdmin = await isSuperAdmin();
+  if (!superAdmin) return deniedState("forbidden", "Seul le Super Administrateur gère les comptes.");
+
   const guard = await requireRole(["admin"]);
   if ("denied" in guard) return deniedState(guard.denied);
 
@@ -208,13 +222,13 @@ export async function changeRole(
     return errorState("Données invalides.", zodFieldErrors(parsed.error));
   }
   if (parsed.data.profile_id === guard.session.userId) {
-    return errorState("Modifiez votre rôle depuis un autre compte admin pour éviter tout blocage.");
+    return errorState("Une action de gestion ne se porte jamais sur son propre compte.");
   }
 
   const result = await updateProfileRole(parsed.data.profile_id, parsed.data.role);
   if (!result.ok) {
     console.error("[actions/admin] changeRole :", result.error);
-    return errorState("Changement de rôle impossible.");
+    return errorState("Changement de rôle impossible (la base a peut-être refusé : protection du Super Administrateur).");
   }
 
   revalidatePath("/admin/utilisateurs");
@@ -225,8 +239,8 @@ export async function inviteUser(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const guard = await requireRole(["admin"]);
-  if ("denied" in guard) return deniedState(guard.denied);
+  const superAdmin = await isSuperAdmin();
+  if (!superAdmin) return deniedState("forbidden", "Seul le Super Administrateur gère les comptes.");
 
   const parsed = inviteUserSchema.safeParse({
     email: formData.get("email"),
@@ -237,7 +251,16 @@ export async function inviteUser(
     return errorState("Veuillez corriger les champs signalés.", zodFieldErrors(parsed.error));
   }
 
-  const result = await inviteTeamMember(parsed.data.email, parsed.data.full_name, parsed.data.role);
+  // Permissions cochées : normalisées par la liste blanche (jamais de clé inconnue).
+  const requested = formData.getAll("permissions").map((p) => String(p));
+  const cleanPermissions = sanitizePermissions(requested) as string[];
+
+  const result = await inviteTeamMember(
+    parsed.data.email,
+    parsed.data.full_name,
+    parsed.data.role,
+    cleanPermissions
+  );
   if (!result.ok) {
     if (result.error === "service_role_not_configured") {
       return errorState(
@@ -249,36 +272,113 @@ export async function inviteUser(
   }
 
   revalidatePath("/admin/utilisateurs");
-  return successState("Invitation envoyée. Le membre apparaîtra après acceptation.");
+  // Trace avec AUTEUR identifié : l'invitation (service_role) ne passe pas
+  // par le trigger SQL qui ne connaît que auth.uid() du client session.
+  await logTeamAction("invite", "auth", result.userId ?? null, {
+    email: parsed.data.email,
+    role: parsed.data.role,
+    permissions: cleanPermissions,
+  });
+  return successState("Invitation envoyée. Le membre recevra un lien sécurisé pour définir son mot de passe.");
 }
 
-export async function setUserDisabled(
+export async function updatePermissions(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  const superAdmin = await isSuperAdmin();
+  if (!superAdmin) return deniedState("forbidden", "Seul le Super Administrateur gère les comptes.");
+
+  const guard = await requireRole(["admin"]);
+  if ("denied" in guard) return deniedState(guard.denied);
+
+  const profileId = String(formData.get("profile_id") ?? "");
+  if (!profileId) return errorState("Profil introuvable.");
+  if (profileId === guard.session.userId) {
+    return errorState("Vous ne pouvez pas modifier vos propres permissions.");
+  }
+
+  const requested = formData.getAll("permissions").map((p) => String(p));
+  const result = await updateProfilePermissions(profileId, requested);
+  if (!result.ok) {
+    console.error("[actions/admin] updatePermissions :", result.error);
+    return errorState("Modification impossible (protection SQL : Super Administrateur ?).");
+  }
+
+  revalidatePath("/admin/utilisateurs");
+  return successState("Permissions mises à jour.");
+}
+
+export async function setUserSuspended(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const superAdmin = await isSuperAdmin();
+  if (!superAdmin) return deniedState("forbidden", "Seul le Super Administrateur gère les comptes.");
+
   const guard = await requireRole(["admin"]);
   if ("denied" in guard) return deniedState(guard.denied);
 
   const userId = String(formData.get("user_id") ?? "");
-  const disable = formData.get("disable") === "1";
+  const suspend = formData.get("suspend") === "1";
   if (!userId) return errorState("Utilisateur introuvable.");
   if (userId === guard.session.userId) {
-    return errorState("Vous ne pouvez pas désactiver votre propre compte.");
+    return errorState("Vous ne pouvez pas suspendre votre propre compte.");
   }
 
-  const result = disable ? await disableTeamMember(userId) : await enableTeamMember(userId);
+  const result = suspend ? await suspendTeamMember(userId) : await reactiveTeamMember(userId);
   if (!result.ok) {
     if (result.error === "service_role_not_configured") {
       return errorState(
         "Cette action exige la clé service_role sur le serveur (SUPABASE_SERVICE_ROLE_KEY)."
       );
     }
-    console.error("[actions/admin] setUserDisabled :", result.error);
-    return errorState(disable ? "Désactivation impossible." : "Réactivation impossible.");
+    console.error("[actions/admin] setUserSuspended :", result.error);
+    return errorState(suspend ? "Suspension impossible." : "Réactivation impossible.");
   }
 
   revalidatePath("/admin/utilisateurs");
-  return successState(disable ? "Compte désactivé." : "Compte réactivé.");
+  // Trace avec AUTEUR (le ban Auth passe par service_role : le trigger
+  // SQL, ignorant l'auteur, ne suffirait pas pour la traçabilité complète).
+  await logTeamAction(suspend ? "suspend" : "reactivate", "auth", userId, {
+    is_active_after: !suspend,
+  });
+  return successState(suspend ? "Compte suspendu." : "Compte réactivé.");
+}
+
+/** Suppression DÉFINITIVE d'un compte — confirmation côté interface requise. */
+export async function deleteTeamMemberAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const superAdmin = await isSuperAdmin();
+  if (!superAdmin) return deniedState("forbidden", "Seul le Super Administrateur gère les comptes.");
+
+  const guard = await requireRole(["admin"]);
+  if ("denied" in guard) return deniedState(guard.denied);
+
+  const userId = String(formData.get("user_id") ?? "");
+  if (!userId) return errorState("Utilisateur introuvable.");
+  if (userId === guard.session.userId) {
+    return errorState("Une suppression ne se porte jamais sur son propre compte.");
+  }
+
+  const result = await deleteTeamMember(userId);
+  if (!result.ok) {
+    if (result.error === "service_role_not_configured") {
+      return errorState(
+        "Cette action exige la clé service_role sur le serveur (SUPABASE_SERVICE_ROLE_KEY)."
+      );
+    }
+    console.error("[actions/admin] deleteTeamMemberAction :", result.error);
+    return errorState("Suppression impossible.");
+  }
+
+  revalidatePath("/admin/utilisateurs");
+  // Trace de la SUPPRESSION DÉFINITIVE (cascade profil — la ligne disparaît,
+  // le nom n'est plus reconstituable : on l'inscrit dans le journal).
+  await logTeamAction("delete", "auth", userId, {});
+  return successState("Compte supprimé définitivement.");
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -291,6 +391,13 @@ export async function uploadMediaAction(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  // Un éditeur doit posséder au moins un module de création d'images.
+  if (
+    guard.session.profile?.role === "editor" &&
+    !hasAnyPermission(guard.session.profile, ["articles", "videos", "flash", "publicite", "directs"])
+  ) {
+    return deniedState("forbidden");
+  }
 
   // Dossier logique de destination (directive §2).
   const purpose = String(formData.get("purpose") ?? "");
@@ -323,7 +430,7 @@ export async function uploadMediaAction(
 }
 
 export async function deleteMediaAction(formData: FormData): Promise<ActionState> {
-  const guard = await requireRole(["admin", "editor"]);
+  const guard = await requireRole(["admin"]);
   if ("denied" in guard) return deniedState(guard.denied);
 
   const path = String(formData.get("path") ?? "");
@@ -360,6 +467,12 @@ export async function uploadArticleCoverAction(
 ): Promise<ActionState> {
   const guard = await requireRole(["admin", "editor", "reporter"]);
   if ("denied" in guard) return deniedState(guard.denied);
+  if (
+    guard.session.profile?.role === "editor" &&
+    !hasAnyPermission(guard.session.profile, ["articles", "articles_tous", "articles_publier"])
+  ) {
+    return deniedState("forbidden");
+  }
 
   const variants: { variant: MediaVariant; file: File }[] = [];
   for (const v of MEDIA_VARIANTS) {

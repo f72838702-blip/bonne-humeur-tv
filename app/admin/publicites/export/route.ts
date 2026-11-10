@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { listCampaigns, listAllPayments } from "@/lib/data/ads";
 import { AD_STATE_LABELS, adStateOf, toCsv } from "@/lib/ads/ads-core";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -48,6 +49,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Accès refusé." }, { status: 403 });
     }
     redirect("/admin/login");
+  }
+  if (
+    guard.session.profile?.role === "editor" &&
+    !hasPermission(guard.session.profile, "publicite")
+  ) {
+    return NextResponse.json({ error: "Accès refusé." }, { status: 403 });
   }
   const supabase = await getSupabaseServerClient();
   if (!supabase) {

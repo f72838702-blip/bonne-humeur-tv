@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Radio } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getLiveConfig } from "@/lib/direct/config";
 import { detectLive } from "@/lib/direct/detect";
 import { CHANNEL_URL } from "@/lib/direct/core";
@@ -24,10 +25,14 @@ export const metadata = { title: "Direct YouTube" };
  *   jamais envoyée au navigateur — elle vit dans un secret Worker).
  */
 export default async function AdminDirectPage() {
-  const guard = await requireRole(["admin"]);
+  const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
+    return <ForbiddenScreen />;
+  }
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "directs")) {
     return <ForbiddenScreen />;
   }
 

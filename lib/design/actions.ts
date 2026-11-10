@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireRole } from "@/lib/auth/session";
+import { isSuperAdmin, getSessionInfo } from "@/lib/auth/session";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { errorState, successState, type ActionState } from "@/lib/actions/helpers";
 import { designConfigSchema, parseDesignConfig, type DesignConfig } from "./schema";
@@ -12,17 +12,19 @@ import { designConfigSchema, parseDesignConfig, type DesignConfig } from "./sche
  * vérité : chaque action revérifie session + rôle côté serveur
  * (règle maison), revalide le schéma fermé, puis écrit via le client
  * service_role (côté serveur seulement, jamais exposé).
- *   Éditer / enregistrer le brouillon : admin + éditeur.
- *   Publier / restaurer               : ADMIN SEUL.
+ *   Mission 0036 : le Studio (design du site public) est réservé au
+ *   SUPER ADMINISTRATEUR — brouillon, publication, restauration.
  */
 
 export async function saveDraftAction(config: DesignConfig): Promise<ActionState> {
-  const guard = await requireRole(["admin", "editor"]);
-  if ("denied" in guard) {
-    return guard.denied === "unauthenticated"
-      ? errorState("Session expirée — reconnectez-vous.")
-      : errorState("Accès réservé à la rédaction.");
+  const allowed = await isSuperAdmin();
+  if (!allowed) {
+    return errorState("Le Studio est réservé au Super Administrateur.");
   }
+  // Session déjà validée par isSuperAdmin() : l'auteur du brouillon = PDG.
+  const session = await getSessionInfo();
+  const actorId = session?.userId;
+  if (!actorId) return errorState("Connectez-vous à l'administration.");
   const validation = designConfigSchema.safeParse(config);
   if (!validation.success) {
     return errorState("Design invalide — des valeurs sont hors liste autorisée.");
@@ -33,7 +35,7 @@ export async function saveDraftAction(config: DesignConfig): Promise<ActionState
   // Un brouillon par admin/éditeur — upsert sur sa clé. Le contenu du
   // brouillon reste celui de la config VALIDÉE (jamais du texte brut).
   const { error } = await admin.from("site_design_draft").upsert({
-    updated_by: guard.session.userId,
+    updated_by: actorId,
     content: validation.data,
   });
   if (error) return errorState("Brouillon non enregistré — réessayez.");
@@ -50,12 +52,12 @@ export async function publishDesignAction(
   draft: DesignConfig,
   note?: string,
 ): Promise<ActionState> {
-  const guard = await requireRole(["admin"]);
-  if ("denied" in guard) {
-    return guard.denied === "unauthenticated"
-      ? errorState("Session expirée — reconnectez-vous.")
-      : errorState("Seul un administrateur peut publier le design.");
+  const allowed = await isSuperAdmin();
+  if (!allowed) {
+    return errorState("Seul le Super Administrateur peut publier le design.");
   }
+  const actorId = (await getSessionInfo())?.userId;
+  if (!actorId) return errorState("Connectez-vous à l'administration.");
   const parsed = publishActionSchema.safeParse({ draft, note });
   if (!parsed.success) {
     return errorState("Design invalide — la publication est refusée.");
@@ -75,7 +77,7 @@ export async function publishDesignAction(
   // 2) Publication (brouillon null = retour au thème par défaut).
   const { error: pubErr } = await admin
     .from("site_design")
-    .update({ published: parsed.data.draft, updated_by: guard.session.userId })
+    .update({ published: parsed.data.draft, updated_by: actorId })
     .eq("id", 1);
   if (pubErr) return errorState("Publication refusée — réessayez.");
 
@@ -83,13 +85,13 @@ export async function publishDesignAction(
   if (previous !== null && previous !== undefined) {
     await admin.from("site_design_versions").insert({
       snapshot: previous,
-      published_by: guard.session.userId,
+      published_by: actorId,
       note: parsed.data.note ?? "Version précédente du design",
     });
   }
 
   // 4) Brouillon consommé (il est devenu le design publié).
-  await admin.from("site_design_draft").delete().eq("updated_by", guard.session.userId);
+  await admin.from("site_design_draft").delete().eq("updated_by", actorId);
 
   // 5) Le site public change MAINTENANT — invalidation ISR complète.
   revalidatePath("/", "layout");
@@ -97,12 +99,12 @@ export async function publishDesignAction(
 }
 
 export async function restoreDesignAction(versionId: string): Promise<ActionState> {
-  const guard = await requireRole(["admin"]);
-  if ("denied" in guard) {
-    return guard.denied === "unauthenticated"
-      ? errorState("Session expirée — reconnectez-vous.")
-      : errorState("Seul un administrateur peut restaurer le design.");
+  const allowed = await isSuperAdmin();
+  if (!allowed) {
+    return errorState("Seul le Super Administrateur peut restaurer le design.");
   }
+  const actorId = (await getSessionInfo())?.userId;
+  if (!actorId) return errorState("Connectez-vous à l'administration.");
   // Id strictement numérique (séquence Postgres) — aucun autre format.
   if (!/^[0-9]+$/.test(versionId)) return errorState("Historique invalide.");
   const admin = getSupabaseAdminClient();
@@ -122,7 +124,7 @@ export async function restoreDesignAction(versionId: string): Promise<ActionStat
   // prévisualise puis publie) — jamais de retour arrière à l'aveugle.
   const { error: upErr } = await admin
     .from("site_design_draft")
-    .upsert({ updated_by: guard.session.userId, content: snapshot });
+    .upsert({ updated_by: actorId, content: snapshot });
   if (upErr) return errorState("Restauration impossible — réessayez.");
   return successState("Ancien design chargé en brouillon — prévisualisez puis publiez.");
 }

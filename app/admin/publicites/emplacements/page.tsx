@@ -13,7 +13,7 @@ export const metadata = { title: "Emplacements publicitaires" };
  * formats autorisés, les supports, la capacité et l'activation.
  */
 export default async function AdminPlacementsPage() {
-  const guard = await requireRole(["admin", "editor"]);
+  const guard = await requireRole(["admin"]);
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     return <ForbiddenScreen />;

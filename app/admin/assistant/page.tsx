@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
+import { hasAnyPermission } from "@/lib/auth/permissions";
 import { ForbiddenScreen, UnconfiguredScreen } from "@/components/admin/AccessDenied";
 import AiAssistant, { type ConversationInfo } from "@/components/admin/AiAssistant";
 import { listConversations } from "@/lib/data/ai-conversations";
@@ -19,6 +20,13 @@ export default async function AdminAssistantPage() {
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
     if (guard.denied === "unconfigured") return <UnconfiguredScreen />;
+    return <ForbiddenScreen />;
+  }
+
+  if (
+    guard.session.profile?.role === "editor" &&
+    !hasAnyPermission(guard.session.profile, ["articles", "articles_tous", "articles_publier"])
+  ) {
     return <ForbiddenScreen />;
   }
 

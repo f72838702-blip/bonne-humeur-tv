@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import {
   parseDirectConfigFormData,
@@ -11,9 +12,10 @@ import type { Detection } from "@/lib/direct/core";
 
 /**
  * Server Actions du module DIRECT (migration live_config 0031).
- * Garde requireRole(["admin"]) AVANT toute écriture ; la RLS
- * (has_role('admin') sur live_config) applique en dernier ressort la
- * même règle côté base. Aucun service_role.
+ * Garde requireRole(["admin","editor"]) + permission « directs » pour un
+ * éditeur (mission 0036) ; la RLS (has_permission('directs') sur
+ * live_config) applique en dernier ressort la même règle côté base.
+ * Aucun service_role.
  *
  * Le champ « lien du direct » est un texte libre de la rédaction : il
  * est normalisé via extractYouTubeId (URL YouTube ou ID à 11
@@ -39,9 +41,13 @@ export async function saveDirectConfig(
   _prev: SaveDirectState,
   formData: FormData
 ): Promise<SaveDirectState> {
-  const guard = await requireRole(["admin"]);
+  const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) {
     return { ok: false, message: deniedMessage(guard.denied) };
+  }
+  // Un éditeur doit posséder la permission « directs » (admin/super passent).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "directs")) {
+    return { ok: false, message: deniedMessage("forbidden") };
   }
 
   const input = parseDirectConfigFormData(formData);
@@ -119,12 +125,20 @@ export async function testDirectDetection(
   _prev: DetectDirectState | null,
   _formData: FormData
 ): Promise<DetectDirectState> {
-  const guard = await requireRole(["admin"]);
+  const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) {
     return {
       ok: false,
       status: null, videoId: null, title: null,
       message: deniedMessage(guard.denied),
+    };
+  }
+  // Permission « directs » exigée d'un éditeur (mission 0036).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "directs")) {
+    return {
+      ok: false,
+      status: null, videoId: null, title: null,
+      message: deniedMessage("forbidden"),
     };
   }
 

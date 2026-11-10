@@ -1,0 +1,95 @@
+  ok    00_supabase_emulation.sql
+  ok    0001_schema.sql
+  ok    0002_functions.sql
+  ok    0003_rls.sql
+  ok    0004_storage.sql
+  ok    0005_seed_categories.sql
+  ok    0006_scheduled_publish.sql
+  ok    0007_video_position.sql
+  ok    0008_media_folders.sql
+  ok    0023_featured_image_alt.sql
+  ok    0024_flash_infos_niveaux.sql
+  ok    0025_regie_publicitaire_tables.sql
+  ok    0026_regie_publicitaire_rls.sql
+  ok    0027_demandes_lu_et_suppression.sql
+  ok    0028_reponses_admin.sql
+  ok    0029_analytics_visiteurs.sql
+  ok    0030_purge_automatique.sql    (sans pg_cron — émulation locale)
+  ok    0031_live_config.sql
+  ok    0032_assistants_ia.sql
+  ok    0033_memoire_admin.sql
+  ok    0034_studio_design.sql
+  ok    0035_corbeille_articles.sql    (sans pg_cron — émulation locale)
+  ok    0036_multi_admin_permissions.sql
+
+=== TESTS MULTI-ADMIN 0036 (base réelle, RLS + triggers) ===
+  PASS  M1a — super : is_super_admin() = true
+  PASS  M1b — super : has_role('admin') = true (couverture admin-only)
+  PASS  M1c — éditeur 'videos' : has_permission('videos') oui, 'articles' non
+  PASS  M1d — éditeur sans permission : AUCUNE clé effective
+  PASS  M1e — staff actif : is_staff() = true
+  PASS  M2a — éditeur 'articles×3' : crée SON brouillon
+  PASS  M2a2 — éditeur 'articles' SEUL : crée SON brouillon
+  PASS  M2b — 'articles' SEUL : ne modifie PAS l'article des AUTRES (UPDATE : 0 ligne modifiée)
+  PASS  M2c — 'articles_tous' : modifie l'article D'UN AUTRE
+  PASS  M2d — 'articles' SEUL : ne publie PAS son propre article
+  PASS  M2e — 'articles_publier' : publie l'article D'UN AUTRE
+  PASS  M2f — 'articles' SEUL : pas de corbeille
+  PASS  M2g — 'articles_publier' : corbeille puis restauration
+  PASS  M2h — reporter : crée SON brouillon
+  PASS  M2i — reporter : ne crée PAS d'article déjà publié
+  PASS  M2j — reporter : ne modifie PAS l'article d'un autre (UPDATE : 0 ligne)
+    [M2k] brouillons visibles=0 insertRefusé=true updLignesModifiées=0
+  PASS  M2k — éditeur SANS permission : ne voit QUE le public, ne crée RIEN
+  PASS  M2l — 'consultation' : lit TOUT (y compris brouillons) mais n'écrit RIEN
+  PASS  M3a — éditeur 'articles' : crée une catégorie
+  PASS  M3b — éditeur 'videos' : catégorie REFUSÉE
+  PASS  M3c — 'consultation' : catégories lues (publiques) mais gestion REFUSÉE
+  PASS  M4a — éditeur 'videos' : crée une vidéo
+  PASS  M4b — éditeur 'articles×3' : écriture vidéos REFUSÉE
+  PASS  M4c — 'consultation' : vidéos lues mais PAS modifiables (UPDATE : 0 ligne)
+  PASS  M5a — éditeur 'flash' : crée un flash
+  PASS  M5b — éditeur 'videos' : flash REFUSÉ
+  PASS  M6a — 'consultation' : lit les demandes
+  PASS  M6b — 'consultation' : ne les TRAITE pas (UPDATE : 0 ligne)
+  PASS  M6c — éditeur 'publicite' : traitement REFUSÉ (UPDATE : 0 ligne)
+  PASS  M6d — admin secondaire : traitement des demandes OK
+  PASS  M6e — reporter : demandes illisibles (0 ligne) et inaction imposée
+  PASS  M7a — éditeur 'publicite' : annonceur + campagne + LIAISON emplacement
+  PASS  M7b — éditeur 'publicite' : active SA campagne (période + statut)
+  PASS  M7c — éditeur 'videos' : régie fermée (0 lecture, 0 écriture)
+  PASS  M7d — 'publicite_approuver' SEUL : liste les campagnes
+  PASS  M7e — 'publicite_approuver' SEUL : SUPPRIME une campagne
+  PASS  M7f — règlements : écriture REFUSÉE à l'éditeur (0026 : admin seuls)
+  PASS  M7g — règlements : l'ADMIN secondaire peut les enregistrer
+  PASS  M8a — éditeur 'directs' : met à jour live_config
+  PASS  M8b — éditeur 'videos' : live_config REFUSÉ (UPDATE : 0 ligne)
+  PASS  M9a — suspendu : is_staff() = false
+  PASS  M9b — suspendu : ne lit PLUS les travaux internes — brouillon d'un AUTRE (correctif n°3)
+  PASS  M9c — suspendu : aucune écriture article (UPDATE : 0 ligne)
+  PASS  M9d — suspendu : aucune création
+  PASS  M9e — réactivé : tout revient
+  PASS  M10a — admin secondaire : rôle du super — refusé
+  PASS  M10b — admin secondaire : permissions du super — refusées
+  PASS  M10c — admin secondaire : suspension du super — refusée
+  PASS  M10d — MÊME postgres/SQL Editor : permissions du super — refusées
+  PASS  M10d2 — MÊME postgres : is_active du super — refusé
+  PASS  M10e — super : ne modifie pas SES permissions (auto-élévation)
+  PASS  M10f — POSTGRES : suppression du compte super — refusée
+  PASS  M10g — éditeur : auto-élévation en admin — refusée
+  PASS  M10h — admin secondaire : requalifie éditeur↔reporter (non-admin) OK
+  PASS  M10i — admin secondaire : NE PEUT PAS créer un admin (règle 5)
+  PASS  M11a — super : lit le journal
+  PASS  M11b — admin secondaire : journal — INVISIBLE (0 ligne, super seul)
+  PASS  M11b2 — reporter : journal — INVISIBLE (0 ligne)
+  PASS  M11c — delta : rôle avant→après TRACÉ avec l'auteur
+  PASS  M11d — delta : permissions avant→après TRACÉES
+  PASS  M11e — journal : insert SANS session (anonyme) — refusé
+  PASS  M12a — éditeur : peut modifier son NOM (pas une permission)
+  PASS  M12b — éditeur : ne change JAMAIS ses propres permissions
+  PASS  M12c — éditeur : ne SE suspend jamais lui-même
+  PASS  M12d — admin : ne s'auto-promeut JAMAIS en super_admin
+  PASS  M13a — postgres : requalifie admin↔éditeur (comme la future promotion du PDG)
+  PASS  M13b — garde « dernier admin » : admin2 dégradable CAR super reste actif
+
+=== RÉSULTAT : 67 PASS / 0 FAIL ===

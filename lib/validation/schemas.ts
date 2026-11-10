@@ -182,15 +182,28 @@ export const categorySchema = z.object({
 
 export const deleteCategorySchema = z.object({ id: uuid });
 
+export const permissionsList = z
+  .array(z.enum(["articles", "articles_publier", "articles_tous", "videos", "flash", "directs", "publicite", "publicite_approuver", "consultation"]))
+  .max(9)
+  .default([]);
+
+/**
+ * Rôles attribuables par l'application : éditeur/reporter SEULEMENT.
+ * Le rôle super_admin est UNIQUE et n'est jamais créable depuis
+ * l'interface (le compte admin historique conserve son usage interne).
+ * Aucun Super Administrateur supplémentaire ne peut être créé.
+ */
+export const assignableRole = z.enum(["editor", "reporter"], { message: "Rôle invalide" });
+
 export const roleChangeSchema = z.object({
   profile_id: uuid,
-  role: z.enum(["admin", "editor", "reporter"], { message: "Rôle invalide" }),
+  role: assignableRole,
 });
 
 export const inviteUserSchema = z.object({
   email: z.email("Adresse email invalide"),
   full_name: trimmed(2, 100, "Nom complet"),
-  role: z.enum(["admin", "editor", "reporter"], { message: "Rôle invalide" }),
+  role: assignableRole,
 });
 
 export const requestStatusSchema = z.object({

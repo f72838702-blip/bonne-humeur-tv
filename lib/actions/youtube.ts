@@ -1,6 +1,7 @@
 "use server";
 
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { extractYouTubeId } from "@/lib/youtube/url";
 import { fetchYouTubeVideoMeta, isYouTubeApiConfigured } from "@/lib/youtube/api";
 import { ActionState, errorState } from "./helpers";
@@ -9,7 +10,8 @@ import { ActionState, errorState } from "./helpers";
  * Import des métadonnées YouTube (titre, description, miniature, durée,
  * statut de direct RÉEL) pour le formulaire vidéo du CMS.
  *
- * • editor+ uniquement (garde serveur, la RLS s'applique par ailleurs).
+ * • editor+ uniquement AVEC la permission « videos » (mission 0036) —
+ *   l'import alimente le formulaire vidéo du CMS.
  * • L'identifiant est extrait et validé STRICTEMENT : URL YouTube ou ID
  *   brut — toute source externe arbitraire est refusée (directive §1).
  * • YOUTUBE_API_KEY n'est jamais exposée : l'appel à la Data API v3
@@ -28,6 +30,10 @@ export async function importYouTubeMeta(
         ? "Connectez-vous pour effectuer cette action."
         : "Votre rôle ne permet pas cette action."
     );
+  }
+  // Permission « videos » exigée d'un éditeur (mission 0036).
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "videos")) {
+    return errorState("Votre rôle ne permet pas cette action.");
   }
 
   const raw = String(formData.get("youtube_url") ?? "");

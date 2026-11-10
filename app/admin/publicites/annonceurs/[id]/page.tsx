@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getAdvertiser, getAdvertiserCampaigns } from "@/lib/data/ads";
 import { adStateOf } from "@/lib/ads/ads-core";
 import { AdvertiserForm } from "@/components/admin/AdsForms";
@@ -13,6 +14,10 @@ export default async function AdminAdvertiserPage({ params }: { params: Promise<
   const guard = await requireRole(["admin", "editor"]);
   if ("denied" in guard) {
     if (guard.denied === "unauthenticated") redirect("/admin/login");
+    return <ForbiddenScreen />;
+  }
+
+  if (guard.session.profile?.role === "editor" && !hasPermission(guard.session.profile, "publicite")) {
     return <ForbiddenScreen />;
   }
 
