@@ -4,7 +4,7 @@ import { isSuperAdmin, getSessionInfo } from "@/lib/auth/session";
 import { getTeamEntries } from "@/lib/data/users";
 import { effectivePermissions, isFullyPrivileged, PERMISSION_LABELS } from "@/lib/auth/permissions";
 import { formatDate } from "@/lib/utils";
-import { InviteUserForm, RoleChangeForm, PermissionsForm, SuspendForm, DeleteUserForm } from "@/components/admin/UserForms";
+import { AddManagerForm, RoleChangeForm, PermissionsForm, SuspendForm, DeleteUserForm, ResetPasswordForm } from "@/components/admin/UserForms";
 import { ForbiddenScreen, NotFoundScreen } from "@/components/admin/AccessDenied";
 
 export const metadata = { title: "Gestion des administrateurs" };
@@ -62,9 +62,10 @@ export default async function AdminUsersPage() {
           Gestion des administrateurs
         </h1>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Vous êtes l’unique Super Administrateur : seul ce compte peut inviter,
-          organiser, suspendre ou supprimer des comptes d’équipe — et aucun
-          administrateur secondaire ne peut vous atteindre.
+          Vous êtes l’unique Super Administrateur : seul ce compte peut créer
+          directement des gestionnaires, organiser, suspendre ou supprimer des
+          comptes d’équipe — et aucun administrateur secondaire ne peut vous
+          atteindre.
         </p>
       </header>
 
@@ -81,11 +82,16 @@ export default async function AdminUsersPage() {
       </section>
 
       <section className="rounded-2xl border border-neutral-200 bg-surface p-6 dark:border-white/10 dark:bg-night-800">
-        <h2 className="mb-4 flex items-center gap-2 font-display text-base font-bold">
+        <h2 className="mb-1 flex items-center gap-2 font-display text-base font-bold">
           <Users className="h-4 w-4 text-guinea-red" />
-          Inviter un membre
+          Ajouter un gestionnaire
         </h2>
-        <InviteUserForm />
+        <p className="mb-4 text-xs text-neutral-500 dark:text-neutral-300">
+          Création directe : le compte est utilisable immédiatement — aucune
+          invitation par e-mail. Transmettez les identifiants par un moyen
+          sûr ; ils ne s’affichent qu’une seule fois.
+        </p>
+        <AddManagerForm />
       </section>
 
       <section className="flex flex-col gap-3">
@@ -141,8 +147,9 @@ export default async function AdminUsersPage() {
                     </div>
 
                     {!isSelf && !isSuper && (
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
                         <RoleChangeForm profileId={p.id} currentRole={p.role} />
+                        <ResetPasswordForm profileId={p.id} />
                         <SuspendForm userId={p.id} isActive={p.is_active} />
                         <DeleteUserForm userId={p.id} name={p.full_name ?? p.email ?? "ce compte"} />
                       </div>
@@ -180,9 +187,12 @@ export default async function AdminUsersPage() {
         Chaque action server reste vérifiée côté base (RLS + triggers 0036) :
         un Super Administrateur immuable, des changements de rôle limités à
         éditeur↔reporter, des permissions tracées avant/après dans le journal
-        d’activité. Les opérations Auth (invitation, suspension, suppression)
-        exigent la clé service_role sur le serveur — son absence est signalée
-        honnêtement par les formulaires.
+        d’activité. La création des comptes se fait directement côté serveur
+        (adresse de connexion technique générée par le serveur, mot de passe
+        provisoire jamais journalisé — il n’est affiché qu’une seule fois).
+        Les opérations Auth (création, suspension, suppression,
+        réinitialisation) exigent la clé service_role sur le serveur — son
+        absence est signalée honnêtement par les formulaires.
       </p>
     </div>
   );

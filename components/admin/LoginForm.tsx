@@ -18,15 +18,22 @@ export default function LoginForm() {
 
       <div>
         <label htmlFor="email" className={labelClass}>
-          Adresse email professionnelle
+          Email ou identifiant de connexion
         </label>
+        {/* type="text" (pas "email") : une saisie identifiant sans « @ » est
+            transformée en adresse technique CÔTÉ SERVEUR — jamais dans le
+            navigateur ; les emails réels passent inchangés. */}
         <input
           id="email"
           name="email"
-          type="email"
-          autoComplete="email"
+          type="text"
+          inputMode="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          autoComplete="username"
           required
-          placeholder="prenom.nom@bonnehumeurtv.com"
+          placeholder="identifiant ou email reçus du Super Administrateur"
           className={inputClass}
         />
         <FieldError errors={state.fieldErrors} name="email" />

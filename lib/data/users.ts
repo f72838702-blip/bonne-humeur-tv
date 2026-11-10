@@ -185,45 +185,71 @@ export async function reactiveTeamMember(
 }
 
 /**
- * Invitation d'un membre : création du compte Auth + e-mail de sécurité.
- * (mécanisme Supabase EXISTANT — jamais de mot de passe en clair).
- * Rôle appliqué en service_role juste après ; permissions de la même façon.
+ * CRÉATION IMMÉDIATE d'un gestionnaire par le Super Administrateur
+ * (mission « création directe » : pas d'invitation, pas d'e-mail d'activation).
+ * — createUser (Administrateur Supabase Auth, service_role SERVEUR SEUL) :
+ *   mot de passe envoyé UNIQUEMENT à cette API, jamais stocké ailleurs,
+ *   jamais journalisé, jamais retourné ;
+ *   email_confirm: true → compte utilisable immédiatement, aucun lien
+ *   d'activation, aucun e-mail envoyé ;
+ * — le trigger handle_new_user crée le profil (reporter, is_active=true) ;
+ * — rôle (editor si au moins une permission, sinon reporter) + permissions
+ *   appliqués ensuite (tracés dans audit_logs).
  */
-export async function inviteTeamMember(
-  email: string,
-  fullName: string,
-  role: UserRole,
-  permissions: string[] = []
-): Promise<{ ok: boolean; error?: string; userId?: string | null }> {
+export async function createManagerAccount({
+  email,
+  fullName,
+  role,
+  permissions,
+  password,
+}: {
+  email: string;
+  fullName: string;
+  role: UserRole;
+  permissions: string[];
+  password: string;
+}): Promise<{ ok: boolean; error?: string; userId?: string | null }> {
   const admin = getSupabaseAdminClient();
   if (!admin) return { ok: false, error: "service_role_not_configured" };
 
-  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: fullName },
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
   });
   if (error) return { ok: false, error: error.message };
+  if (!data.user) return { ok: false, error: "compte_auth_non_cree" };
 
-  // Le trigger handle_new_user crée le profil 'reporter' à l'acceptation.
-  // Le rôle ET les permissions demandés sont appliqués ensuite par le
-  // super admin (traçés dans audit_logs).
-  if (data.user) {
-    if (role !== "reporter") {
-      const { error: roleError } = await admin
-        .from("profiles")
-        .update({ role })
-        .eq("id", data.user.id);
-      if (roleError) return { ok: true, error: `rôle: ${roleError.message}` };
-    }
-    const clean = sanitizePermissions(permissions) as string[];
-    if (clean.length > 0) {
-      const { error: permError } = await admin
-        .from("profiles")
-        .update({ permissions: clean })
-        .eq("id", data.user.id);
-      if (permError) return { ok: true, error: `permissions: ${permError.message}` };
-    }
+  if (role !== "reporter") {
+    const { error: roleError } = await admin
+      .from("profiles")
+      .update({ role })
+      .eq("id", data.user.id);
+    if (roleError) return { ok: true, error: `role: ${roleError.message}` };
   }
-  return { ok: true, userId: data.user?.id ?? null };
+  const clean = sanitizePermissions(permissions) as string[];
+  if (clean.length > 0) {
+    const { error: permError } = await admin
+      .from("profiles")
+      .update({ permissions: clean })
+      .eq("id", data.user.id);
+    if (permError) return { ok: true, error: `permissions: ${permError.message}` };
+  }
+  return { ok: true, userId: data.user.id };
+}
+
+/** Réinitialisation du mot de passe par le Super Administrateur
+ *  (le nouveau provisoire est généré côté serveur, affiché UNE fois). */
+export async function resetManagerPassword(
+  userId: string,
+  password: string
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = getSupabaseAdminClient();
+  if (!admin) return { ok: false, error: "service_role_not_configured" };
+  const { error } = await admin.auth.admin.updateUserById(userId, { password });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 /** Suppression DÉFINITIVE du compte (cascade profil) — avec confirmation côté UI. */

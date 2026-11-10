@@ -206,6 +206,25 @@ export const inviteUserSchema = z.object({
   role: assignableRole,
 });
 
+// ─────────────────────────────────────────────────────────────
+// CRÉATION DIRECTE D'UN GESTIONNAIRE (Super Administrateur) :
+// email facultatif (si vide → identifiant@gestion.bonnehumeur.info
+// généré côté serveur — lib/auth/manager-account) ; le mot de passe
+// provisoire ne quitte jamais le serveur (jamais stocké, jamais logué).
+// ─────────────────────────────────────────────────────────────
+export const createManagerSchema = z
+  .object({
+    full_name: trimmed(2, 100, "Nom complet"),
+    identifiant: z.string().trim().max(64).optional(),
+    email: z.union([z.email("Adresse email invalide"), z.literal("")]).optional(),
+    password: trimmed(10, 128, "Mot de passe"),
+    password_confirm: trimmed(10, 128, "Confirmation"),
+  })
+  .refine((d) => d.password === d.password_confirm, {
+    message: "Les deux mots de passe ne concordent pas.",
+    path: ["password_confirm"],
+  });
+
 export const requestStatusSchema = z.object({
   type: z.enum(["partnership", "contact"]),
   id: uuid,

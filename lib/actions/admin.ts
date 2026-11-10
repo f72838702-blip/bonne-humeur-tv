@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole, requirePermission, requireAnyPermission, isSuperAdmin } from "@/lib/auth/session";
 import { sanitizePermissions, hasAnyPermission } from "@/lib/auth/permissions";
 import {
-  inviteUserSchema,
+  createManagerSchema,
   requestDeleteSchema,
   requestStatusSchema,
   roleChangeSchema,
@@ -17,14 +17,21 @@ import {
   zodFieldErrors,
 } from "./helpers";
 import {
+  createManagerAccount,
   deleteTeamMember,
-  inviteTeamMember,
   logTeamAction,
   reactiveTeamMember,
+  resetManagerPassword,
   suspendTeamMember,
   updateProfilePermissions,
   updateProfileRole,
 } from "@/lib/data/users";
+import {
+  identifiantToEmail,
+  generateProvisionalPassword,
+  looksLikeEmail,
+  validateIdentifiant,
+} from "@/lib/auth/manager-account";
 import { deleteRequest, updateRequestStatus } from "@/lib/data/requests";
 import { getRequestRecipient, insertFailedReply, insertSentReply } from "@/lib/data/replies";
 import { isBrevoConfigured, sendEmailViaBrevo } from "@/lib/email/brevo";
@@ -235,51 +242,122 @@ export async function changeRole(
   return successState("Rôle mis à jour.");
 }
 
-export async function inviteUser(
+export async function createManager(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   const superAdmin = await isSuperAdmin();
   if (!superAdmin) return deniedState("forbidden", "Seul le Super Administrateur gère les comptes.");
 
-  const parsed = inviteUserSchema.safeParse({
-    email: formData.get("email"),
+  const parsed = createManagerSchema.safeParse({
     full_name: formData.get("full_name"),
-    role: formData.get("role"),
+    identifiant: formData.get("identifiant") ?? "",
+    email: formData.get("email") ?? "",
+    password: formData.get("password"),
+    password_confirm: formData.get("password_confirm"),
   });
   if (!parsed.success) {
     return errorState("Veuillez corriger les champs signalés.", zodFieldErrors(parsed.error));
   }
 
+  // Adresse de connexion : email réel si fourni, sinon identifiant →
+  // adresse technique stable, générée CÔTÉ SERVEUR SEULEMENT (jamais dans
+  // le navigateur, jamais réversible hors serveur).
+  const idCheck = validateIdentifiant(parsed.data.identifiant ?? "");
+  let authEmail: string;
+  if ((parsed.data.email ?? "") !== "") {
+    authEmail = parsed.data.email as string;
+  } else {
+    if (!idCheck.ok) {
+      return errorState(
+        idCheck.reason === "bornes"
+          ? "Identifiant invalide : aucun point ou tiret en première/dernière position."
+          : "Identifiant invalide : 2 à 32 caractères, lettres non accentuées, chiffres, point, tiret ou underscore."
+      );
+    }
+    authEmail = identifiantToEmail(idCheck.identifiant);
+  }
+
   // Permissions cochées : normalisées par la liste blanche (jamais de clé inconnue).
   const requested = formData.getAll("permissions").map((p) => String(p));
   const cleanPermissions = sanitizePermissions(requested) as string[];
+  const role = cleanPermissions.length > 0 ? "editor" : "reporter";
 
-  const result = await inviteTeamMember(
-    parsed.data.email,
-    parsed.data.full_name,
-    parsed.data.role,
-    cleanPermissions
-  );
+  const result = await createManagerAccount({
+    email: authEmail,
+    fullName: parsed.data.full_name,
+    role,
+    permissions: cleanPermissions,
+    password: parsed.data.password,
+  });
   if (!result.ok) {
     if (result.error === "service_role_not_configured") {
       return errorState(
-        "L'invitation exige la clé service_role sur le serveur (SUPABASE_SERVICE_ROLE_KEY). Voir supabase/README-CONFIGURATION.md."
+        "La création exige la clé service_role sur le serveur (SUPABASE_SERVICE_ROLE_KEY). Voir supabase/README-CONFIGURATION.md."
       );
     }
-    console.error("[actions/admin] inviteUser :", result.error);
-    return errorState("Invitation impossible. Vérifiez l'adresse email.");
+    console.error("[actions/admin] createManager :", result.error);
+    return errorState(
+      /already|registered|exists|dup/i.test(result.error ?? "")
+        ? "Cet identifiant ou cette adresse est déjà utilisé — choisissez-en un autre."
+        : "Création impossible — réessayez."
+    );
   }
 
   revalidatePath("/admin/utilisateurs");
-  // Trace avec AUTEUR identifié : l'invitation (service_role) ne passe pas
-  // par le trigger SQL qui ne connaît que auth.uid() du client session.
-  await logTeamAction("invite", "auth", result.userId ?? null, {
-    email: parsed.data.email,
-    role: parsed.data.role,
+  // Trace AVEC AUTEUR (service_role ne passe pas par le trigger SQL) —
+  // JAMAIS le mot de passe ici, ni nulle part ailleurs.
+  await logTeamAction("create_account", "auth", result.userId ?? null, {
+    identifiant: looksLikeEmail(authEmail) ? null : (idCheck.ok ? idCheck.identifiant : null),
+    email: authEmail,
+    role,
     permissions: cleanPermissions,
   });
-  return successState("Invitation envoyée. Le membre recevra un lien sécurisé pour définir son mot de passe.");
+  return successState(
+    `Gestionnaire créé avec succès. Connexion : ${authEmail} — mot de passe provisoire : ${parsed.data.password} — à transmettre par un moyen sûr ; il ne sera plus jamais affiché.`
+  );
+}
+
+/**
+ * Réinitialisation du mot de passe perdu d'un gestionnaire — super only.
+ * Le nouveau provisoire est généré par le serveur (12 car. lisibles sans
+ * ambiguïtés) et renvoyé UNE seule fois au Super Administrateur : aucune
+ * écriture du mot de passe en clair dans profiles, audit_logs ou la console.
+ */
+export async function resetManagerPasswordAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const superAdmin = await isSuperAdmin();
+  if (!superAdmin) return deniedState("forbidden", "Seul le Super Administrateur gère les comptes.");
+
+  const parsed = roleChangeSchema.pick({ profile_id: true }).safeParse({
+    profile_id: formData.get("profile_id"),
+  });
+  if (!parsed.success) return errorState("Données invalides.");
+
+  const guard = await requireRole(["admin"]);
+  if ("denied" in guard) return deniedState(guard.denied);
+  if (parsed.data.profile_id === guard.session.userId) {
+    return errorState("La réinitialisation ne se porte pas sur son propre compte.");
+  }
+
+  const tempPassword = generateProvisionalPassword();
+  const result = await resetManagerPassword(parsed.data.profile_id, tempPassword);
+  if (!result.ok) {
+    if (result.error === "service_role_not_configured") {
+      return errorState(
+        "La réinitialisation exige la clé service_role sur le serveur (SUPABASE_SERVICE_ROLE_KEY)."
+      );
+    }
+    console.error("[actions/admin] resetManagerPasswordAction :", result.error);
+    return errorState("Réinitialisation impossible — réessayez.");
+  }
+
+  await logTeamAction("password_reset", "auth", parsed.data.profile_id, {});
+  return successState(
+    `Mot de passe réinitialisé. Nouveau provisoire : ${tempPassword} — à transmettre par un moyen sûr ; il ne sera plus jamais affiché.`
+  );
 }
 
 export async function updatePermissions(
