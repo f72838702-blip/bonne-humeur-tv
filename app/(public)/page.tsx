@@ -3,6 +3,7 @@ import Link from "next/link";
 import LiveSection from "@/components/home/LiveSection";
 import AdSlot from "@/components/publicite/AdSlot";
 import HomeSections from "@/components/home/HomeSections";
+import PartnerShowcase from "@/components/publicite/PartnerShowcase";
 import { Radio } from "lucide-react";
 import { getSponsoredArticleIds } from "@/lib/data/ads-public";
 import { getFeaturedVideo, getLiveVideo, getPublishedVideos } from "@/lib/data/videos";
@@ -86,6 +87,12 @@ export default async function HomePage() {
           hasContent,
         }}
       />
+
+      {/* ─── Partenaires officiels (home_partners — position FIXE en pied
+          de page d'accueil, hors config Studio §8). Le composant est
+          DATA-GATED : section absente tant qu'aucun partenaire actif
+          n'existe dans la régie /admin/publicites/partenaires. ─── */}
+      <PartnerShowcase className="mx-auto max-w-7xl px-4 pb-4 sm:px-6" />
     </>
   );
 }
